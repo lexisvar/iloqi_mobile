@@ -1,0 +1,2309 @@
+openapi: 3.0.3
+info:
+  title: Eloqi - English Accent Training API
+  version: 1.0.0
+  description: "\n    Eloqi API provides endpoints for English accent training and\
+    \ pronunciation improvement.\n    \n    ## Features\n    - Voice sample recording\
+    \ and analysis\n    - ML-powered accent classification (AU/US/UK/Neutral)\n  \
+    \  - Training drills with real-time feedback\n    - Progress tracking and analytics\n\
+    \    - Accent preview generation (TTS)\n    \n    ## Authentication\n    This\
+    \ API uses JWT (JSON Web Tokens) for authentication. Include the token in the\
+    \ Authorization header:\n    ```\n    Authorization: Bearer <your-jwt-token>\n\
+    \    ```\n    \n    ## Rate Limits\n    - Voice samples: 20 uploads per hour\n\
+    \    - Accent previews: 5 generations per day\n    - Training sessions: 50 sessions\
+    \ per day\n    \n    ## Supported Audio Formats\n    - WAV (recommended)\n   \
+    \ - MP3\n    - OGG\n    \n    Max file size: 10MB\n    Duration: 1-60 seconds\n\
+    \    "
+paths:
+  /api/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/token/verify/:
+    post:
+      operationId: auth_token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: No response body
+  /api/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: Register a new user with email and password. Profile can be completed
+        later.
+      summary: Register new user
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+            examples:
+              RegistrationExample:
+                value:
+                  email: user@example.com
+                  password: securepassword123
+                  password_confirm: securepassword123
+                summary: Registration Example
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWTResponse'
+              examples:
+                RegistrationExample:
+                  value:
+                    email: user@example.com
+                    password: securepassword123
+                    password_confirm: securepassword123
+                  summary: Registration Example
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: Login with email and password to receive JWT tokens
+      summary: User login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+            examples:
+              LoginExample:
+                value:
+                  email: user@example.com
+                  password: securepassword123
+                summary: Login Example
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWTResponse'
+              examples:
+                LoginExample:
+                  value:
+                    email: user@example.com
+                    password: securepassword123
+                  summary: Login Example
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/auth/profile/:
+    get:
+      operationId: auth_profile_retrieve
+      description: Get current user's profile information
+      summary: Get user profile
+      tags:
+      - User Profile
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+          description: ''
+  /api/auth/profile/update/:
+    put:
+      operationId: auth_profile_update_update
+      description: Update user profile information including language preferences
+        and learning goals
+      summary: Update user profile
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+            examples:
+              ProfileUpdateExample:
+                value:
+                  l1_language: Spanish
+                  target_accent: UK
+                  proficiency_level: intermediate
+                  learning_goals: Improve pronunciation for business presentations
+                summary: Profile Update Example
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                ProfileUpdateExample:
+                  value:
+                    l1_language: Spanish
+                    target_accent: UK
+                    proficiency_level: intermediate
+                    learning_goals: Improve pronunciation for business presentations
+                  summary: Profile Update Example
+          description: ''
+    patch:
+      operationId: auth_profile_update_partial_update
+      description: Update user profile information including language preferences
+        and learning goals
+      summary: Update user profile
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+            examples:
+              ProfileUpdateExample:
+                value:
+                  l1_language: Spanish
+                  target_accent: UK
+                  proficiency_level: intermediate
+                  learning_goals: Improve pronunciation for business presentations
+                summary: Profile Update Example
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                ProfileUpdateExample:
+                  value:
+                    l1_language: Spanish
+                    target_accent: UK
+                    proficiency_level: intermediate
+                    learning_goals: Improve pronunciation for business presentations
+                  summary: Profile Update Example
+          description: ''
+  /api/auth/change-password/:
+    post:
+      operationId: auth_change_password_create
+      description: Change user password with old password verification
+      summary: Change password
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                description: Password changed successfully
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/auth/export-data/:
+    get:
+      operationId: auth_export_data_retrieve
+      description: Export all user data for GDPR compliance
+      summary: Export user data
+      tags:
+      - User Profile
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/auth/delete-account/:
+    delete:
+      operationId: auth_delete_account_destroy
+      description: Permanently delete user account and all associated data
+      summary: Delete user account
+      tags:
+      - User Profile
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+                description: Unspecified response body
+          description: ''
+  /api/samples/voice-samples/:
+    get:
+      operationId: samples_voice_samples_list
+      description: |-
+        List user's voice samples or create a new one.
+
+        GET: Return list of user's voice samples
+        POST: Upload and create a new voice sample
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVoiceSampleList'
+          description: ''
+    post:
+      operationId: samples_voice_samples_create
+      description: |-
+        List user's voice samples or create a new one.
+
+        GET: Return list of user's voice samples
+        POST: Upload and create a new voice sample
+      tags:
+      - samples
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VoiceSampleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VoiceSampleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceSample'
+          description: ''
+  /api/samples/voice-samples/{id}/:
+    get:
+      operationId: samples_voice_samples_retrieve
+      description: |-
+        Retrieve or delete a specific voice sample.
+
+        GET: Return voice sample details
+        DELETE: Delete the voice sample and its file
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceSample'
+          description: ''
+    delete:
+      operationId: samples_voice_samples_destroy
+      description: |-
+        Retrieve or delete a specific voice sample.
+
+        GET: Return voice sample details
+        DELETE: Delete the voice sample and its file
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/samples/voice-samples/{sample_id}/analyze/:
+    post:
+      operationId: samples_voice_samples_analyze_create
+      description: |-
+        Analyze a voice sample using ML pipeline.
+
+        POST /api/voice-samples/{id}/analyze/
+        Optional body: {"prompt_text": "Text that was supposed to be read"}
+      parameters:
+      - in: path
+        name: sample_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/voice-samples/{sample_id}/results/:
+    get:
+      operationId: samples_voice_samples_results_retrieve
+      description: |-
+        Get existing analysis results for a voice sample.
+
+        GET /api/voice-samples/{id}/results/
+      parameters:
+      - in: path
+        name: sample_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/voice-samples/{sample_id}/reanalyze/:
+    post:
+      operationId: samples_voice_samples_reanalyze_create
+      description: |-
+        Force re-analysis of a voice sample.
+
+        POST /api/voice-samples/{id}/reanalyze/
+        Optional body: {"prompt_text": "Text that was supposed to be read"}
+      parameters:
+      - in: path
+        name: sample_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/progress/:
+    get:
+      operationId: samples_progress_retrieve
+      description: |-
+        Get user's accent training progress.
+
+        GET /api/progress/
+        Optional query params: ?target_accent=US
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/progress/details/:
+    get:
+      operationId: samples_progress_details_retrieve
+      description: |-
+        Retrieve or update user progress.
+
+        GET: Return user's progress information
+        PATCH: Update progress settings (e.g., target accent)
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProgress'
+          description: ''
+    put:
+      operationId: samples_progress_details_update
+      description: |-
+        Retrieve or update user progress.
+
+        GET: Return user's progress information
+        PATCH: Update progress settings (e.g., target accent)
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProgressRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProgressRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProgressRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProgress'
+          description: ''
+    patch:
+      operationId: samples_progress_details_partial_update
+      description: |-
+        Retrieve or update user progress.
+
+        GET: Return user's progress information
+        PATCH: Update progress settings (e.g., target accent)
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProgressRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProgressRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProgressRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProgress'
+          description: ''
+  /api/samples/recommendations/:
+    get:
+      operationId: samples_recommendations_retrieve
+      description: |-
+        Get personalized training recommendations.
+
+        GET /api/recommendations/
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/statistics/accents/:
+    get:
+      operationId: samples_statistics_accents_retrieve
+      description: |-
+        Get accent detection statistics for the user.
+
+        GET /api/statistics/accents/
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/training-sessions/:
+    get:
+      operationId: samples_training_sessions_list
+      description: |-
+        List user's training sessions or create a new one.
+
+        GET: Return list of user's training sessions
+        POST: Create a new training session
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTrainingSessionList'
+          description: ''
+    post:
+      operationId: samples_training_sessions_create
+      description: |-
+        List user's training sessions or create a new one.
+
+        GET: Return list of user's training sessions
+        POST: Create a new training session
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingSessionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrainingSessionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrainingSessionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSession'
+          description: ''
+  /api/samples/training-sessions/{id}/:
+    get:
+      operationId: samples_training_sessions_retrieve
+      description: |-
+        Retrieve, update, or delete a training session.
+
+        GET: Return training session details
+        PATCH: Update training session
+        DELETE: Delete training session
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSession'
+          description: ''
+    put:
+      operationId: samples_training_sessions_update
+      description: |-
+        Retrieve, update, or delete a training session.
+
+        GET: Return training session details
+        PATCH: Update training session
+        DELETE: Delete training session
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainingSessionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TrainingSessionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TrainingSessionRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSession'
+          description: ''
+    patch:
+      operationId: samples_training_sessions_partial_update
+      description: |-
+        Retrieve, update, or delete a training session.
+
+        GET: Return training session details
+        PATCH: Update training session
+        DELETE: Delete training session
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTrainingSessionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTrainingSessionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTrainingSessionRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSession'
+          description: ''
+    delete:
+      operationId: samples_training_sessions_destroy
+      description: |-
+        Retrieve, update, or delete a training session.
+
+        GET: Return training session details
+        PATCH: Update training session
+        DELETE: Delete training session
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/samples/training-sessions/{session_id}/complete/:
+    post:
+      operationId: samples_training_sessions_complete_create
+      description: |-
+        Mark a training session as completed and calculate final score.
+
+        POST /api/training-sessions/{id}/complete/
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/accent-twins/:
+    get:
+      operationId: samples_accent_twins_list
+      description: |-
+        List user's accent twins or create a new one.
+
+        GET: Return list of user's accent twins
+        POST: Create a new accent twin generation request
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAccentTwinList'
+          description: ''
+    post:
+      operationId: samples_accent_twins_create
+      description: |-
+        List user's accent twins or create a new one.
+
+        GET: Return list of user's accent twins
+        POST: Create a new accent twin generation request
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccentTwinCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AccentTwinCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AccentTwinCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccentTwinCreate'
+          description: ''
+  /api/samples/accent-twins/{id}/:
+    get:
+      operationId: samples_accent_twins_retrieve
+      description: |-
+        Retrieve or delete a specific accent twin.
+
+        GET: Return accent twin details
+        DELETE: Delete the accent twin and its files
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccentTwin'
+          description: ''
+    delete:
+      operationId: samples_accent_twins_destroy
+      description: |-
+        Retrieve or delete a specific accent twin.
+
+        GET: Return accent twin details
+        DELETE: Delete the accent twin and its files
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/samples/voice-samples/{sample_id}/generate-accent-twin/:
+    post:
+      operationId: samples_voice_samples_generate_accent_twin_create
+      description: |-
+        Generate an accent twin for a voice sample.
+
+        POST /api/voice-samples/{id}/generate-accent-twin/
+        Body: {
+            "target_accent": "US",
+            "tts_provider": "edge_tts",
+            "voice_model": "en-US-AriaNeural",
+            "generation_params": {}
+        }
+      parameters:
+      - in: path
+        name: sample_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/accent-twins/{twin_id}/status/:
+    get:
+      operationId: samples_accent_twins_status_retrieve
+      description: |-
+        Get the status of an accent twin generation.
+
+        GET /api/accent-twins/{id}/status/
+      parameters:
+      - in: path
+        name: twin_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/accent-twins/{twin_id}/compare/:
+    post:
+      operationId: samples_accent_twins_compare_create
+      description: |-
+        Compare an accent twin with its original sample for detailed analysis.
+
+        POST /api/accent-twins/{id}/compare/
+      parameters:
+      - in: path
+        name: twin_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/accent-twins/available-accents/:
+    get:
+      operationId: samples_accent_twins_available_accents_retrieve
+      description: |-
+        Get list of available target accents for accent twin generation.
+
+        GET /api/accent-twins/available-accents/
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/training/sessions/:
+    get:
+      operationId: training_sessions_retrieve
+      description: List all drill sessions for the user
+      tags:
+      - Training Sessions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+    post:
+      operationId: training_sessions_create
+      description: Create a new drill session
+      tags:
+      - Training Sessions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/sessions/{session_id}/:
+    get:
+      operationId: training_sessions_retrieve_2
+      description: Get a specific drill session
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Training Sessions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/sessions/{session_id}/complete/:
+    post:
+      operationId: training_sessions_complete_create
+      description: Mark a drill session as complete
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Training Sessions
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/sessions/{session_id}/exercises/:
+    get:
+      operationId: training_sessions_exercises_retrieve
+      description: List all exercises for a session
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/exercises/{exercise_id}/:
+    get:
+      operationId: training_exercises_retrieve
+      description: Get a specific exercise
+      parameters:
+      - in: path
+        name: exercise_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/exercises/{exercise_id}/submit/:
+    post:
+      operationId: training_exercises_submit_create
+      description: Submit a response for an exercise
+      parameters:
+      - in: path
+        name: exercise_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Exercises
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/progress/:
+    get:
+      operationId: training_progress_retrieve
+      description: Get overall training progress for the user
+      tags:
+      - Progress Tracking
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/weekly-summary/:
+    get:
+      operationId: training_weekly_summary_retrieve
+      description: Get weekly training summary for the user
+      tags:
+      - Progress Tracking
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/weekly-summary/{week_start}/:
+    get:
+      operationId: training_weekly_summary_retrieve_2
+      description: Get training summary for a specific week
+      parameters:
+      - in: path
+        name: week_start
+        schema:
+          type: string
+        required: true
+      tags:
+      - Progress Tracking
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/training/recommendations/:
+    get:
+      operationId: training_recommendations_retrieve
+      description: Get personalized training recommendations
+      tags:
+      - Recommendations
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/preview/generate/:
+    post:
+      operationId: preview_generate_create
+      description: Generate a new voice preview
+      tags:
+      - Voice Preview
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/preview/{preview_id}/:
+    get:
+      operationId: preview_retrieve_2
+      description: Get a specific voice preview
+      parameters:
+      - in: path
+        name: preview_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Voice Preview
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/preview/{preview_id}/status/:
+    get:
+      operationId: preview_status_retrieve
+      description: Check the status of a voice preview generation
+      parameters:
+      - in: path
+        name: preview_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Voice Preview
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/preview/:
+    get:
+      operationId: preview_retrieve
+      description: List all voice previews for the user
+      tags:
+      - Voice Preview
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/preview/{preview_id}/cancel/:
+    post:
+      operationId: preview_cancel_create
+      description: Cancel a pending voice preview generation
+      parameters:
+      - in: path
+        name: preview_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Voice Preview
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/preview/{preview_id}/feedback/:
+    post:
+      operationId: preview_feedback_create
+      description: Submit feedback for a voice preview
+      parameters:
+      - in: path
+        name: preview_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - Voice Preview
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/preview/models/:
+    get:
+      operationId: preview_models_retrieve
+      description: List all available voice synthesis models
+      tags:
+      - Models
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+components:
+  schemas:
+    AccentTwin:
+      type: object
+      description: Serializer for AccentTwin model with detailed generation information.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+          description: User who owns this accent twin
+        user_username:
+          type: string
+          readOnly: true
+        original_sample:
+          type: integer
+          description: Original voice sample used for generation
+        original_sample_info:
+          type: string
+          readOnly: true
+        target_accent:
+          type: string
+          description: Target accent for the synthesized voice (e.g., 'US', 'UK',
+            'AU')
+          maxLength: 50
+        tts_provider:
+          allOf:
+          - $ref: '#/components/schemas/TtsProviderEnum'
+          default: coqui
+        voice_model:
+          type: string
+          description: Specific voice model or speaker ID used
+          maxLength: 100
+        generation_status:
+          allOf:
+          - $ref: '#/components/schemas/GenerationStatusEnum'
+          readOnly: true
+        accent_twin_file:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+          description: Generated accent twin audio file
+        file_url:
+          type: string
+          readOnly: true
+        generation_params:
+          description: Parameters used for generation (quality, speed, etc.)
+        processing_time:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Time taken for generation in seconds
+        error_message:
+          type: string
+          readOnly: true
+          description: Error message if generation failed
+        similarity_score:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Similarity score between original and accent twin (0-100)
+        phoneme_gaps:
+          readOnly: true
+          description: Detailed phoneme-level differences for training
+        is_ready:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - accent_twin_file
+      - created_at
+      - error_message
+      - file_url
+      - generation_status
+      - id
+      - is_ready
+      - original_sample
+      - original_sample_info
+      - phoneme_gaps
+      - processing_time
+      - similarity_score
+      - target_accent
+      - updated_at
+      - user
+      - user_username
+    AccentTwinCreate:
+      type: object
+      description: Simplified serializer for creating accent twins.
+      properties:
+        original_sample:
+          type: integer
+          description: Original voice sample used for generation
+        target_accent:
+          type: string
+          description: Target accent for the synthesized voice (e.g., 'US', 'UK',
+            'AU')
+          maxLength: 50
+        tts_provider:
+          allOf:
+          - $ref: '#/components/schemas/TtsProviderEnum'
+          default: coqui
+        voice_model:
+          type: string
+          description: Specific voice model or speaker ID used
+          maxLength: 100
+        generation_params:
+          description: Parameters used for generation (quality, speed, etc.)
+      required:
+      - original_sample
+      - target_accent
+    AccentTwinCreateRequest:
+      type: object
+      description: Simplified serializer for creating accent twins.
+      properties:
+        original_sample:
+          type: integer
+          description: Original voice sample used for generation
+        target_accent:
+          type: string
+          minLength: 1
+          description: Target accent for the synthesized voice (e.g., 'US', 'UK',
+            'AU')
+          maxLength: 50
+        tts_provider:
+          allOf:
+          - $ref: '#/components/schemas/TtsProviderEnum'
+          default: coqui
+        voice_model:
+          type: string
+          description: Specific voice model or speaker ID used
+          maxLength: 100
+        generation_params:
+          description: Parameters used for generation (quality, speed, etc.)
+      required:
+      - original_sample
+      - target_accent
+    ChangePasswordRequest:
+      type: object
+      description: Serializer for changing user password.
+      properties:
+        old_password:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          minLength: 1
+        confirm_password:
+          type: string
+          minLength: 1
+      required:
+      - confirm_password
+      - new_password
+      - old_password
+    DifficultyLevelEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      type: integer
+      description: |-
+        * `1` - Level 1
+        * `2` - Level 2
+        * `3` - Level 3
+        * `4` - Level 4
+        * `5` - Level 5
+    ExerciseTypeEnum:
+      enum:
+      - reading
+      - conversation
+      - phonetic
+      - accent_drill
+      - free_speech
+      type: string
+      description: |-
+        * `reading` - Reading Exercise
+        * `conversation` - Conversation Practice
+        * `phonetic` - Phonetic Training
+        * `accent_drill` - Accent Drill
+        * `free_speech` - Free Speech
+    GenerationStatusEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `pending` - Generation Pending
+        * `processing` - Processing
+        * `completed` - Completed Successfully
+        * `failed` - Generation Failed
+    JWTResponse:
+      type: object
+      description: Serializer for JWT token response.
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        user:
+          allOf:
+          - $ref: '#/components/schemas/UserProfile'
+          readOnly: true
+      required:
+      - access
+      - refresh
+      - user
+    PaginatedAccentTwinList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccentTwin'
+    PaginatedTrainingSessionList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrainingSession'
+    PaginatedVoiceSampleList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/VoiceSample'
+    PatchedTrainingSessionRequest:
+      type: object
+      description: Serializer for TrainingSession model.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Session name or description
+          maxLength: 200
+        exercise_type:
+          $ref: '#/components/schemas/ExerciseTypeEnum'
+        target_accent:
+          type: string
+          description: Target accent for this session
+          maxLength: 50
+        prompt_text:
+          type: string
+          description: Text for reading exercises
+        is_completed:
+          type: boolean
+        duration_minutes:
+          type: integer
+          nullable: true
+          description: Session duration
+    PatchedUserProfileUpdateRequest:
+      type: object
+      description: Serializer for updating user profile information.
+      properties:
+        l1_language:
+          type: string
+          writeOnly: true
+          minLength: 1
+        target_accent:
+          type: string
+          writeOnly: true
+          minLength: 1
+        preferred_session_duration:
+          type: integer
+          description: Preferred session duration in minutes
+        difficulty_level:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyLevelEnum'
+          description: |-
+            Current difficulty level (1-5)
+
+            * `1` - Level 1
+            * `2` - Level 2
+            * `3` - Level 3
+            * `4` - Level 4
+            * `5` - Level 5
+        email_notifications:
+          type: boolean
+        push_notifications:
+          type: boolean
+    PatchedUserProgressRequest:
+      type: object
+      description: Serializer for UserProgress model.
+      properties:
+        target_accent:
+          type: string
+          minLength: 1
+          description: Target accent for training
+          maxLength: 50
+        pronunciation_progress:
+          type: number
+          format: double
+          description: Pronunciation improvement trend
+        fluency_progress:
+          type: number
+          format: double
+          description: Fluency improvement trend
+        accent_consistency:
+          type: number
+          format: double
+          description: Accent consistency score
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    TokenVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - token
+    TrainingSession:
+      type: object
+      description: Serializer for TrainingSession model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+        user_username:
+          type: string
+          readOnly: true
+        name:
+          type: string
+          description: Session name or description
+          maxLength: 200
+        exercise_type:
+          $ref: '#/components/schemas/ExerciseTypeEnum'
+        target_accent:
+          type: string
+          description: Target accent for this session
+          maxLength: 50
+        prompt_text:
+          type: string
+          description: Text for reading exercises
+        is_completed:
+          type: boolean
+        session_score:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Average score for this session
+        duration_minutes:
+          type: integer
+          nullable: true
+          description: Session duration
+        sample_count:
+          type: string
+          readOnly: true
+        analyzed_sample_count:
+          type: string
+          readOnly: true
+        completion_percentage:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        completed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - analyzed_sample_count
+      - completed_at
+      - completion_percentage
+      - created_at
+      - id
+      - name
+      - sample_count
+      - session_score
+      - user
+      - user_username
+    TrainingSessionRequest:
+      type: object
+      description: Serializer for TrainingSession model.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Session name or description
+          maxLength: 200
+        exercise_type:
+          $ref: '#/components/schemas/ExerciseTypeEnum'
+        target_accent:
+          type: string
+          description: Target accent for this session
+          maxLength: 50
+        prompt_text:
+          type: string
+          description: Text for reading exercises
+        is_completed:
+          type: boolean
+        duration_minutes:
+          type: integer
+          nullable: true
+          description: Session duration
+      required:
+      - name
+    TtsProviderEnum:
+      enum:
+      - coqui
+      - bark
+      - edge_tts
+      - gtts
+      type: string
+      description: |-
+        * `coqui` - Coqui TTS
+        * `bark` - Bark TTS
+        * `edge_tts` - Microsoft Edge TTS
+        * `gtts` - Google TTS
+    UserLoginRequest:
+      type: object
+      description: Serializer for user login.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+    UserProfile:
+      type: object
+      description: Serializer for user profile information.
+      properties:
+        email:
+          type: string
+          format: email
+          readOnly: true
+        l1_language:
+          type: string
+          readOnly: true
+        target_accent:
+          type: string
+          readOnly: true
+        preferred_session_duration:
+          type: integer
+          description: Preferred practice session duration in minutes
+        difficulty_level:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyLevelEnum'
+          description: |-
+            Current difficulty level (1-5)
+
+            * `1` - Level 1
+            * `2` - Level 2
+            * `3` - Level 3
+            * `4` - Level 4
+            * `5` - Level 5
+        total_practice_time:
+          type: integer
+          readOnly: true
+          description: Total practice time in minutes
+        streak_days:
+          type: integer
+          readOnly: true
+          description: Current consecutive practice days
+        last_practice_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+        email_notifications:
+          type: boolean
+        push_notifications:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - l1_language
+      - last_practice_date
+      - streak_days
+      - target_accent
+      - total_practice_time
+      - updated_at
+    UserProfileUpdateRequest:
+      type: object
+      description: Serializer for updating user profile information.
+      properties:
+        l1_language:
+          type: string
+          writeOnly: true
+          minLength: 1
+        target_accent:
+          type: string
+          writeOnly: true
+          minLength: 1
+        preferred_session_duration:
+          type: integer
+          description: Preferred session duration in minutes
+        difficulty_level:
+          allOf:
+          - $ref: '#/components/schemas/DifficultyLevelEnum'
+          description: |-
+            Current difficulty level (1-5)
+
+            * `1` - Level 1
+            * `2` - Level 2
+            * `3` - Level 3
+            * `4` - Level 4
+            * `5` - Level 5
+        email_notifications:
+          type: boolean
+        push_notifications:
+          type: boolean
+    UserProgress:
+      type: object
+      description: Serializer for UserProgress model.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+        user_username:
+          type: string
+          readOnly: true
+        target_accent:
+          type: string
+          description: Target accent for training
+          maxLength: 50
+        total_samples:
+          type: integer
+          readOnly: true
+          description: Total voice samples recorded
+        analyzed_samples:
+          type: integer
+          readOnly: true
+          description: Number of analyzed samples
+        average_score:
+          type: number
+          format: double
+          readOnly: true
+          description: Average overall score
+        best_score:
+          type: number
+          format: double
+          readOnly: true
+          description: Best overall score achieved
+        current_streak:
+          type: integer
+          readOnly: true
+          description: Current daily practice streak
+        longest_streak:
+          type: integer
+          readOnly: true
+          description: Longest daily practice streak
+        last_practice_date:
+          type: string
+          format: date
+          readOnly: true
+          nullable: true
+          description: Last practice date
+        pronunciation_progress:
+          type: number
+          format: double
+          description: Pronunciation improvement trend
+        fluency_progress:
+          type: number
+          format: double
+          description: Fluency improvement trend
+        accent_consistency:
+          type: number
+          format: double
+          description: Accent consistency score
+        improvement_percentage:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - analyzed_samples
+      - average_score
+      - best_score
+      - created_at
+      - current_streak
+      - id
+      - improvement_percentage
+      - last_practice_date
+      - longest_streak
+      - total_samples
+      - updated_at
+      - user
+      - user_username
+    UserProgressRequest:
+      type: object
+      description: Serializer for UserProgress model.
+      properties:
+        target_accent:
+          type: string
+          minLength: 1
+          description: Target accent for training
+          maxLength: 50
+        pronunciation_progress:
+          type: number
+          format: double
+          description: Pronunciation improvement trend
+        fluency_progress:
+          type: number
+          format: double
+          description: Fluency improvement trend
+        accent_consistency:
+          type: number
+          format: double
+          description: Accent consistency score
+    UserRegistrationRequest:
+      type: object
+      description: Simplified registration requiring only email and password.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 6
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+      - password_confirm
+    VoiceSample:
+      type: object
+      description: Serializer for VoiceSample model with enhanced analysis fields.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+        user_username:
+          type: string
+          readOnly: true
+        file_url:
+          type: string
+          readOnly: true
+        original_filename:
+          type: string
+          readOnly: true
+        file_size:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: File size in bytes
+        duration:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Duration in seconds
+        sample_rate:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Sample rate in Hz
+        channels:
+          type: integer
+          readOnly: true
+          nullable: true
+          description: Number of audio channels
+        is_analyzed:
+          type: boolean
+          readOnly: true
+          description: Whether ML analysis has been performed
+        analysis_data:
+          readOnly: true
+          nullable: true
+          description: ML analysis results
+        analysis_timestamp:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+          description: When analysis was last performed
+        analysis_summary:
+          type: string
+          readOnly: true
+        prompt_text:
+          type: string
+          description: Text that was supposed to be read (optional)
+        target_accent:
+          type: string
+          description: Target accent for training
+          maxLength: 50
+        training_session:
+          type: integer
+          nullable: true
+          description: Training session this sample belongs to
+        needs_reanalysis:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - analysis_data
+      - analysis_summary
+      - analysis_timestamp
+      - channels
+      - created_at
+      - duration
+      - file_size
+      - file_url
+      - id
+      - is_analyzed
+      - needs_reanalysis
+      - original_filename
+      - sample_rate
+      - updated_at
+      - user
+      - user_username
+    VoiceSampleRequest:
+      type: object
+      description: Serializer for VoiceSample model with enhanced analysis fields.
+      properties:
+        file:
+          type: string
+          format: binary
+          writeOnly: true
+          description: 'Supported formats: WAV, MP3, M4A, OGG, WEBM. Max size: 50MB'
+          pattern: (?:wav|mp3|m4a|ogg|webm)$
+        prompt_text:
+          type: string
+          description: Text that was supposed to be read (optional)
+        target_accent:
+          type: string
+          description: Target accent for training
+          maxLength: 50
+        training_session:
+          type: integer
+          nullable: true
+          description: Training session this sample belongs to
+      required:
+      - file
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
