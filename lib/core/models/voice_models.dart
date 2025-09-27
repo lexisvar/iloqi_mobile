@@ -3,43 +3,166 @@ import 'package:json_annotation/json_annotation.dart';
 part 'voice_models.g.dart';
 
 @JsonSerializable()
-class VoiceAnalysis {
-  final String id;
-  @JsonKey(name: 'audio_file')
-  final String audioFile;
-  final String transcription;
-  @JsonKey(name: 'detected_accent')
-  final String detectedAccent;
-  final double confidence;
-  @JsonKey(name: 'audio_quality')
-  final double audioQuality;
-  final double duration;
+class VoiceSample {
+  final int id;
+  final String user;
+  @JsonKey(name: 'user_username')
+  final String userUsername;
+  @JsonKey(name: 'file_url')
+  final String fileUrl;
+  @JsonKey(name: 'original_filename')
+  final String originalFilename;
+  @JsonKey(name: 'file_size')
+  final int? fileSize;
+  final double? duration;
   @JsonKey(name: 'sample_rate')
-  final int sampleRate;
-  @JsonKey(name: 'snr_db')
-  final double? snrDb;
+  final int? sampleRate;
+  final int? channels;
+  @JsonKey(name: 'is_analyzed')
+  final bool isAnalyzed;
+  @JsonKey(name: 'analysis_data')
+  final Map<String, dynamic>? analysisData;
+  @JsonKey(name: 'analysis_timestamp')
+  final String? analysisTimestamp;
+  @JsonKey(name: 'analysis_summary')
+  final String? analysisSummary;
+  @JsonKey(name: 'prompt_text')
+  final String? promptText;
+  @JsonKey(name: 'target_accent')
+  final String? targetAccent;
+  @JsonKey(name: 'training_session')
+  final int? trainingSession;
+  @JsonKey(name: 'needs_reanalysis')
+  final bool needsReanalysis;
   @JsonKey(name: 'created_at')
   final String createdAt;
   @JsonKey(name: 'updated_at')
   final String updatedAt;
 
-  const VoiceAnalysis({
+  const VoiceSample({
     required this.id,
-    required this.audioFile,
-    required this.transcription,
-    required this.detectedAccent,
-    required this.confidence,
-    required this.audioQuality,
-    required this.duration,
-    required this.sampleRate,
-    this.snrDb,
+    required this.user,
+    required this.userUsername,
+    required this.fileUrl,
+    required this.originalFilename,
+    this.fileSize,
+    this.duration,
+    this.sampleRate,
+    this.channels,
+    required this.isAnalyzed,
+    this.analysisData,
+    this.analysisTimestamp,
+    this.analysisSummary,
+    this.promptText,
+    this.targetAccent,
+    this.trainingSession,
+    required this.needsReanalysis,
     required this.createdAt,
     required this.updatedAt,
   });
 
-  factory VoiceAnalysis.fromJson(Map<String, dynamic> json) => _$VoiceAnalysisFromJson(json);
+  factory VoiceSample.fromJson(Map<String, dynamic> json) => _$VoiceSampleFromJson(json);
+  Map<String, dynamic> toJson() => _$VoiceSampleToJson(this);
+}
 
+@JsonSerializable()
+class VoiceAnalysis {
+  final String status;
+  final String message;
+  final AnalysisData analysis;
+
+  const VoiceAnalysis({
+    required this.status,
+    required this.message,
+    required this.analysis,
+  });
+
+  factory VoiceAnalysis.fromJson(Map<String, dynamic> json) => _$VoiceAnalysisFromJson(json);
   Map<String, dynamic> toJson() => _$VoiceAnalysisToJson(this);
+
+  // Convenience getters for backward compatibility
+  String get id => analysis.hashCode.toString();
+  String get transcription => analysis.transcription;
+  String get detectedAccent => analysis.detectedAccent;
+  double get confidence => analysis.confidenceScore;
+  double get audioQuality => analysis.overallScore;
+  double get duration => analysis.audioFeatures.duration;
+  int get sampleRate => 44100; // Default sample rate
+  double? get snrDb => analysis.audioFeatures.snrEstimate;
+  String get createdAt => DateTime.now().toIso8601String();
+  String get updatedAt => DateTime.now().toIso8601String();
+}
+
+@JsonSerializable()
+class AnalysisData {
+  final String transcription;
+  @JsonKey(name: 'confidence_score')
+  final double confidenceScore;
+  @JsonKey(name: 'detected_accent')
+  final String detectedAccent;
+  @JsonKey(name: 'accent_confidence')
+  final double accentConfidence;
+  @JsonKey(name: 'overall_score')
+  final double overallScore;
+  @JsonKey(name: 'pronunciation_score')
+  final double pronunciationScore;
+  @JsonKey(name: 'fluency_score')
+  final double fluencyScore;
+  final List<String> feedback;
+  @JsonKey(name: 'phoneme_issues')
+  final List<dynamic> phonemeIssues;
+  @JsonKey(name: 'audio_features')
+  final AudioFeatures audioFeatures;
+
+  const AnalysisData({
+    required this.transcription,
+    required this.confidenceScore,
+    required this.detectedAccent,
+    required this.accentConfidence,
+    required this.overallScore,
+    required this.pronunciationScore,
+    required this.fluencyScore,
+    required this.feedback,
+    required this.phonemeIssues,
+    required this.audioFeatures,
+  });
+
+  factory AnalysisData.fromJson(Map<String, dynamic> json) => _$AnalysisDataFromJson(json);
+  Map<String, dynamic> toJson() => _$AnalysisDataToJson(this);
+}
+
+@JsonSerializable()
+class AudioFeatures {
+  final List<double> mfcc;
+  @JsonKey(name: 'spectral_centroid')
+  final double spectralCentroid;
+  @JsonKey(name: 'spectral_rolloff')
+  final double spectralRolloff;
+  @JsonKey(name: 'zero_crossing_rate')
+  final double zeroCrossingRate;
+  @JsonKey(name: 'fundamental_frequency')
+  final double fundamentalFrequency;
+  @JsonKey(name: 'rms_energy')
+  final double rmsEnergy;
+  final double tempo;
+  final double duration;
+  @JsonKey(name: 'snr_estimate')
+  final double snrEstimate;
+
+  const AudioFeatures({
+    required this.mfcc,
+    required this.spectralCentroid,
+    required this.spectralRolloff,
+    required this.zeroCrossingRate,
+    required this.fundamentalFrequency,
+    required this.rmsEnergy,
+    required this.tempo,
+    required this.duration,
+    required this.snrEstimate,
+  });
+
+  factory AudioFeatures.fromJson(Map<String, dynamic> json) => _$AudioFeaturesFromJson(json);
+  Map<String, dynamic> toJson() => _$AudioFeaturesToJson(this);
 }
 
 @JsonSerializable()

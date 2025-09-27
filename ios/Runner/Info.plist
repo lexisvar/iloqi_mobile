@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Eloqi Mobile</string>
+	<string>iloqi</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -49,5 +49,13 @@
 	<!-- Microphone permission for voice recording -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to the microphone to record your voice for accent analysis and training.</string>
+	
+	<!-- Audio session configuration for speaker output -->
+	<key>UIRequiresPersistentWiFi</key>
+	<false/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>audio</string>
+	</array>
 </dict>
 </plist>

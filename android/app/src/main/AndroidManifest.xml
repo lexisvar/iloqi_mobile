@@ -1,11 +1,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Permissions for audio recording -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    
+    <!-- Storage permissions for Android versions below API 30 -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+    
+    <!-- Audio recording permission for Android 13+ (API 33+) -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     
     <application
-        android:label="eloqi_mobile"
+        android:label="iloqi"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

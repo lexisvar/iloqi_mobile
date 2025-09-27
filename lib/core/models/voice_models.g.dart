@@ -6,34 +6,120 @@ part of 'voice_models.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-VoiceAnalysis _$VoiceAnalysisFromJson(Map<String, dynamic> json) =>
-    VoiceAnalysis(
-      id: json['id'] as String,
-      audioFile: json['audio_file'] as String,
-      transcription: json['transcription'] as String,
-      detectedAccent: json['detected_accent'] as String,
-      confidence: (json['confidence'] as num).toDouble(),
-      audioQuality: (json['audio_quality'] as num).toDouble(),
-      duration: (json['duration'] as num).toDouble(),
-      sampleRate: (json['sample_rate'] as num).toInt(),
-      snrDb: (json['snr_db'] as num?)?.toDouble(),
+VoiceSample _$VoiceSampleFromJson(Map<String, dynamic> json) => VoiceSample(
+      id: (json['id'] as num).toInt(),
+      user: json['user'] as String,
+      userUsername: json['user_username'] as String,
+      fileUrl: json['file_url'] as String,
+      originalFilename: json['original_filename'] as String,
+      fileSize: (json['file_size'] as num?)?.toInt(),
+      duration: (json['duration'] as num?)?.toDouble(),
+      sampleRate: (json['sample_rate'] as num?)?.toInt(),
+      channels: (json['channels'] as num?)?.toInt(),
+      isAnalyzed: json['is_analyzed'] as bool,
+      analysisData: json['analysis_data'] as Map<String, dynamic>?,
+      analysisTimestamp: json['analysis_timestamp'] as String?,
+      analysisSummary: json['analysis_summary'] as String?,
+      promptText: json['prompt_text'] as String?,
+      targetAccent: json['target_accent'] as String?,
+      trainingSession: (json['training_session'] as num?)?.toInt(),
+      needsReanalysis: json['needs_reanalysis'] as bool,
       createdAt: json['created_at'] as String,
       updatedAt: json['updated_at'] as String,
     );
 
-Map<String, dynamic> _$VoiceAnalysisToJson(VoiceAnalysis instance) =>
+Map<String, dynamic> _$VoiceSampleToJson(VoiceSample instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'audio_file': instance.audioFile,
-      'transcription': instance.transcription,
-      'detected_accent': instance.detectedAccent,
-      'confidence': instance.confidence,
-      'audio_quality': instance.audioQuality,
+      'user': instance.user,
+      'user_username': instance.userUsername,
+      'file_url': instance.fileUrl,
+      'original_filename': instance.originalFilename,
+      'file_size': instance.fileSize,
       'duration': instance.duration,
       'sample_rate': instance.sampleRate,
-      'snr_db': instance.snrDb,
+      'channels': instance.channels,
+      'is_analyzed': instance.isAnalyzed,
+      'analysis_data': instance.analysisData,
+      'analysis_timestamp': instance.analysisTimestamp,
+      'analysis_summary': instance.analysisSummary,
+      'prompt_text': instance.promptText,
+      'target_accent': instance.targetAccent,
+      'training_session': instance.trainingSession,
+      'needs_reanalysis': instance.needsReanalysis,
       'created_at': instance.createdAt,
       'updated_at': instance.updatedAt,
+    };
+
+VoiceAnalysis _$VoiceAnalysisFromJson(Map<String, dynamic> json) =>
+    VoiceAnalysis(
+      status: json['status'] as String,
+      message: json['message'] as String,
+      analysis: AnalysisData.fromJson(json['analysis'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$VoiceAnalysisToJson(VoiceAnalysis instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'message': instance.message,
+      'analysis': instance.analysis,
+    };
+
+AnalysisData _$AnalysisDataFromJson(Map<String, dynamic> json) => AnalysisData(
+      transcription: json['transcription'] as String,
+      confidenceScore: (json['confidence_score'] as num).toDouble(),
+      detectedAccent: json['detected_accent'] as String,
+      accentConfidence: (json['accent_confidence'] as num).toDouble(),
+      overallScore: (json['overall_score'] as num).toDouble(),
+      pronunciationScore: (json['pronunciation_score'] as num).toDouble(),
+      fluencyScore: (json['fluency_score'] as num).toDouble(),
+      feedback:
+          (json['feedback'] as List<dynamic>).map((e) => e as String).toList(),
+      phonemeIssues: json['phoneme_issues'] as List<dynamic>,
+      audioFeatures: AudioFeatures.fromJson(
+          json['audio_features'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$AnalysisDataToJson(AnalysisData instance) =>
+    <String, dynamic>{
+      'transcription': instance.transcription,
+      'confidence_score': instance.confidenceScore,
+      'detected_accent': instance.detectedAccent,
+      'accent_confidence': instance.accentConfidence,
+      'overall_score': instance.overallScore,
+      'pronunciation_score': instance.pronunciationScore,
+      'fluency_score': instance.fluencyScore,
+      'feedback': instance.feedback,
+      'phoneme_issues': instance.phonemeIssues,
+      'audio_features': instance.audioFeatures,
+    };
+
+AudioFeatures _$AudioFeaturesFromJson(Map<String, dynamic> json) =>
+    AudioFeatures(
+      mfcc: (json['mfcc'] as List<dynamic>)
+          .map((e) => (e as num).toDouble())
+          .toList(),
+      spectralCentroid: (json['spectral_centroid'] as num).toDouble(),
+      spectralRolloff: (json['spectral_rolloff'] as num).toDouble(),
+      zeroCrossingRate: (json['zero_crossing_rate'] as num).toDouble(),
+      fundamentalFrequency: (json['fundamental_frequency'] as num).toDouble(),
+      rmsEnergy: (json['rms_energy'] as num).toDouble(),
+      tempo: (json['tempo'] as num).toDouble(),
+      duration: (json['duration'] as num).toDouble(),
+      snrEstimate: (json['snr_estimate'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$AudioFeaturesToJson(AudioFeatures instance) =>
+    <String, dynamic>{
+      'mfcc': instance.mfcc,
+      'spectral_centroid': instance.spectralCentroid,
+      'spectral_rolloff': instance.spectralRolloff,
+      'zero_crossing_rate': instance.zeroCrossingRate,
+      'fundamental_frequency': instance.fundamentalFrequency,
+      'rms_energy': instance.rmsEnergy,
+      'tempo': instance.tempo,
+      'duration': instance.duration,
+      'snr_estimate': instance.snrEstimate,
     };
 
 AccentTwin _$AccentTwinFromJson(Map<String, dynamic> json) => AccentTwin(

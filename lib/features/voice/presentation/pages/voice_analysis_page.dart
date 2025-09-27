@@ -61,10 +61,11 @@ class VoiceAnalysisPage extends ConsumerWidget {
               child: _AnalysisResults(
                 analysisState: analysisState,
                 accentTwinState: accentTwinState,
-                onGenerateAccentTwin: (analysisId, targetAccent) {
+                onGenerateAccentTwin: (sampleId, targetAccent) {
                   ref.read(accentTwinProvider.notifier)
-                      .generateAccentTwin(analysisId, targetAccent);
+                      .generateAccentTwin(sampleId, targetAccent);
                 },
+                currentSample: ref.read(voiceAnalysisProvider.notifier).currentSample,
               ),
             ),
           ],
@@ -291,12 +292,14 @@ class _AnalyzeButton extends StatelessWidget {
 class _AnalysisResults extends ConsumerWidget {
   final AsyncValue<VoiceAnalysis?> analysisState;
   final AsyncValue<AccentTwin?> accentTwinState;
-  final Function(String, String) onGenerateAccentTwin;
+  final Function(int, String) onGenerateAccentTwin;
+  final VoiceSample? currentSample;
 
   const _AnalysisResults({
     required this.analysisState,
     required this.accentTwinState,
     required this.onGenerateAccentTwin,
+    required this.currentSample,
   });
 
   @override
@@ -406,17 +409,21 @@ class _AnalysisResults extends ConsumerWidget {
                         const SizedBox(height: 12),
                         Container(
                           width: double.infinity,
+                          constraints: const BoxConstraints(maxHeight: 120),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(color: Colors.grey.shade200),
                           ),
-                          child: Text(
-                            analysis.transcription,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontStyle: FontStyle.italic,
+                          child: SingleChildScrollView(
+                            child: Text(
+                              analysis.transcription,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black87,
+                              ),
                             ),
                           ),
                         ),
@@ -462,30 +469,37 @@ class _AnalysisResults extends ConsumerWidget {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          _AccentChip(
-                            label: 'US 🇺🇸',
-                            accent: 'us',
-                            onTap: () => onGenerateAccentTwin(analysis.id, 'us'),
-                            isLoading: accentTwinState.isLoading,
-                          ),
-                          _AccentChip(
-                            label: 'UK 🇬🇧',
-                            accent: 'uk',
-                            onTap: () => onGenerateAccentTwin(analysis.id, 'uk'),
-                            isLoading: accentTwinState.isLoading,
-                          ),
-                          _AccentChip(
-                            label: 'AU 🇦🇺',
-                            accent: 'au',
-                            onTap: () => onGenerateAccentTwin(analysis.id, 'au'),
-                            isLoading: accentTwinState.isLoading,
-                          ),
-                          _AccentChip(
-                            label: 'CA 🇨🇦',
-                            accent: 'ca',
-                            onTap: () => onGenerateAccentTwin(analysis.id, 'ca'),
-                            isLoading: accentTwinState.isLoading,
-                          ),
+                          if (currentSample != null) ...[
+                            _AccentChip(
+                              label: 'US 🇺🇸',
+                              accent: 'us',
+                              onTap: () => onGenerateAccentTwin(currentSample!.id, 'US'),
+                              isLoading: accentTwinState.isLoading,
+                            ),
+                            _AccentChip(
+                              label: 'UK 🇬🇧',
+                              accent: 'uk',
+                              onTap: () => onGenerateAccentTwin(currentSample!.id, 'UK'),
+                              isLoading: accentTwinState.isLoading,
+                            ),
+                            _AccentChip(
+                              label: 'AU 🇦🇺',
+                              accent: 'au',
+                              onTap: () => onGenerateAccentTwin(currentSample!.id, 'AU'),
+                              isLoading: accentTwinState.isLoading,
+                            ),
+                            _AccentChip(
+                              label: 'CA 🇨🇦',
+                              accent: 'ca',
+                              onTap: () => onGenerateAccentTwin(currentSample!.id, 'CA'),
+                              isLoading: accentTwinState.isLoading,
+                            ),
+                          ] else
+                            const Text(
+                              'Upload and analyze a voice sample first to generate accent twins.',
+                              style: TextStyle(color: Colors.grey),
+                              textAlign: TextAlign.center,
+                            ),
                         ],
                       ),
                       

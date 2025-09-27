@@ -11,30 +11,45 @@ part 'voice_api_service.g.dart';
 abstract class VoiceApiService {
   factory VoiceApiService(Dio dio, {String baseUrl}) = _VoiceApiService;
 
-  @POST('voice/analyze/')
+  // Upload voice sample first
+  @POST('samples/voice-samples/')
   @MultiPart()
-  Future<VoiceAnalysis> analyzeVoice(@Part() File audioFile);
+  Future<VoiceSample> uploadVoiceSample(@Part() File file);
 
-  @GET('voice/analysis/{id}/')
-  Future<VoiceAnalysis> getVoiceAnalysis(@Path('id') String id);
+  // Then analyze the uploaded sample
+  @POST('samples/voice-samples/{sampleId}/analyze/')
+  Future<VoiceAnalysis> analyzeVoiceSample(@Path('sampleId') int sampleId);
 
-  @GET('voice/analysis/')
-  Future<List<VoiceAnalysis>> getVoiceAnalysesList({
-    @Query('limit') int? limit,
-    @Query('offset') int? offset,
+  // Get analysis results
+  @GET('samples/voice-samples/{sampleId}/results/')
+  Future<VoiceAnalysis> getAnalysisResults(@Path('sampleId') int sampleId);
+
+  // Get voice samples list
+  @GET('samples/voice-samples/')
+  Future<List<VoiceSample>> getVoiceSamplesList({
+    @Query('page') int? page,
+    @Query('ordering') String? ordering,
+    @Query('search') String? search,
   });
 
-  @POST('voice/accent-twin/')
-  Future<AccentTwin> generateAccentTwin(@Body() Map<String, dynamic> request);
+  // Generate accent twin
+  @POST('samples/voice-samples/{sampleId}/generate-accent-twin/')
+  Future<AccentTwin> generateAccentTwin(
+    @Path('sampleId') int sampleId,
+    @Body() Map<String, dynamic> request,
+  );
 
-  @GET('voice/accent-twin/{id}/')
-  Future<AccentTwin> getAccentTwin(@Path('id') String id);
-
-  @GET('voice/accent-twin/')
+  // Get accent twins list
+  @GET('samples/accent-twins/')
   Future<List<AccentTwin>> getAccentTwinsList({
-    @Query('limit') int? limit,
-    @Query('offset') int? offset,
+    @Query('page') int? page,
+    @Query('ordering') String? ordering,
+    @Query('search') String? search,
   });
+
+  // Get specific accent twin
+  @GET('samples/accent-twins/{id}/')
+  Future<AccentTwin> getAccentTwin(@Path('id') int id);
 
   @POST('training/session/')
   Future<TrainingSession> createTrainingSession(@Body() Map<String, dynamic> request);

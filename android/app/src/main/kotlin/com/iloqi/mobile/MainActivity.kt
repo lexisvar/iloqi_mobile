@@ -1,4 +1,4 @@
-package com.example.eloqi_mobile
+package com.iloqi.mobile
 
 import io.flutter.embedding.android.FlutterActivity
 

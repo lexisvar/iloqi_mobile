@@ -24,19 +24,19 @@ class _VoiceApiService implements VoiceApiService {
   final ParseErrorLogger? errorLogger;
 
   @override
-  Future<VoiceAnalysis> analyzeVoice(File audioFile) async {
+  Future<VoiceSample> uploadVoiceSample(File file) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = FormData();
     _data.files.add(MapEntry(
-      'audioFile',
+      'file',
       MultipartFile.fromFileSync(
-        audioFile.path,
-        filename: audioFile.path.split(Platform.pathSeparator).last,
+        file.path,
+        filename: file.path.split(Platform.pathSeparator).last,
       ),
     ));
-    final _options = _setStreamType<VoiceAnalysis>(Options(
+    final _options = _setStreamType<VoiceSample>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
@@ -44,7 +44,40 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'voice/analyze/',
+          'samples/voice-samples/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late VoiceSample _value;
+    try {
+      _value = VoiceSample.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<VoiceAnalysis> analyzeVoiceSample(int sampleId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<VoiceAnalysis>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/voice-samples/${sampleId}/analyze/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -65,7 +98,7 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<VoiceAnalysis> getVoiceAnalysis(String id) async {
+  Future<VoiceAnalysis> getAnalysisResults(int sampleId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -77,7 +110,7 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'voice/analysis/${id}/',
+          'samples/voice-samples/${sampleId}/results/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -98,26 +131,28 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<List<VoiceAnalysis>> getVoiceAnalysesList({
-    int? limit,
-    int? offset,
+  Future<List<VoiceSample>> getVoiceSamplesList({
+    int? page,
+    String? ordering,
+    String? search,
   }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
-      r'limit': limit,
-      r'offset': offset,
+      r'page': page,
+      r'ordering': ordering,
+      r'search': search,
     };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<VoiceAnalysis>>(Options(
+    final _options = _setStreamType<List<VoiceSample>>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
     )
         .compose(
           _dio.options,
-          'voice/analysis/',
+          'samples/voice-samples/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -127,10 +162,10 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<VoiceAnalysis> _value;
+    late List<VoiceSample> _value;
     try {
       _value = _result.data!
-          .map((dynamic i) => VoiceAnalysis.fromJson(i as Map<String, dynamic>))
+          .map((dynamic i) => VoiceSample.fromJson(i as Map<String, dynamic>))
           .toList();
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
@@ -140,7 +175,10 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<AccentTwin> generateAccentTwin(Map<String, dynamic> request) async {
+  Future<AccentTwin> generateAccentTwin(
+    int sampleId,
+    Map<String, dynamic> request,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -153,40 +191,7 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'voice/accent-twin/',
-          queryParameters: queryParameters,
-          data: _data,
-        )
-        .copyWith(
-            baseUrl: _combineBaseUrls(
-          _dio.options.baseUrl,
-          baseUrl,
-        )));
-    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late AccentTwin _value;
-    try {
-      _value = AccentTwin.fromJson(_result.data!);
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<AccentTwin> getAccentTwin(String id) async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<AccentTwin>(Options(
-      method: 'GET',
-      headers: _headers,
-      extra: _extra,
-    )
-        .compose(
-          _dio.options,
-          'voice/accent-twin/${id}/',
+          'samples/voice-samples/${sampleId}/generate-accent-twin/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -208,13 +213,15 @@ class _VoiceApiService implements VoiceApiService {
 
   @override
   Future<List<AccentTwin>> getAccentTwinsList({
-    int? limit,
-    int? offset,
+    int? page,
+    String? ordering,
+    String? search,
   }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{
-      r'limit': limit,
-      r'offset': offset,
+      r'page': page,
+      r'ordering': ordering,
+      r'search': search,
     };
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
@@ -226,7 +233,7 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'voice/accent-twin/',
+          'samples/accent-twins/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -241,6 +248,39 @@ class _VoiceApiService implements VoiceApiService {
       _value = _result.data!
           .map((dynamic i) => AccentTwin.fromJson(i as Map<String, dynamic>))
           .toList();
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<AccentTwin> getAccentTwin(int id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<AccentTwin>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/accent-twins/${id}/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AccentTwin _value;
+    try {
+      _value = AccentTwin.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

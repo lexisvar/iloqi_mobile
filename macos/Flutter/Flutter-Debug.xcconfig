@@ -1,2 +1,5 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "ephemeral/Flutter-Generated.xcconfig"
+
+// Set minimum macOS deployment target to 10.15 for audio plugin compatibility
+MACOSX_DEPLOYMENT_TARGET = 10.15
