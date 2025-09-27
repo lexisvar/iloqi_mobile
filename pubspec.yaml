@@ -1,5 +1,5 @@
 name: eloqi_mobile
-description: "Eloqi - Revolutionary Accent Training App with AI-powered accent twin technology"
+description: "Revolutionary Accent Training App with AI-powered accent twin technology"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -33,16 +33,16 @@ dependencies:
   hive_flutter: ^1.1.0
   
   # Audio Recording & Playback
-  # record: ^5.0.4  # Temporarily disabled for testing
+  flutter_sound: ^9.2.13  # More stable audio recording package
   just_audio: ^0.9.36
-  audio_waveforms: ^1.0.5
+  audioplayers: ^5.2.1
   
   # Permissions
   permission_handler: ^11.1.0
   
   # File Operations
   path_provider: ^2.1.2
-  file_picker: ^6.1.1
+  # file_picker: ^6.1.1  # Temporarily removed due to platform implementation issues
   
   # UI Components
   flutter_svg: ^2.0.9

@@ -7,7 +7,7 @@ import '../models/voice_models.dart';
 
 part 'voice_api_service.g.dart';
 
-@RestApi(baseUrl: 'http://127.0.0.1:8000/api/')
+@RestApi(baseUrl: 'http://172.20.10.13:8000/api/')
 abstract class VoiceApiService {
   factory VoiceApiService(Dio dio, {String baseUrl}) = _VoiceApiService;
 

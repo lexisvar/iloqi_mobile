@@ -1,13 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:dio/dio.dart';
-
-import '../models/user_model.dart';
-import '../models/auth_result.dart';
-import '../services/auth_api_service.dart';
-import '../di/injection_container.dart';
-
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 
 import '../models/user_model.dart';

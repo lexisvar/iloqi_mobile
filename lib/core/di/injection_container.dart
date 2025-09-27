@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -37,9 +38,10 @@ Future<void> init() async {
     ),
   );
 
-  // Dio setup
+  // Dio setup with device-accessible IP
+  // Use your Mac's local IP address so iOS device can reach the API
   sl._dio = Dio(BaseOptions(
-    baseUrl: 'http://127.0.0.1:8000/api/',
+    baseUrl: 'http://172.20.10.13:8000/api/',  // Your Mac's local IP
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     headers: {

@@ -28,5 +28,9 @@
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	
+	<!-- Microphone permission for voice recording -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to the microphone to record your voice for accent analysis and training.</string>
 </dict>
 </plist>

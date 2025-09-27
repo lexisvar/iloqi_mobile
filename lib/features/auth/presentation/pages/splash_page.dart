@@ -15,18 +15,30 @@ class _SplashPageState extends ConsumerState<SplashPage> {
   @override
   void initState() {
     super.initState();
+    print('🚀 SplashPage initState called');
     _checkAuthAndNavigate();
   }
 
   Future<void> _checkAuthAndNavigate() async {
+    print('🚀 Starting auth check and navigation');
     await Future.delayed(const Duration(seconds: 2));
     
     if (mounted) {
+      print('🚀 Widget still mounted, checking auth state');
       final authState = ref.read(authStateProvider);
       final isLoggedIn = authState.when(
-        data: (user) => user != null,
-        loading: () => false,
-        error: (_, __) => false,
+        data: (user) {
+          print('🚀 Auth state data: user = $user');
+          return user != null;
+        },
+        loading: () {
+          print('🚀 Auth state loading');
+          return false;
+        },
+        error: (error, _) {
+          print('🚀 Auth state error: $error');
+          return false;
+        },
       );
 
       if (isLoggedIn) {
