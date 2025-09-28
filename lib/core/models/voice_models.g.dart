@@ -51,6 +51,22 @@ Map<String, dynamic> _$VoiceSampleToJson(VoiceSample instance) =>
       'updated_at': instance.updatedAt,
     };
 
+VoiceAnalysisResponse _$VoiceAnalysisResponseFromJson(
+        Map<String, dynamic> json) =>
+    VoiceAnalysisResponse(
+      status: json['status'] as String,
+      message: json['message'] as String,
+      analysis: AnalysisData.fromJson(json['analysis'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$VoiceAnalysisResponseToJson(
+        VoiceAnalysisResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'message': instance.message,
+      'analysis': instance.analysis,
+    };
+
 VoiceAnalysis _$VoiceAnalysisFromJson(Map<String, dynamic> json) =>
     VoiceAnalysis(
       status: json['status'] as String,
@@ -122,25 +138,98 @@ Map<String, dynamic> _$AudioFeaturesToJson(AudioFeatures instance) =>
       'snr_estimate': instance.snrEstimate,
     };
 
+AccentTwinComparison _$AccentTwinComparisonFromJson(
+        Map<String, dynamic> json) =>
+    AccentTwinComparison(
+      similarityScore: (json['similarity_score'] as num).toDouble(),
+      comparisonDetails: json['comparison_details'] as Map<String, dynamic>,
+      status: json['status'] as String,
+      message: json['message'] as String,
+    );
+
+Map<String, dynamic> _$AccentTwinComparisonToJson(
+        AccentTwinComparison instance) =>
+    <String, dynamic>{
+      'similarity_score': instance.similarityScore,
+      'comparison_details': instance.comparisonDetails,
+      'status': instance.status,
+      'message': instance.message,
+    };
+
+AccentTwinResponse _$AccentTwinResponseFromJson(Map<String, dynamic> json) =>
+    AccentTwinResponse(
+      status: json['status'] as String,
+      message: json['message'] as String,
+      accentTwin:
+          AccentTwin.fromJson(json['accent_twin'] as Map<String, dynamic>),
+      generationInfo: json['generation_info'] as Map<String, dynamic>?,
+    );
+
+Map<String, dynamic> _$AccentTwinResponseToJson(AccentTwinResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'message': instance.message,
+      'accent_twin': instance.accentTwin,
+      'generation_info': instance.generationInfo,
+    };
+
+GenerationInfo _$GenerationInfoFromJson(Map<String, dynamic> json) =>
+    GenerationInfo(
+      provider: json['provider'] as String,
+      voiceModel: json['voice_model'] as String,
+      processingTime: (json['processing_time'] as num?)?.toDouble(),
+      fileSize: (json['file_size'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$GenerationInfoToJson(GenerationInfo instance) =>
+    <String, dynamic>{
+      'provider': instance.provider,
+      'voice_model': instance.voiceModel,
+      'processing_time': instance.processingTime,
+      'file_size': instance.fileSize,
+    };
+
 AccentTwin _$AccentTwinFromJson(Map<String, dynamic> json) => AccentTwin(
-      id: json['id'] as String,
-      originalAnalysisId: json['original_analysis'] as String,
+      id: (json['id'] as num?)?.toInt(),
+      user: json['user'] as String?,
+      userUsername: json['user_username'] as String?,
+      originalSample: (json['original_sample'] as num).toInt(),
       targetAccent: json['target_accent'] as String,
-      generatedAudio: json['generated_audio'] as String,
       ttsProvider: json['tts_provider'] as String,
+      voiceModel: json['voice_model'] as String,
+      generationStatus: json['generation_status'] as String?,
+      accentTwinFile: json['accent_twin_file'] as String?,
+      fileUrl: json['file_url'] as String?,
+      generationParams: json['generation_params'] as Map<String, dynamic>,
+      processingTime: (json['processing_time'] as num?)?.toDouble(),
+      errorMessage: json['error_message'] as String?,
       similarityScore: (json['similarity_score'] as num?)?.toDouble(),
-      createdAt: json['created_at'] as String,
+      phonemeGaps: json['phoneme_gaps'] as Map<String, dynamic>?,
+      isReady: json['is_ready'] as bool?,
+      createdAt: json['created_at'] as String?,
+      updatedAt: json['updated_at'] as String?,
     );
 
 Map<String, dynamic> _$AccentTwinToJson(AccentTwin instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'original_analysis': instance.originalAnalysisId,
+      'user': instance.user,
+      'user_username': instance.userUsername,
+      'original_sample': instance.originalSample,
       'target_accent': instance.targetAccent,
-      'generated_audio': instance.generatedAudio,
       'tts_provider': instance.ttsProvider,
+      'voice_model': instance.voiceModel,
+      'generation_status': instance.generationStatus,
+      'accent_twin_file': instance.accentTwinFile,
+      'file_url': instance.fileUrl,
+      'generation_params': instance.generationParams,
+      'processing_time': instance.processingTime,
+      'error_message': instance.errorMessage,
       'similarity_score': instance.similarityScore,
+      'phoneme_gaps': instance.phonemeGaps,
+      'is_ready': instance.isReady,
       'created_at': instance.createdAt,
+      'updated_at': instance.updatedAt,
     };
 
 TrainingSession _$TrainingSessionFromJson(Map<String, dynamic> json) =>
@@ -190,4 +279,83 @@ Map<String, dynamic> _$UserProgressToJson(UserProgress instance) =>
       'best_streak': instance.bestStreak,
       'total_practice_time': instance.totalPracticeTime,
       'improvement_rate': instance.improvementRate,
+    };
+
+PaginatedVoiceSampleList _$PaginatedVoiceSampleListFromJson(
+        Map<String, dynamic> json) =>
+    PaginatedVoiceSampleList(
+      count: (json['count'] as num).toInt(),
+      next: json['next'] as String?,
+      previous: json['previous'] as String?,
+      results: (json['results'] as List<dynamic>)
+          .map((e) => VoiceSample.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$PaginatedVoiceSampleListToJson(
+        PaginatedVoiceSampleList instance) =>
+    <String, dynamic>{
+      'count': instance.count,
+      'next': instance.next,
+      'previous': instance.previous,
+      'results': instance.results,
+    };
+
+PaginatedAccentTwinList _$PaginatedAccentTwinListFromJson(
+        Map<String, dynamic> json) =>
+    PaginatedAccentTwinList(
+      count: (json['count'] as num).toInt(),
+      next: json['next'] as String?,
+      previous: json['previous'] as String?,
+      results: (json['results'] as List<dynamic>)
+          .map((e) => AccentTwin.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$PaginatedAccentTwinListToJson(
+        PaginatedAccentTwinList instance) =>
+    <String, dynamic>{
+      'count': instance.count,
+      'next': instance.next,
+      'previous': instance.previous,
+      'results': instance.results,
+    };
+
+AccentTwinCreateRequest _$AccentTwinCreateRequestFromJson(
+        Map<String, dynamic> json) =>
+    AccentTwinCreateRequest(
+      originalSample: (json['original_sample'] as num).toInt(),
+      targetAccent: json['target_accent'] as String,
+      ttsProvider: json['tts_provider'] as String?,
+      voiceModel: json['voice_model'] as String?,
+      generationParams: json['generation_params'] as Map<String, dynamic>?,
+    );
+
+Map<String, dynamic> _$AccentTwinCreateRequestToJson(
+        AccentTwinCreateRequest instance) =>
+    <String, dynamic>{
+      'original_sample': instance.originalSample,
+      'target_accent': instance.targetAccent,
+      'tts_provider': instance.ttsProvider,
+      'voice_model': instance.voiceModel,
+      'generation_params': instance.generationParams,
+    };
+
+AccentTwinStatusResponse _$AccentTwinStatusResponseFromJson(
+        Map<String, dynamic> json) =>
+    AccentTwinStatusResponse(
+      status: json['status'] as String,
+      message: json['message'] as String?,
+      accentTwin:
+          AccentTwin.fromJson(json['accent_twin'] as Map<String, dynamic>),
+      generationInfo: json['generation_info'] as Map<String, dynamic>?,
+    );
+
+Map<String, dynamic> _$AccentTwinStatusResponseToJson(
+        AccentTwinStatusResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'message': instance.message,
+      'accent_twin': instance.accentTwin,
+      'generation_info': instance.generationInfo,
     };

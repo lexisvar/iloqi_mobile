@@ -66,6 +66,22 @@ class VoiceSample {
 }
 
 @JsonSerializable()
+class VoiceAnalysisResponse {
+  final String status;
+  final String message;
+  final AnalysisData analysis;
+
+  const VoiceAnalysisResponse({
+    required this.status,
+    required this.message,
+    required this.analysis,
+  });
+
+  factory VoiceAnalysisResponse.fromJson(Map<String, dynamic> json) => _$VoiceAnalysisResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$VoiceAnalysisResponseToJson(this);
+}
+
+@JsonSerializable()
 class VoiceAnalysis {
   final String status;
   final String message;
@@ -166,33 +182,125 @@ class AudioFeatures {
 }
 
 @JsonSerializable()
+class AccentTwinComparison {
+  @JsonKey(name: 'similarity_score')
+  final double similarityScore;
+  @JsonKey(name: 'comparison_details')
+  final Map<String, dynamic> comparisonDetails;
+  final String status;
+  final String message;
+
+  const AccentTwinComparison({
+    required this.similarityScore,
+    required this.comparisonDetails,
+    required this.status,
+    required this.message,
+  });
+
+  factory AccentTwinComparison.fromJson(Map<String, dynamic> json) => _$AccentTwinComparisonFromJson(json);
+  Map<String, dynamic> toJson() => _$AccentTwinComparisonToJson(this);
+}
+
+@JsonSerializable()
+class AccentTwinResponse {
+  final String status;
+  final String message;
+  @JsonKey(name: 'accent_twin')
+  final AccentTwin accentTwin;
+  @JsonKey(name: 'generation_info')
+  final Map<String, dynamic>? generationInfo;
+
+  const AccentTwinResponse({
+    required this.status,
+    required this.message,
+    required this.accentTwin,
+    this.generationInfo,
+  });
+
+  factory AccentTwinResponse.fromJson(Map<String, dynamic> json) => _$AccentTwinResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$AccentTwinResponseToJson(this);
+}
+
+@JsonSerializable()
+class GenerationInfo {
+  final String provider;
+  @JsonKey(name: 'voice_model')
+  final String voiceModel;
+  @JsonKey(name: 'processing_time')
+  final double? processingTime;
+  @JsonKey(name: 'file_size')
+  final int? fileSize;
+
+  const GenerationInfo({
+    required this.provider,
+    required this.voiceModel,
+    this.processingTime,
+    this.fileSize,
+  });
+
+  factory GenerationInfo.fromJson(Map<String, dynamic> json) => _$GenerationInfoFromJson(json);
+  Map<String, dynamic> toJson() => _$GenerationInfoToJson(this);
+}
+
+@JsonSerializable()
 class AccentTwin {
-  final String id;
-  @JsonKey(name: 'original_analysis')
-  final String originalAnalysisId;
+  final int? id; // Made optional for creation responses
+  final String? user; // Made optional for creation responses
+  @JsonKey(name: 'user_username')
+  final String? userUsername; // Made optional for creation responses
+  @JsonKey(name: 'original_sample')
+  final int originalSample;
   @JsonKey(name: 'target_accent')
   final String targetAccent;
-  @JsonKey(name: 'generated_audio')
-  final String generatedAudio;
   @JsonKey(name: 'tts_provider')
   final String ttsProvider;
+  @JsonKey(name: 'voice_model')
+  final String voiceModel;
+  @JsonKey(name: 'generation_status')
+  final String? generationStatus; // Made optional for creation responses
+  @JsonKey(name: 'accent_twin_file')
+  final String? accentTwinFile;
+  @JsonKey(name: 'file_url')
+  final String? fileUrl;
+  @JsonKey(name: 'generation_params')
+  final Map<String, dynamic> generationParams;
+  @JsonKey(name: 'processing_time')
+  final double? processingTime;
+  @JsonKey(name: 'error_message')
+  final String? errorMessage; // Made optional for creation responses
   @JsonKey(name: 'similarity_score')
   final double? similarityScore;
+  @JsonKey(name: 'phoneme_gaps')
+  final Map<String, dynamic>? phonemeGaps; // Made optional for creation responses
+  @JsonKey(name: 'is_ready')
+  final bool? isReady; // Made optional for creation responses
   @JsonKey(name: 'created_at')
-  final String createdAt;
+  final String? createdAt; // Made optional for creation responses
+  @JsonKey(name: 'updated_at')
+  final String? updatedAt; // Made optional for creation responses
 
   const AccentTwin({
-    required this.id,
-    required this.originalAnalysisId,
+    this.id,
+    this.user,
+    this.userUsername,
+    required this.originalSample,
     required this.targetAccent,
-    required this.generatedAudio,
     required this.ttsProvider,
+    required this.voiceModel,
+    this.generationStatus,
+    this.accentTwinFile,
+    this.fileUrl,
+    required this.generationParams,
+    this.processingTime,
+    this.errorMessage,
     this.similarityScore,
-    required this.createdAt,
+    this.phonemeGaps,
+    this.isReady,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory AccentTwin.fromJson(Map<String, dynamic> json) => _$AccentTwinFromJson(json);
-
   Map<String, dynamic> toJson() => _$AccentTwinToJson(this);
 }
 
@@ -266,6 +374,87 @@ class UserProgress {
   factory UserProgress.fromJson(Map<String, dynamic> json) => _$UserProgressFromJson(json);
 
   Map<String, dynamic> toJson() => _$UserProgressToJson(this);
+}
+
+@JsonSerializable()
+class PaginatedVoiceSampleList {
+  final int count;
+  final String? next;
+  final String? previous;
+  final List<VoiceSample> results;
+
+  const PaginatedVoiceSampleList({
+    required this.count,
+    this.next,
+    this.previous,
+    required this.results,
+  });
+
+  factory PaginatedVoiceSampleList.fromJson(Map<String, dynamic> json) => _$PaginatedVoiceSampleListFromJson(json);
+  Map<String, dynamic> toJson() => _$PaginatedVoiceSampleListToJson(this);
+}
+
+@JsonSerializable()
+class PaginatedAccentTwinList {
+  final int count;
+  final String? next;
+  final String? previous;
+  final List<AccentTwin> results;
+
+  const PaginatedAccentTwinList({
+    required this.count,
+    this.next,
+    this.previous,
+    required this.results,
+  });
+
+  factory PaginatedAccentTwinList.fromJson(Map<String, dynamic> json) => _$PaginatedAccentTwinListFromJson(json);
+  Map<String, dynamic> toJson() => _$PaginatedAccentTwinListToJson(this);
+}
+
+@JsonSerializable()
+class AccentTwinCreateRequest {
+  @JsonKey(name: 'original_sample')
+  final int originalSample;
+  @JsonKey(name: 'target_accent')
+  final String targetAccent;
+  @JsonKey(name: 'tts_provider')
+  final String? ttsProvider;
+  @JsonKey(name: 'voice_model')
+  final String? voiceModel;
+  @JsonKey(name: 'generation_params')
+  final Map<String, dynamic>? generationParams;
+
+  const AccentTwinCreateRequest({
+    required this.originalSample,
+    required this.targetAccent,
+    this.ttsProvider,
+    this.voiceModel,
+    this.generationParams,
+  });
+
+  factory AccentTwinCreateRequest.fromJson(Map<String, dynamic> json) => _$AccentTwinCreateRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$AccentTwinCreateRequestToJson(this);
+}
+
+@JsonSerializable()
+class AccentTwinStatusResponse {
+  final String status;
+  final String? message;
+  @JsonKey(name: 'accent_twin')
+  final AccentTwin accentTwin;
+  @JsonKey(name: 'generation_info')
+  final Map<String, dynamic>? generationInfo;
+
+  const AccentTwinStatusResponse({
+    required this.status,
+    this.message,
+    required this.accentTwin,
+    this.generationInfo,
+  });
+
+  factory AccentTwinStatusResponse.fromJson(Map<String, dynamic> json) => _$AccentTwinStatusResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$AccentTwinStatusResponseToJson(this);
 }
 
 enum SupportedAccent {

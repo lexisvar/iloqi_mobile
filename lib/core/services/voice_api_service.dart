@@ -17,31 +17,34 @@ abstract class VoiceApiService {
   Future<VoiceSample> uploadVoiceSample(@Part() File file);
 
   // Then analyze the uploaded sample
-  @POST('samples/voice-samples/{sampleId}/analyze/')
-  Future<VoiceAnalysis> analyzeVoiceSample(@Path('sampleId') int sampleId);
+  @POST('samples/voice-samples/{sample_id}/analyze/')
+  Future<VoiceAnalysisResponse> analyzeVoiceSample(@Path('sample_id') int sampleId);
 
   // Get analysis results
-  @GET('samples/voice-samples/{sampleId}/results/')
-  Future<VoiceAnalysis> getAnalysisResults(@Path('sampleId') int sampleId);
+  @GET('samples/voice-samples/{sample_id}/results/')
+  Future<VoiceSample> getAnalysisResults(@Path('sample_id') int sampleId);
 
   // Get voice samples list
   @GET('samples/voice-samples/')
-  Future<List<VoiceSample>> getVoiceSamplesList({
+  Future<PaginatedVoiceSampleList> getVoiceSamplesList({
     @Query('page') int? page,
     @Query('ordering') String? ordering,
     @Query('search') String? search,
   });
 
-  // Generate accent twin
-  @POST('samples/voice-samples/{sampleId}/generate-accent-twin/')
-  Future<AccentTwin> generateAccentTwin(
-    @Path('sampleId') int sampleId,
-    @Body() Map<String, dynamic> request,
+  // Generate accent twin (create new accent twin directly)
+  @POST('samples/accent-twins/')
+  Future<AccentTwin> createAccentTwin(
+    @Body() AccentTwinCreateRequest request,
   );
+
+  // Check accent twin status
+  @GET('samples/accent-twins/{twin_id}/status/')
+  Future<AccentTwinStatusResponse> getAccentTwinStatus(@Path('twin_id') int twinId);
 
   // Get accent twins list
   @GET('samples/accent-twins/')
-  Future<List<AccentTwin>> getAccentTwinsList({
+  Future<PaginatedAccentTwinList> getAccentTwinsList({
     @Query('page') int? page,
     @Query('ordering') String? ordering,
     @Query('search') String? search,
@@ -51,6 +54,18 @@ abstract class VoiceApiService {
   @GET('samples/accent-twins/{id}/')
   Future<AccentTwin> getAccentTwin(@Path('id') int id);
 
+  // Compare accent twin with original
+  @POST('samples/accent-twins/{twin_id}/compare/')
+  Future<AccentTwinComparison> compareAccentTwin(
+    @Path('twin_id') int twinId,
+    @Body() Map<String, dynamic> request,
+  );
+
+  // Get available accents
+  @GET('samples/accent-twins/available-accents/')
+  Future<List<String>> getAvailableAccents();
+
+  // Training endpoints
   @POST('training/session/')
   Future<TrainingSession> createTrainingSession(@Body() Map<String, dynamic> request);
 

@@ -17,13 +17,30 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   Future<void> _checkAuthStatus() async {
     try {
       final token = await StorageService.read('access_token');
-      if (token != null) {
-        final user = await _authApi.getCurrentUser();
-        state = AsyncValue.data(user);
+      final refreshToken = await StorageService.read('refresh_token');
+      
+      if (token != null && refreshToken != null) {
+        print('🔐 Found tokens, verifying...');
+        // Try to verify token first
+        try {
+          await _authApi.verifyToken({'token': token});
+          print('🔐 Token is valid, getting user profile...');
+          
+          final user = await _authApi.getCurrentUser();
+          state = AsyncValue.data(user);
+          print('🔐 Auth state initialized with user: ${user.email}');
+        } catch (e) {
+          print('🔐 Token verification failed, clearing auth state: $e');
+          await StorageService.delete('access_token');
+          await StorageService.delete('refresh_token');
+          state = const AsyncValue.data(null);
+        }
       } else {
+        print('🔐 No tokens found, user not authenticated');
         state = const AsyncValue.data(null);
       }
     } catch (e) {
+      print('🔐 Error in _checkAuthStatus: $e');
       state = const AsyncValue.data(null);
     }
   }

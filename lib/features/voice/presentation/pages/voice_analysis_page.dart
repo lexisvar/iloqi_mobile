@@ -505,41 +505,18 @@ class _AnalysisResults extends ConsumerWidget {
                       
                       // Accent Twin Result
                       if (accentTwinState.hasValue && accentTwinState.value != null)
-                        Container(
-                          margin: const EdgeInsets.only(top: 16),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.green.shade200),
-                          ),
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(Icons.check_circle, color: Colors.green.shade600),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Accent Twin Generated!',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.green.shade800,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Target Accent: ${accentTwinState.value!.targetAccent.toUpperCase()}',
-                                style: const TextStyle(fontSize: 14),
-                              ),
-                              if (accentTwinState.value!.similarityScore != null)
-                                Text(
-                                  'Similarity Score: ${(accentTwinState.value!.similarityScore! * 100).toStringAsFixed(1)}%',
-                                  style: const TextStyle(fontSize: 14),
-                                ),
-                            ],
-                          ),
+                        _AccentTwinResult(
+                          accentTwin: accentTwinState.value!,
+                          onPlayAccentTwin: (audioUrl) {
+                            ref.read(accentTwinProvider.notifier).playAccentTwin(audioUrl);
+                          },
+                          onRefresh: () {
+                            final accentTwinId = accentTwinState.value?.id;
+                            if (accentTwinId != null) {
+                              ref.read(accentTwinProvider.notifier)
+                                  .refreshAccentTwin(accentTwinId);
+                            }
+                          },
                         ),
                       
                       // Accent Twin Loading
@@ -578,46 +555,55 @@ class _AnalysisResults extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Analyzing your voice...'),
-          ],
+      loading: () => const Expanded(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Analyzing your voice...'),
+            ],
+          ),
         ),
       ),
-      error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline,
-              size: 64,
-              color: Colors.red.shade400,
+      error: (error, stack) => Expanded(
+        child: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red.shade400,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Analysis failed',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.red.shade800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    error.toString(),
+                    style: TextStyle(color: Colors.red.shade600),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref.read(voiceAnalysisProvider.notifier).clearAnalysis(),
+                  child: const Text('Try Again'),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              'Analysis failed',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.red.shade800,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: TextStyle(color: Colors.red.shade600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => ref.read(voiceAnalysisProvider.notifier).clearAnalysis(),
-              child: const Text('Try Again'),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -685,5 +671,214 @@ class _AccentChip extends StatelessWidget {
       backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
       side: BorderSide(color: Theme.of(context).primaryColor.withOpacity(0.3)),
     );
+  }
+}
+
+class _AccentTwinResult extends StatelessWidget {
+  final AccentTwin accentTwin;
+  final Function(String) onPlayAccentTwin;
+  final VoidCallback onRefresh;
+
+  const _AccentTwinResult({
+    required this.accentTwin,
+    required this.onPlayAccentTwin,
+    required this.onRefresh,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _getBackgroundColor(context),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: _getBorderColor(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Status Header
+          Row(
+            children: [
+              Icon(_getStatusIcon(), color: _getStatusColor(context)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _getStatusText(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: _getStatusColor(context),
+                  ),
+                ),
+              ),
+              if (accentTwin.generationStatus == 'pending')
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(_getStatusColor(context)),
+                  ),
+                ),
+            ],
+          ),
+          
+          const SizedBox(height: 8),
+          
+          // Accent Twin Details
+          Text(
+            'Target Accent: ${accentTwin.targetAccent.toUpperCase()}',
+            style: const TextStyle(fontSize: 14),
+          ),
+          Text(
+            'Provider: ${accentTwin.ttsProvider.toUpperCase()}',
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          
+          // Processing Time
+          if (accentTwin.processingTime != null)
+            Text(
+              'Processing Time: ${accentTwin.processingTime!.toStringAsFixed(1)}s',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          
+          // Similarity Score
+          if (accentTwin.similarityScore != null)
+            Text(
+              'Similarity Score: ${(accentTwin.similarityScore! * 100).toStringAsFixed(1)}%',
+              style: const TextStyle(fontSize: 14),
+            ),
+          
+          // Error Message
+          if (accentTwin.errorMessage?.isNotEmpty == true)
+            Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.red.shade200),
+              ),
+              child: Text(
+                'Error: ${accentTwin.errorMessage}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Colors.red.shade800,
+                ),
+              ),
+            ),
+          
+          const SizedBox(height: 12),
+          
+          // Action Buttons
+          Row(
+            children: [
+              // Play Button (only if ready and has file)
+              if (accentTwin.isReady == true && accentTwin.fileUrl != null)
+                ElevatedButton.icon(
+                  onPressed: () => onPlayAccentTwin(accentTwin.fileUrl!),
+                  icon: const Icon(Icons.play_arrow, size: 18),
+                  label: const Text('Play'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(80, 32),
+                  ),
+                ),
+              
+              const SizedBox(width: 8),
+              
+              // Refresh Button
+              OutlinedButton.icon(
+                onPressed: onRefresh,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Refresh'),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(90, 32),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Color _getBackgroundColor(BuildContext context) {
+    switch (accentTwin.generationStatus) {
+      case 'completed':
+        return Colors.green.shade50;
+      case 'pending':
+      case 'processing':
+        return Colors.blue.shade50;
+      case 'failed':
+      case 'error':
+        return Colors.red.shade50;
+      default:
+        return Colors.grey.shade50;
+    }
+  }
+
+  Color _getBorderColor(BuildContext context) {
+    switch (accentTwin.generationStatus) {
+      case 'completed':
+        return Colors.green.shade200;
+      case 'pending':
+      case 'processing':
+        return Colors.blue.shade200;
+      case 'failed':
+      case 'error':
+        return Colors.red.shade200;
+      default:
+        return Colors.grey.shade200;
+    }
+  }
+
+  Color _getStatusColor(BuildContext context) {
+    switch (accentTwin.generationStatus) {
+      case 'completed':
+        return Colors.green.shade600;
+      case 'pending':
+      case 'processing':
+        return Colors.blue.shade600;
+      case 'failed':
+      case 'error':
+        return Colors.red.shade600;
+      default:
+        return Colors.grey.shade600;
+    }
+  }
+
+  IconData _getStatusIcon() {
+    switch (accentTwin.generationStatus) {
+      case 'completed':
+        return Icons.check_circle;
+      case 'pending':
+      case 'processing':
+        return Icons.hourglass_empty;
+      case 'failed':
+      case 'error':
+        return Icons.error;
+      default:
+        return Icons.info;
+    }
+  }
+
+  String _getStatusText() {
+    switch (accentTwin.generationStatus) {
+      case 'completed':
+        return 'Accent Twin Ready!';
+      case 'pending':
+        return 'Generating Accent Twin...';
+      case 'processing':
+        return 'Processing Audio...';
+      case 'failed':
+        return 'Generation Failed';
+      case 'error':
+        return 'Error Occurred';
+      default:
+        return 'Status: ${accentTwin.generationStatus}';
+    }
   }
 }

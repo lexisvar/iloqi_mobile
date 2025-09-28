@@ -65,12 +65,12 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<VoiceAnalysis> analyzeVoiceSample(int sampleId) async {
+  Future<VoiceAnalysisResponse> analyzeVoiceSample(int sampleId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<VoiceAnalysis>(Options(
+    final _options = _setStreamType<VoiceAnalysisResponse>(Options(
       method: 'POST',
       headers: _headers,
       extra: _extra,
@@ -87,9 +87,9 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late VoiceAnalysis _value;
+    late VoiceAnalysisResponse _value;
     try {
-      _value = VoiceAnalysis.fromJson(_result.data!);
+      _value = VoiceAnalysisResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -98,12 +98,12 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<VoiceAnalysis> getAnalysisResults(int sampleId) async {
+  Future<VoiceSample> getAnalysisResults(int sampleId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<VoiceAnalysis>(Options(
+    final _options = _setStreamType<VoiceSample>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -120,9 +120,9 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late VoiceAnalysis _value;
+    late VoiceSample _value;
     try {
-      _value = VoiceAnalysis.fromJson(_result.data!);
+      _value = VoiceSample.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -131,7 +131,7 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<List<VoiceSample>> getVoiceSamplesList({
+  Future<PaginatedVoiceSampleList> getVoiceSamplesList({
     int? page,
     String? ordering,
     String? search,
@@ -145,7 +145,7 @@ class _VoiceApiService implements VoiceApiService {
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<VoiceSample>>(Options(
+    final _options = _setStreamType<PaginatedVoiceSampleList>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -161,12 +161,10 @@ class _VoiceApiService implements VoiceApiService {
           _dio.options.baseUrl,
           baseUrl,
         )));
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<VoiceSample> _value;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PaginatedVoiceSampleList _value;
     try {
-      _value = _result.data!
-          .map((dynamic i) => VoiceSample.fromJson(i as Map<String, dynamic>))
-          .toList();
+      _value = PaginatedVoiceSampleList.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -175,15 +173,12 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<AccentTwin> generateAccentTwin(
-    int sampleId,
-    Map<String, dynamic> request,
-  ) async {
+  Future<AccentTwin> createAccentTwin(AccentTwinCreateRequest request) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
-    _data.addAll(request);
+    _data.addAll(request.toJson());
     final _options = _setStreamType<AccentTwin>(Options(
       method: 'POST',
       headers: _headers,
@@ -191,7 +186,7 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'samples/voice-samples/${sampleId}/generate-accent-twin/',
+          'samples/accent-twins/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -212,7 +207,40 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<List<AccentTwin>> getAccentTwinsList({
+  Future<AccentTwinStatusResponse> getAccentTwinStatus(int twinId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<AccentTwinStatusResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/accent-twins/${twinId}/status/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AccentTwinStatusResponse _value;
+    try {
+      _value = AccentTwinStatusResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<PaginatedAccentTwinList> getAccentTwinsList({
     int? page,
     String? ordering,
     String? search,
@@ -226,7 +254,7 @@ class _VoiceApiService implements VoiceApiService {
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<AccentTwin>>(Options(
+    final _options = _setStreamType<PaginatedAccentTwinList>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -242,12 +270,10 @@ class _VoiceApiService implements VoiceApiService {
           _dio.options.baseUrl,
           baseUrl,
         )));
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<AccentTwin> _value;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PaginatedAccentTwinList _value;
     try {
-      _value = _result.data!
-          .map((dynamic i) => AccentTwin.fromJson(i as Map<String, dynamic>))
-          .toList();
+      _value = PaginatedAccentTwinList.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -281,6 +307,76 @@ class _VoiceApiService implements VoiceApiService {
     late AccentTwin _value;
     try {
       _value = AccentTwin.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<AccentTwinComparison> compareAccentTwin(
+    int twinId,
+    Map<String, dynamic> request,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request);
+    final _options = _setStreamType<AccentTwinComparison>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/accent-twins/${twinId}/compare/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AccentTwinComparison _value;
+    try {
+      _value = AccentTwinComparison.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<List<String>> getAvailableAccents() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<List<String>>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/accent-twins/available-accents/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<List<dynamic>>(_options);
+    late List<String> _value;
+    try {
+      _value = _result.data!.cast<String>();
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
