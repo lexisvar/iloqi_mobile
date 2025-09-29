@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,6 +13,7 @@ class VoiceAnalysisPage extends ConsumerWidget {
     final recordingState = ref.watch(voiceRecordingProvider);
     final analysisState = ref.watch(voiceAnalysisProvider);
     final accentTwinState = ref.watch(accentTwinProvider);
+    final audioPlaybackState = ref.watch(audioPlaybackProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -82,64 +84,116 @@ class _RecordingSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return SingleChildScrollView(
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            spreadRadius: 0,
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Recording Button
+          // Recording Button with animation
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            width: recordingState.isRecording ? 220 : 200,
+            height: recordingState.isRecording ? 220 : 200,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: recordingState.isRecording 
+                    ? [Colors.red.withOpacity(0.1), Colors.red.withOpacity(0.2)]
+                    : [Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.2)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              border: Border.all(
+                color: recordingState.isRecording ? Colors.red : Colors.blue,
+                width: 3,
+              ),
+              boxShadow: [
+                if (recordingState.isRecording)
+                  BoxShadow(
+                    color: Colors.red.withOpacity(0.3),
+                    blurRadius: 20,
+                    spreadRadius: 5,
+                  ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(200),
+                onTap: () {
+                  if (recordingState.isRecording) {
+                    ref.read(voiceRecordingProvider.notifier).stopRecording();
+                  } else {
+                    ref.read(voiceRecordingProvider.notifier).startRecording();
+                  }
+                },
+                child: Container(
+                  decoration: const BoxDecoration(shape: BoxShape.circle),
+                  child: Icon(
+                    recordingState.isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                    size: 80,
+                    color: recordingState.isRecording ? Colors.red : Colors.blue,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // Status Text with better styling
           Container(
-            width: 200,
-            height: 200,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: recordingState.isRecording 
-                ? Colors.red.withOpacity(0.1)
-                : Colors.blue.withOpacity(0.1),
-            border: Border.all(
-              color: recordingState.isRecording ? Colors.red : Colors.blue,
-              width: 4,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: _getStatusColor(recordingState).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(25),
+              border: Border.all(
+                color: _getStatusColor(recordingState).withOpacity(0.3),
+              ),
+            ),
+            child: Text(
+              _getStatusText(),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: _getStatusColor(recordingState),
+              ),
+              textAlign: TextAlign.center,
             ),
           ),
-          child: IconButton(
-            iconSize: 80,
-            icon: Icon(
-              recordingState.isRecording ? Icons.stop : Icons.mic,
-              color: recordingState.isRecording ? Colors.red : Colors.blue,
+          
+          const SizedBox(height: 16),
+          
+          // Recording Duration with better styling
+          if (recordingState.isRecording)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                _formatDuration(recordingState.recordingDuration),
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.red.shade600,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
             ),
-            onPressed: () {
-              if (recordingState.isRecording) {
-                ref.read(voiceRecordingProvider.notifier).stopRecording();
-              } else {
-                ref.read(voiceRecordingProvider.notifier).startRecording();
-              }
-            },
-          ),
-        ),
-        
-        const SizedBox(height: 16),
-        
-        // Status Text
-        Text(
-          _getStatusText(),
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w500,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        
-        const SizedBox(height: 8),
-        
-        // Recording Duration
-        if (recordingState.isRecording)
-          Text(
-            _formatDuration(recordingState.recordingDuration),
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.red.shade600,
-            ),
-          ),
         
         // Audio Level Indicator
         if (recordingState.isRecording && recordingState.audioLevel != null)
@@ -226,6 +280,31 @@ class _RecordingSection extends ConsumerWidget {
         return 'Recording analyzed successfully';
       case RecordingStatus.error:
         return 'Error occurred';
+    }
+  }
+
+  Color _getStatusColor() {
+    if (recordingState.errorMessage != null) {
+      return Colors.red;
+    }
+    
+    switch (recordingState.status) {
+      case RecordingStatus.idle:
+        return Colors.grey[600]!;
+      case RecordingStatus.recording:
+        return Colors.red;
+      case RecordingStatus.stopped:
+        return recordingState.hasRecording 
+            ? Colors.green
+            : Colors.grey[600]!;
+      case RecordingStatus.playing:
+        return Colors.blue;
+      case RecordingStatus.analyzing:
+        return Colors.orange;
+      case RecordingStatus.analyzed:
+        return Colors.green;
+      case RecordingStatus.error:
+        return Colors.red;
     }
   }
 
@@ -507,8 +586,18 @@ class _AnalysisResults extends ConsumerWidget {
                       if (accentTwinState.hasValue && accentTwinState.value != null)
                         _AccentTwinResult(
                           accentTwin: accentTwinState.value!,
+                          audioPlaybackState: audioPlaybackState,
                           onPlayAccentTwin: (audioUrl) {
                             ref.read(accentTwinProvider.notifier).playAccentTwin(audioUrl);
+                          },
+                          onPauseAccentTwin: () {
+                            ref.read(accentTwinProvider.notifier).pauseAccentTwinPlayback();
+                          },
+                          onResumeAccentTwin: () {
+                            ref.read(accentTwinProvider.notifier).resumeAccentTwinPlayback();
+                          },
+                          onStopAccentTwin: () {
+                            ref.read(accentTwinProvider.notifier).stopAccentTwinPlayback();
                           },
                           onRefresh: () {
                             final accentTwinId = accentTwinState.value?.id;
@@ -677,12 +766,20 @@ class _AccentChip extends StatelessWidget {
 class _AccentTwinResult extends StatelessWidget {
   final AccentTwin accentTwin;
   final Function(String) onPlayAccentTwin;
+  final VoidCallback onPauseAccentTwin;
+  final VoidCallback onResumeAccentTwin;
+  final VoidCallback onStopAccentTwin;
   final VoidCallback onRefresh;
+  final AudioPlaybackState audioPlaybackState;
 
   const _AccentTwinResult({
     required this.accentTwin,
     required this.onPlayAccentTwin,
+    required this.onPauseAccentTwin,
+    required this.onResumeAccentTwin,
+    required this.onStopAccentTwin,
     required this.onRefresh,
+    required this.audioPlaybackState,
   });
 
   @override
@@ -774,18 +871,74 @@ class _AccentTwinResult extends StatelessWidget {
           // Action Buttons
           Row(
             children: [
-              // Play Button (only if ready and has file)
-              if (accentTwin.isReady == true && accentTwin.fileUrl != null)
-                ElevatedButton.icon(
-                  onPressed: () => onPlayAccentTwin(accentTwin.fileUrl!),
-                  icon: const Icon(Icons.play_arrow, size: 18),
-                  label: const Text('Play'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size(80, 32),
+              // Enhanced Audio Controls (only if ready and has file)
+              if (accentTwin.isReady == true && accentTwin.fileUrl != null) ...[
+                // Determine if this is the currently playing audio
+                if (audioPlaybackState.currentAudioUrl == accentTwin.fileUrl) ...[
+                  // Currently playing this file - show pause/stop controls
+                  if (audioPlaybackState.isPlaying) ...[
+                    // Pause button
+                    ElevatedButton.icon(
+                      onPressed: onPauseAccentTwin,
+                      icon: const Icon(Icons.pause, size: 18),
+                      label: const Text('Pause'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(80, 32),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Stop button
+                    ElevatedButton.icon(
+                      onPressed: onStopAccentTwin,
+                      icon: const Icon(Icons.stop, size: 18),
+                      label: const Text('Stop'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(70, 32),
+                      ),
+                    ),
+                  ] else if (audioPlaybackState.isPaused) ...[
+                    // Resume button
+                    ElevatedButton.icon(
+                      onPressed: onResumeAccentTwin,
+                      icon: const Icon(Icons.play_arrow, size: 18),
+                      label: const Text('Resume'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(85, 32),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Stop button
+                    ElevatedButton.icon(
+                      onPressed: onStopAccentTwin,
+                      icon: const Icon(Icons.stop, size: 18),
+                      label: const Text('Stop'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(70, 32),
+                      ),
+                    ),
+                  ]
+                ] else ...[
+                  // Not currently playing this file - show play button
+                  ElevatedButton.icon(
+                    onPressed: () => onPlayAccentTwin(accentTwin.fileUrl!),
+                    icon: const Icon(Icons.play_arrow, size: 18),
+                    label: const Text('Play'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(80, 32),
+                    ),
                   ),
-                ),
+                ],
+              ],
               
               const SizedBox(width: 8),
               

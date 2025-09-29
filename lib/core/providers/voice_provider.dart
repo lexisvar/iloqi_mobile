@@ -14,7 +14,17 @@ import '../services/voice_api_service.dart';
 import '../di/injection_container.dart';
 
 // Providers
-final voiceApiServiceProvider = Provider<VoiceApiService>((ref) {
+final voiceApiServiceProviclass AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
+  final VoiceApiService _voiceApiService;
+  final AudioPlaybackNotifier _audioPlaybackNotifier;
+  Timer? _pollTimer;
+  AudioPlayer? _audioPlayer;
+  final Map<String, String> _downloadedFiles = {}; // Cache for downloaded files
+
+  AccentTwinNotifier(this._voiceApiService, this._audioPlaybackNotifier) 
+      : super(const AsyncValue.data(null));
+
+  Future<void> generateAccentTwin(int sampleId, String targetAccent, {int attempt = 1}) async {vider<VoiceApiService>((ref) {
   return ServiceLocator.instance.voiceApi;
 });
 
@@ -27,7 +37,10 @@ final voiceAnalysisProvider = StateNotifierProvider<VoiceAnalysisNotifier, Async
 });
 
 final accentTwinProvider = StateNotifierProvider<AccentTwinNotifier, AsyncValue<AccentTwin?>>((ref) {
-  return AccentTwinNotifier(ref.watch(voiceApiServiceProvider));
+  return AccentTwinNotifier(
+    ref.watch(voiceApiServiceProvider), 
+    ref.watch(audioPlaybackProvider.notifier)
+  );
 });
 
 // Voice Recording State
@@ -393,7 +406,68 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
   }
 }
 
+//-----------------------------------------------------------
+// Audio player state management for accent twin playback
+//-----------------------------------------------------------
+
+enum AudioPlayerState { stopped, playing, paused }
+
+class AudioPlaybackState {
+  final AudioPlayerState state;
+  final String? currentAudioUrl;
+  final Duration? position;
+  final Duration? duration;
+
+  const AudioPlaybackState({
+    this.state = AudioPlayerState.stopped,
+    this.currentAudioUrl,
+    this.position,
+    this.duration,
+  });
+
+  AudioPlaybackState copyWith({
+    AudioPlayerState? state,
+    String? currentAudioUrl,
+    Duration? position,
+    Duration? duration,
+  }) {
+    return AudioPlaybackState(
+      state: state ?? this.state,
+      currentAudioUrl: currentAudioUrl ?? this.currentAudioUrl,
+      position: position ?? this.position,
+      duration: duration ?? this.duration,
+    );
+  }
+
+  bool get isPlaying => state == AudioPlayerState.playing;
+  bool get isPaused => state == AudioPlayerState.paused;
+  bool get isStopped => state == AudioPlayerState.stopped;
+}
+
+final audioPlaybackProvider = StateNotifierProvider<AudioPlaybackNotifier, AudioPlaybackState>((ref) {
+  return AudioPlaybackNotifier();
+});
+
+class AudioPlaybackNotifier extends StateNotifier<AudioPlaybackState> {
+  AudioPlaybackNotifier() : super(const AudioPlaybackState());
+
+  void updateState(AudioPlayerState audioState, {String? url, Duration? position, Duration? duration}) {
+    state = state.copyWith(
+      state: audioState,
+      currentAudioUrl: url ?? state.currentAudioUrl,
+      position: position,
+      duration: duration,
+    );
+  }
+
+  void reset() {
+    state = const AudioPlaybackState();
+  }
+}
+
+//-----------------------------------------------------------
 // Voice Analysis Notifier
+//-----------------------------------------------------------
 class VoiceAnalysisNotifier extends StateNotifier<AsyncValue<VoiceAnalysis?>> {
   final VoiceApiService _voiceApiService;
   VoiceSample? _currentSample; // Store the uploaded sample
@@ -697,6 +771,9 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
 
   Future<void> playAccentTwin(String audioUrl) async {
     try {
+      // Update playback state to playing
+      _audioPlaybackNotifier.updateState(AudioPlayerState.playing, url: audioUrl);
+      
       // Stop any existing playback first to avoid conflicts
       await stopAccentTwinPlayback();
       
@@ -741,15 +818,28 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
             // Add completion listener for debugging
             _audioPlayer!.onPlayerComplete.listen((_) {
               debugPrint('🎵 Cached file playback completed');
+              _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
             });
             
-            _audioPlayer!.onPlayerStateChanged.listen((state) {
-              debugPrint('🎵 Cached file player state: $state');
-            });
-            
-            return;
+            _audioPlayer!.onPlayerStateChanged.listen((playerState) {
+              debugPrint('🎵 Cached file player state: $playerState');
+              // Update our state based on player state
+              switch (playerState) {
+                case PlayerState.playing:
+                  _audioPlaybackNotifier.updateState(AudioPlayerState.playing, url: audioUrl);
+                  break;
+                case PlayerState.paused:
+                  _audioPlaybackNotifier.updateState(AudioPlayerState.paused, url: audioUrl);
+                  break;
+                case PlayerState.stopped:
+                case PlayerState.completed:
+                  _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
+                  break;
+              }
+            });            return;
           } catch (cachedError) {
             debugPrint('❌ Cached file playback failed: $cachedError');
+            _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
             // Fall through to download and try again
           }
         } else {
@@ -787,6 +877,7 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
       
     } catch (e) {
       debugPrint('❌ Error playing accent twin: $e');
+      _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
       
       // Skip the first fallback and go straight to download for HTTP URLs
       if (audioUrl.startsWith('http://')) {
@@ -810,9 +901,11 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
           
           await _audioPlayer!.play(UrlSource(audioUrl));
           debugPrint('✅ Fallback audio configuration worked');
+          _audioPlaybackNotifier.updateState(AudioPlayerState.playing, url: audioUrl);
           
         } catch (fallbackError) {
           debugPrint('❌ Fallback audio configuration also failed: $fallbackError');
+          _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
         }
       }
     }
@@ -901,10 +994,36 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
     try {
       if (_audioPlayer != null) {
         await _audioPlayer!.stop();
+        _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
         debugPrint('🔊 Accent twin playback stopped');
       }
     } catch (e) {
       debugPrint('❌ Error stopping accent twin playback: $e');
+      _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
+    }
+  }
+
+  Future<void> pauseAccentTwinPlayback() async {
+    try {
+      if (_audioPlayer != null) {
+        await _audioPlayer!.pause();
+        _audioPlaybackNotifier.updateState(AudioPlayerState.paused);
+        debugPrint('⏸️ Accent twin playback paused');
+      }
+    } catch (e) {
+      debugPrint('❌ Error pausing accent twin playback: $e');
+    }
+  }
+
+  Future<void> resumeAccentTwinPlayback() async {
+    try {
+      if (_audioPlayer != null) {
+        await _audioPlayer!.resume();
+        _audioPlaybackNotifier.updateState(AudioPlayerState.playing);
+        debugPrint('▶️ Accent twin playback resumed');
+      }
+    } catch (e) {
+      debugPrint('❌ Error resuming accent twin playback: $e');
     }
   }
 
