@@ -170,7 +170,7 @@ class ProfilePage extends ConsumerWidget {
                     onTap: () {
                       showAboutDialog(
                         context: context,
-                        applicationName: 'Eloqi',
+                        applicationName: 'iloqi',
                         applicationVersion: '1.0.0',
                         applicationIcon: const Icon(Icons.mic_rounded),
                         children: const [

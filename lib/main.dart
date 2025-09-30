@@ -16,7 +16,7 @@ void main() async {
   
   runApp(
     const ProviderScope(
-      child: EloqiApp(),
+      child: IloqiApp(),
     ),
   );
 }

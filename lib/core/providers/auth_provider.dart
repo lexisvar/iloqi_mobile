@@ -76,7 +76,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
       await StorageService.write('refresh_token', response.refresh);
       
       state = AsyncValue.data(response.user);
-      return AuthResult.success('Account created successfully! Welcome to Eloqi.');
+      return AuthResult.success('Account created successfully! Welcome to iloqi.');
     } on DioException catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
       return _handleDioError(e, isLogin: false);

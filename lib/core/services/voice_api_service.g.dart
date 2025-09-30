@@ -98,12 +98,12 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<VoiceSample> getAnalysisResults(int sampleId) async {
+  Future<VoiceAnalysisResultsResponse> getAnalysisResults(int sampleId) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<VoiceSample>(Options(
+    final _options = _setStreamType<VoiceAnalysisResultsResponse>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
@@ -120,9 +120,154 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    late VoiceSample _value;
+    late VoiceAnalysisResultsResponse _value;
     try {
-      _value = VoiceSample.fromJson(_result.data!);
+      _value = VoiceAnalysisResultsResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<VoiceAnalysisResponse> reanalyzeVoiceSample(
+    int sampleId,
+    ReanalyzeRequest request,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request.toJson());
+    final _options = _setStreamType<VoiceAnalysisResponse>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/voice-samples/${sampleId}/reanalyze/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late VoiceAnalysisResponse _value;
+    try {
+      _value = VoiceAnalysisResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<AccentRecommendationsResponse> getAccentRecommendations(
+      int sampleId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<AccentRecommendationsResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/voice-samples/${sampleId}/accent-recommendations/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AccentRecommendationsResponse _value;
+    try {
+      _value = AccentRecommendationsResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<PracticeSessionResponse> createPracticeSession(
+    int sampleId,
+    PracticeSessionCreateRequest request,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request.toJson());
+    final _options = _setStreamType<PracticeSessionResponse>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/voice-samples/${sampleId}/practice-sessions/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PracticeSessionResponse _value;
+    try {
+      _value = PracticeSessionResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<PracticeAudioResponse> generatePracticeAudio(
+    int sessionId,
+    Map<String, dynamic> request,
+  ) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request);
+    final _options = _setStreamType<PracticeAudioResponse>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/practice-sessions/${sessionId}/generate-audio/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PracticeAudioResponse _value;
+    try {
+      _value = PracticeAudioResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -385,6 +530,48 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
+  Future<PaginatedTrainingSessionList> getTrainingSessions({
+    int? page,
+    String? ordering,
+    String? search,
+  }) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'ordering': ordering,
+      r'search': search,
+    };
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<PaginatedTrainingSessionList>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/training-sessions/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PaginatedTrainingSessionList _value;
+    try {
+      _value = PaginatedTrainingSessionList.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
   Future<TrainingSession> createTrainingSession(
       Map<String, dynamic> request) async {
     final _extra = <String, dynamic>{};
@@ -399,7 +586,7 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'training/session/',
+          'samples/training-sessions/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -420,7 +607,7 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<TrainingSession> getTrainingSession(String id) async {
+  Future<TrainingSession> getTrainingSession(int id) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -432,7 +619,7 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'training/session/${id}/',
+          'samples/training-sessions/${id}/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -453,30 +640,23 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<TrainingSession> submitTrainingRecording(
-    String id,
-    File recording,
+  Future<TrainingSession> updateTrainingSession(
+    int id,
+    Map<String, dynamic> request,
   ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    final _data = FormData();
-    _data.files.add(MapEntry(
-      'recording',
-      MultipartFile.fromFileSync(
-        recording.path,
-        filename: recording.path.split(Platform.pathSeparator).last,
-      ),
-    ));
+    final _data = <String, dynamic>{};
+    _data.addAll(request);
     final _options = _setStreamType<TrainingSession>(Options(
       method: 'PUT',
       headers: _headers,
       extra: _extra,
-      contentType: 'multipart/form-data',
     )
         .compose(
           _dio.options,
-          'training/session/${id}/',
+          'samples/training-sessions/${id}/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -497,30 +677,23 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<List<TrainingSession>> getTrainingSessions({
-    int? limit,
-    int? offset,
-    String? trainingType,
-    String? targetAccent,
-  }) async {
+  Future<TrainingSession> partialUpdateTrainingSession(
+    int id,
+    Map<String, dynamic> request,
+  ) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{
-      r'limit': limit,
-      r'offset': offset,
-      r'training_type': trainingType,
-      r'target_accent': targetAccent,
-    };
-    queryParameters.removeWhere((k, v) => v == null);
+    final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<TrainingSession>>(Options(
-      method: 'GET',
+    final _data = <String, dynamic>{};
+    _data.addAll(request);
+    final _options = _setStreamType<TrainingSession>(Options(
+      method: 'PATCH',
       headers: _headers,
       extra: _extra,
     )
         .compose(
           _dio.options,
-          'training/sessions/',
+          'samples/training-sessions/${id}/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -529,13 +702,10 @@ class _VoiceApiService implements VoiceApiService {
           _dio.options.baseUrl,
           baseUrl,
         )));
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<TrainingSession> _value;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late TrainingSession _value;
     try {
-      _value = _result.data!
-          .map((dynamic i) =>
-              TrainingSession.fromJson(i as Map<String, dynamic>))
-          .toList();
+      _value = TrainingSession.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -544,7 +714,100 @@ class _VoiceApiService implements VoiceApiService {
   }
 
   @override
-  Future<UserProgress> getUserProgress() async {
+  Future<void> deleteTrainingSession(int id) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<void>(Options(
+      method: 'DELETE',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/training-sessions/${id}/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    await _dio.fetch<void>(_options);
+  }
+
+  @override
+  Future<TrainingSessionCompleteResponse> completeTrainingSession(
+      int sessionId) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<TrainingSessionCompleteResponse>(Options(
+      method: 'POST',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/training-sessions/${sessionId}/complete/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late TrainingSessionCompleteResponse _value;
+    try {
+      _value = TrainingSessionCompleteResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<UserProgressResponse> getUserProgress({String? targetAccent}) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{r'target_accent': targetAccent};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<UserProgressResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/progress/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late UserProgressResponse _value;
+    try {
+      _value = UserProgressResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<UserProgress> getUserProgressDetails() async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -556,7 +819,7 @@ class _VoiceApiService implements VoiceApiService {
     )
         .compose(
           _dio.options,
-          'training/progress/',
+          'samples/progress/details/',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -569,6 +832,174 @@ class _VoiceApiService implements VoiceApiService {
     late UserProgress _value;
     try {
       _value = UserProgress.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<UserProgress> updateUserProgress(Map<String, dynamic> request) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request);
+    final _options = _setStreamType<UserProgress>(Options(
+      method: 'PUT',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/progress/details/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late UserProgress _value;
+    try {
+      _value = UserProgress.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<UserProgress> partialUpdateUserProgress(
+      Map<String, dynamic> request) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(request);
+    final _options = _setStreamType<UserProgress>(Options(
+      method: 'PATCH',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/progress/details/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late UserProgress _value;
+    try {
+      _value = UserProgress.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<RecommendationsResponse> getRecommendations() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<RecommendationsResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/recommendations/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late RecommendationsResponse _value;
+    try {
+      _value = RecommendationsResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<AccentStatisticsResponse> getAccentStatistics() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<AccentStatisticsResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/statistics/accents/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late AccentStatisticsResponse _value;
+    try {
+      _value = AccentStatisticsResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<TtsStatusResponse> getTtsStatus() async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<TtsStatusResponse>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          'samples/tts/status/',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late TtsStatusResponse _value;
+    try {
+      _value = TtsStatusResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

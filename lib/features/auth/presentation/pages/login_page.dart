@@ -86,7 +86,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 ),
                 const SizedBox(height: 16),
                 const Text(
-                  'Welcome to Eloqi',
+                  'Welcome to iloqi',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

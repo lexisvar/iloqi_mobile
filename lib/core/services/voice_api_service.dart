@@ -22,7 +22,32 @@ abstract class VoiceApiService {
 
   // Get analysis results
   @GET('samples/voice-samples/{sample_id}/results/')
-  Future<VoiceSample> getAnalysisResults(@Path('sample_id') int sampleId);
+  Future<VoiceAnalysisResultsResponse> getAnalysisResults(@Path('sample_id') int sampleId);
+
+  // Re-analyze voice sample
+  @POST('samples/voice-samples/{sample_id}/reanalyze/')
+  Future<VoiceAnalysisResponse> reanalyzeVoiceSample(
+    @Path('sample_id') int sampleId,
+    @Body() ReanalyzeRequest request,
+  );
+
+  // Get accent recommendations
+  @GET('samples/voice-samples/{sample_id}/accent-recommendations/')
+  Future<AccentRecommendationsResponse> getAccentRecommendations(@Path('sample_id') int sampleId);
+
+  // Create practice session
+  @POST('samples/voice-samples/{sample_id}/practice-sessions/')
+  Future<PracticeSessionResponse> createPracticeSession(
+    @Path('sample_id') int sampleId,
+    @Body() PracticeSessionCreateRequest request,
+  );
+
+  // Generate practice audio
+  @POST('samples/practice-sessions/{session_id}/generate-audio/')
+  Future<PracticeAudioResponse> generatePracticeAudio(
+    @Path('session_id') int sessionId,
+    @Body() Map<String, dynamic> request,
+  );
 
   // Get voice samples list
   @GET('samples/voice-samples/')
@@ -65,28 +90,56 @@ abstract class VoiceApiService {
   @GET('samples/accent-twins/available-accents/')
   Future<List<String>> getAvailableAccents();
 
-  // Training endpoints
-  @POST('training/session/')
+  // Training endpoints (updated to match new API)
+  @GET('samples/training-sessions/')
+  Future<PaginatedTrainingSessionList> getTrainingSessions({
+    @Query('page') int? page,
+    @Query('ordering') String? ordering,
+    @Query('search') String? search,
+  });
+
+  @POST('samples/training-sessions/')
   Future<TrainingSession> createTrainingSession(@Body() Map<String, dynamic> request);
 
-  @GET('training/session/{id}/')
-  Future<TrainingSession> getTrainingSession(@Path('id') String id);
+  @GET('samples/training-sessions/{id}/')
+  Future<TrainingSession> getTrainingSession(@Path('id') int id);
 
-  @PUT('training/session/{id}/')
-  @MultiPart()
-  Future<TrainingSession> submitTrainingRecording(
-    @Path('id') String id,
-    @Part() File recording,
-  );
+  @PUT('samples/training-sessions/{id}/')
+  Future<TrainingSession> updateTrainingSession(@Path('id') int id, @Body() Map<String, dynamic> request);
 
-  @GET('training/sessions/')
-  Future<List<TrainingSession>> getTrainingSessions({
-    @Query('limit') int? limit,
-    @Query('offset') int? offset,
-    @Query('training_type') String? trainingType,
+  @PATCH('samples/training-sessions/{id}/')
+  Future<TrainingSession> partialUpdateTrainingSession(@Path('id') int id, @Body() Map<String, dynamic> request);
+
+  @DELETE('samples/training-sessions/{id}/')
+  Future<void> deleteTrainingSession(@Path('id') int id);
+
+  @POST('samples/training-sessions/{session_id}/complete/')
+  Future<TrainingSessionCompleteResponse> completeTrainingSession(@Path('session_id') int sessionId);
+
+  // Progress endpoints
+  @GET('samples/progress/')
+  Future<UserProgressResponse> getUserProgress({
     @Query('target_accent') String? targetAccent,
   });
 
-  @GET('training/progress/')
-  Future<UserProgress> getUserProgress();
+  @GET('samples/progress/details/')
+  Future<UserProgress> getUserProgressDetails();
+
+  @PUT('samples/progress/details/')
+  Future<UserProgress> updateUserProgress(@Body() Map<String, dynamic> request);
+
+  @PATCH('samples/progress/details/')
+  Future<UserProgress> partialUpdateUserProgress(@Body() Map<String, dynamic> request);
+
+  // Recommendations
+  @GET('samples/recommendations/')
+  Future<RecommendationsResponse> getRecommendations();
+
+  // Statistics
+  @GET('samples/statistics/accents/')
+  Future<AccentStatisticsResponse> getAccentStatistics();
+
+  // TTS Status
+  @GET('samples/tts/status/')
+  Future<TtsStatusResponse> getTtsStatus();
 }

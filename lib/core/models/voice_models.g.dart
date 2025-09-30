@@ -67,6 +67,26 @@ Map<String, dynamic> _$VoiceAnalysisResponseToJson(
       'analysis': instance.analysis,
     };
 
+VoiceAnalysisResultsResponse _$VoiceAnalysisResultsResponseFromJson(
+        Map<String, dynamic> json) =>
+    VoiceAnalysisResultsResponse(
+      status: json['status'] as String,
+      analyzed: json['analyzed'] as bool,
+      analysis: json['analysis'] == null
+          ? null
+          : AnalysisData.fromJson(json['analysis'] as Map<String, dynamic>),
+      message: json['message'] as String?,
+    );
+
+Map<String, dynamic> _$VoiceAnalysisResultsResponseToJson(
+        VoiceAnalysisResultsResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'analyzed': instance.analyzed,
+      'analysis': instance.analysis,
+      'message': instance.message,
+    };
+
 VoiceAnalysis _$VoiceAnalysisFromJson(Map<String, dynamic> json) =>
     VoiceAnalysis(
       status: json['status'] as String,
@@ -321,6 +341,26 @@ Map<String, dynamic> _$PaginatedAccentTwinListToJson(
       'results': instance.results,
     };
 
+PaginatedTrainingSessionList _$PaginatedTrainingSessionListFromJson(
+        Map<String, dynamic> json) =>
+    PaginatedTrainingSessionList(
+      count: (json['count'] as num).toInt(),
+      next: json['next'] as String?,
+      previous: json['previous'] as String?,
+      results: (json['results'] as List<dynamic>)
+          .map((e) => TrainingSession.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+
+Map<String, dynamic> _$PaginatedTrainingSessionListToJson(
+        PaginatedTrainingSessionList instance) =>
+    <String, dynamic>{
+      'count': instance.count,
+      'next': instance.next,
+      'previous': instance.previous,
+      'results': instance.results,
+    };
+
 AccentTwinCreateRequest _$AccentTwinCreateRequestFromJson(
         Map<String, dynamic> json) =>
     AccentTwinCreateRequest(
@@ -358,4 +398,242 @@ Map<String, dynamic> _$AccentTwinStatusResponseToJson(
       'message': instance.message,
       'accent_twin': instance.accentTwin,
       'generation_info': instance.generationInfo,
+    };
+
+TrainingSessionCompleteResponse _$TrainingSessionCompleteResponseFromJson(
+        Map<String, dynamic> json) =>
+    TrainingSessionCompleteResponse(
+      status: json['status'] as String,
+      message: json['message'] as String,
+      sessionScore: (json['session_score'] as num?)?.toDouble(),
+      completionTime: json['completion_time'] as String?,
+    );
+
+Map<String, dynamic> _$TrainingSessionCompleteResponseToJson(
+        TrainingSessionCompleteResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'message': instance.message,
+      'session_score': instance.sessionScore,
+      'completion_time': instance.completionTime,
+    };
+
+UserProgressResponse _$UserProgressResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserProgressResponse(
+      status: json['status'] as String,
+      targetAccent: json['target_accent'] as String?,
+      totalSessions: (json['total_sessions'] as num).toInt(),
+      completedSessions: (json['completed_sessions'] as num).toInt(),
+      averageScore: (json['average_score'] as num).toDouble(),
+      currentStreak: (json['current_streak'] as num).toInt(),
+      bestStreak: (json['best_streak'] as num).toInt(),
+      improvementTrend: (json['improvement_trend'] as List<dynamic>)
+          .map((e) => (e as num).toDouble())
+          .toList(),
+      lastPracticeDate: json['last_practice_date'] as String?,
+    );
+
+Map<String, dynamic> _$UserProgressResponseToJson(
+        UserProgressResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'target_accent': instance.targetAccent,
+      'total_sessions': instance.totalSessions,
+      'completed_sessions': instance.completedSessions,
+      'average_score': instance.averageScore,
+      'current_streak': instance.currentStreak,
+      'best_streak': instance.bestStreak,
+      'improvement_trend': instance.improvementTrend,
+      'last_practice_date': instance.lastPracticeDate,
+    };
+
+RecommendationsResponse _$RecommendationsResponseFromJson(
+        Map<String, dynamic> json) =>
+    RecommendationsResponse(
+      status: json['status'] as String,
+      recommendations: (json['recommendations'] as List<dynamic>)
+          .map((e) => e as Map<String, dynamic>)
+          .toList(),
+      personalizedTips: (json['personalized_tips'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      nextSessionSuggestion:
+          json['next_session_suggestion'] as Map<String, dynamic>?,
+    );
+
+Map<String, dynamic> _$RecommendationsResponseToJson(
+        RecommendationsResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'recommendations': instance.recommendations,
+      'personalized_tips': instance.personalizedTips,
+      'next_session_suggestion': instance.nextSessionSuggestion,
+    };
+
+AccentStatisticsResponse _$AccentStatisticsResponseFromJson(
+        Map<String, dynamic> json) =>
+    AccentStatisticsResponse(
+      status: json['status'] as String,
+      totalAnalyses: (json['total_analyses'] as num).toInt(),
+      accentDistribution:
+          Map<String, int>.from(json['accent_distribution'] as Map),
+      averageScores: (json['average_scores'] as Map<String, dynamic>).map(
+        (k, e) => MapEntry(k, (e as num).toDouble()),
+      ),
+      popularAccents: (json['popular_accents'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      improvementRates: (json['improvement_rates'] as Map<String, dynamic>).map(
+        (k, e) => MapEntry(k, (e as num).toDouble()),
+      ),
+    );
+
+Map<String, dynamic> _$AccentStatisticsResponseToJson(
+        AccentStatisticsResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'total_analyses': instance.totalAnalyses,
+      'accent_distribution': instance.accentDistribution,
+      'average_scores': instance.averageScores,
+      'popular_accents': instance.popularAccents,
+      'improvement_rates': instance.improvementRates,
+    };
+
+TtsStatusResponse _$TtsStatusResponseFromJson(Map<String, dynamic> json) =>
+    TtsStatusResponse(
+      status: json['status'] as String,
+      ttsProvider: json['tts_provider'] as String,
+      isAvailable: json['is_available'] as bool,
+      queueLength: (json['queue_length'] as num).toInt(),
+      processingTimeAvg: (json['processing_time_avg'] as num).toDouble(),
+      successRate: (json['success_rate'] as num).toDouble(),
+      lastHealthCheck: json['last_health_check'] as String,
+    );
+
+Map<String, dynamic> _$TtsStatusResponseToJson(TtsStatusResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'tts_provider': instance.ttsProvider,
+      'is_available': instance.isAvailable,
+      'queue_length': instance.queueLength,
+      'processing_time_avg': instance.processingTimeAvg,
+      'success_rate': instance.successRate,
+      'last_health_check': instance.lastHealthCheck,
+    };
+
+AccentRecommendation _$AccentRecommendationFromJson(
+        Map<String, dynamic> json) =>
+    AccentRecommendation(
+      accentCode: json['accent_code'] as String,
+      accentName: json['accent_name'] as String,
+      difficulty: json['difficulty'] as String,
+      difficultyScore: (json['difficulty_score'] as num).toDouble(),
+      reasons:
+          (json['reasons'] as List<dynamic>).map((e) => e as String).toList(),
+      phoneticSimilarities: (json['phonetic_similarities'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      phoneticChallenges: (json['phonetic_challenges'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      estimatedLearningTime: json['estimated_learning_time'] as String,
+      successProbability: (json['success_probability'] as num).toDouble(),
+    );
+
+Map<String, dynamic> _$AccentRecommendationToJson(
+        AccentRecommendation instance) =>
+    <String, dynamic>{
+      'accent_code': instance.accentCode,
+      'accent_name': instance.accentName,
+      'difficulty': instance.difficulty,
+      'difficulty_score': instance.difficultyScore,
+      'reasons': instance.reasons,
+      'phonetic_similarities': instance.phoneticSimilarities,
+      'phonetic_challenges': instance.phoneticChallenges,
+      'estimated_learning_time': instance.estimatedLearningTime,
+      'success_probability': instance.successProbability,
+    };
+
+AccentRecommendationsResponse _$AccentRecommendationsResponseFromJson(
+        Map<String, dynamic> json) =>
+    AccentRecommendationsResponse(
+      status: json['status'] as String,
+      recommendations: (json['recommendations'] as List<dynamic>)
+          .map((e) => AccentRecommendation.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      userProfile: json['user_profile'] as Map<String, dynamic>,
+    );
+
+Map<String, dynamic> _$AccentRecommendationsResponseToJson(
+        AccentRecommendationsResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'recommendations': instance.recommendations,
+      'user_profile': instance.userProfile,
+    };
+
+PracticeSessionCreateRequest _$PracticeSessionCreateRequestFromJson(
+        Map<String, dynamic> json) =>
+    PracticeSessionCreateRequest(
+      targetAccent: json['target_accent'] as String,
+      voiceGender: json['voice_gender'] as String,
+      ttsProvider: json['tts_provider'] as String?,
+      sessionName: json['session_name'] as String?,
+    );
+
+Map<String, dynamic> _$PracticeSessionCreateRequestToJson(
+        PracticeSessionCreateRequest instance) =>
+    <String, dynamic>{
+      'target_accent': instance.targetAccent,
+      'voice_gender': instance.voiceGender,
+      'tts_provider': instance.ttsProvider,
+      'session_name': instance.sessionName,
+    };
+
+PracticeSessionResponse _$PracticeSessionResponseFromJson(
+        Map<String, dynamic> json) =>
+    PracticeSessionResponse(
+      status: json['status'] as String,
+      message: json['message'] as String,
+      session:
+          TrainingSession.fromJson(json['session'] as Map<String, dynamic>),
+      practiceInfo: json['practice_info'] as Map<String, dynamic>,
+    );
+
+Map<String, dynamic> _$PracticeSessionResponseToJson(
+        PracticeSessionResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'message': instance.message,
+      'session': instance.session,
+      'practice_info': instance.practiceInfo,
+    };
+
+PracticeAudioResponse _$PracticeAudioResponseFromJson(
+        Map<String, dynamic> json) =>
+    PracticeAudioResponse(
+      status: json['status'] as String,
+      audioUrl: json['audio_url'] as String,
+      generationInfo: json['generation_info'] as Map<String, dynamic>,
+    );
+
+Map<String, dynamic> _$PracticeAudioResponseToJson(
+        PracticeAudioResponse instance) =>
+    <String, dynamic>{
+      'status': instance.status,
+      'audio_url': instance.audioUrl,
+      'generation_info': instance.generationInfo,
+    };
+
+ReanalyzeRequest _$ReanalyzeRequestFromJson(Map<String, dynamic> json) =>
+    ReanalyzeRequest(
+      promptText: json['prompt_text'] as String?,
+      forceCompleteReanalysis: json['force_complete_reanalysis'] as bool?,
+    );
+
+Map<String, dynamic> _$ReanalyzeRequestToJson(ReanalyzeRequest instance) =>
+    <String, dynamic>{
+      'prompt_text': instance.promptText,
+      'force_complete_reanalysis': instance.forceCompleteReanalysis,
     };

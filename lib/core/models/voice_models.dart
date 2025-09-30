@@ -82,6 +82,24 @@ class VoiceAnalysisResponse {
 }
 
 @JsonSerializable()
+class VoiceAnalysisResultsResponse {
+  final String status;
+  final bool analyzed;
+  final AnalysisData? analysis;
+  final String? message;
+
+  const VoiceAnalysisResultsResponse({
+    required this.status,
+    required this.analyzed,
+    this.analysis,
+    this.message,
+  });
+
+  factory VoiceAnalysisResultsResponse.fromJson(Map<String, dynamic> json) => _$VoiceAnalysisResultsResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$VoiceAnalysisResultsResponseToJson(this);
+}
+
+@JsonSerializable()
 class VoiceAnalysis {
   final String status;
   final String message;
@@ -102,6 +120,7 @@ class VoiceAnalysis {
   String get detectedAccent => analysis.detectedAccent;
   double get confidence => analysis.confidenceScore;
   double get audioQuality => analysis.overallScore;
+  double get pronunciationScore => analysis.pronunciationScore;
   double get duration => analysis.audioFeatures.duration;
   int get sampleRate => 44100; // Default sample rate
   double? get snrDb => analysis.audioFeatures.snrEstimate;
@@ -413,6 +432,24 @@ class PaginatedAccentTwinList {
 }
 
 @JsonSerializable()
+class PaginatedTrainingSessionList {
+  final int count;
+  final String? next;
+  final String? previous;
+  final List<TrainingSession> results;
+
+  const PaginatedTrainingSessionList({
+    required this.count,
+    this.next,
+    this.previous,
+    required this.results,
+  });
+
+  factory PaginatedTrainingSessionList.fromJson(Map<String, dynamic> json) => _$PaginatedTrainingSessionListFromJson(json);
+  Map<String, dynamic> toJson() => _$PaginatedTrainingSessionListToJson(this);
+}
+
+@JsonSerializable()
 class AccentTwinCreateRequest {
   @JsonKey(name: 'original_sample')
   final int originalSample;
@@ -484,4 +521,269 @@ enum TrainingType {
 
   final String value;
   final String displayName;
+}
+
+@JsonSerializable()
+class TrainingSessionCompleteResponse {
+  final String status;
+  final String message;
+  @JsonKey(name: 'session_score')
+  final double? sessionScore;
+  @JsonKey(name: 'completion_time')
+  final String? completionTime;
+
+  const TrainingSessionCompleteResponse({
+    required this.status,
+    required this.message,
+    this.sessionScore,
+    this.completionTime,
+  });
+
+  factory TrainingSessionCompleteResponse.fromJson(Map<String, dynamic> json) =>
+      _$TrainingSessionCompleteResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$TrainingSessionCompleteResponseToJson(this);
+}
+
+@JsonSerializable()
+class UserProgressResponse {
+  final String status;
+  @JsonKey(name: 'target_accent')
+  final String? targetAccent;
+  @JsonKey(name: 'total_sessions')
+  final int totalSessions;
+  @JsonKey(name: 'completed_sessions')
+  final int completedSessions;
+  @JsonKey(name: 'average_score')
+  final double averageScore;
+  @JsonKey(name: 'current_streak')
+  final int currentStreak;
+  @JsonKey(name: 'best_streak')
+  final int bestStreak;
+  @JsonKey(name: 'improvement_trend')
+  final List<double> improvementTrend;
+  @JsonKey(name: 'last_practice_date')
+  final String? lastPracticeDate;
+
+  const UserProgressResponse({
+    required this.status,
+    this.targetAccent,
+    required this.totalSessions,
+    required this.completedSessions,
+    required this.averageScore,
+    required this.currentStreak,
+    required this.bestStreak,
+    required this.improvementTrend,
+    this.lastPracticeDate,
+  });
+
+  factory UserProgressResponse.fromJson(Map<String, dynamic> json) =>
+      _$UserProgressResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$UserProgressResponseToJson(this);
+}
+
+@JsonSerializable()
+class RecommendationsResponse {
+  final String status;
+  final List<Map<String, dynamic>> recommendations;
+  @JsonKey(name: 'personalized_tips')
+  final List<String> personalizedTips;
+  @JsonKey(name: 'next_session_suggestion')
+  final Map<String, dynamic>? nextSessionSuggestion;
+
+  const RecommendationsResponse({
+    required this.status,
+    required this.recommendations,
+    required this.personalizedTips,
+    this.nextSessionSuggestion,
+  });
+
+  factory RecommendationsResponse.fromJson(Map<String, dynamic> json) =>
+      _$RecommendationsResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$RecommendationsResponseToJson(this);
+}
+
+@JsonSerializable()
+class AccentStatisticsResponse {
+  final String status;
+  @JsonKey(name: 'total_analyses')
+  final int totalAnalyses;
+  @JsonKey(name: 'accent_distribution')
+  final Map<String, int> accentDistribution;
+  @JsonKey(name: 'average_scores')
+  final Map<String, double> averageScores;
+  @JsonKey(name: 'popular_accents')
+  final List<String> popularAccents;
+  @JsonKey(name: 'improvement_rates')
+  final Map<String, double> improvementRates;
+
+  const AccentStatisticsResponse({
+    required this.status,
+    required this.totalAnalyses,
+    required this.accentDistribution,
+    required this.averageScores,
+    required this.popularAccents,
+    required this.improvementRates,
+  });
+
+  factory AccentStatisticsResponse.fromJson(Map<String, dynamic> json) =>
+      _$AccentStatisticsResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$AccentStatisticsResponseToJson(this);
+}
+
+@JsonSerializable()
+class TtsStatusResponse {
+  final String status;
+  @JsonKey(name: 'tts_provider')
+  final String ttsProvider;
+  @JsonKey(name: 'is_available')
+  final bool isAvailable;
+  @JsonKey(name: 'queue_length')
+  final int queueLength;
+  @JsonKey(name: 'processing_time_avg')
+  final double processingTimeAvg;
+  @JsonKey(name: 'success_rate')
+  final double successRate;
+  @JsonKey(name: 'last_health_check')
+  final String lastHealthCheck;
+
+  const TtsStatusResponse({
+    required this.status,
+    required this.ttsProvider,
+    required this.isAvailable,
+    required this.queueLength,
+    required this.processingTimeAvg,
+    required this.successRate,
+    required this.lastHealthCheck,
+  });
+
+  factory TtsStatusResponse.fromJson(Map<String, dynamic> json) =>
+      _$TtsStatusResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$TtsStatusResponseToJson(this);
+}
+
+@JsonSerializable()
+class AccentRecommendation {
+  @JsonKey(name: 'accent_code')
+  final String accentCode;
+  @JsonKey(name: 'accent_name')
+  final String accentName;
+  final String difficulty;
+  @JsonKey(name: 'difficulty_score')
+  final double difficultyScore;
+  final List<String> reasons;
+  @JsonKey(name: 'phonetic_similarities')
+  final List<String> phoneticSimilarities;
+  @JsonKey(name: 'phonetic_challenges')
+  final List<String> phoneticChallenges;
+  @JsonKey(name: 'estimated_learning_time')
+  final String estimatedLearningTime;
+  @JsonKey(name: 'success_probability')
+  final double successProbability;
+
+  const AccentRecommendation({
+    required this.accentCode,
+    required this.accentName,
+    required this.difficulty,
+    required this.difficultyScore,
+    required this.reasons,
+    required this.phoneticSimilarities,
+    required this.phoneticChallenges,
+    required this.estimatedLearningTime,
+    required this.successProbability,
+  });
+
+  factory AccentRecommendation.fromJson(Map<String, dynamic> json) => _$AccentRecommendationFromJson(json);
+  Map<String, dynamic> toJson() => _$AccentRecommendationToJson(this);
+}
+
+@JsonSerializable()
+class AccentRecommendationsResponse {
+  final String status;
+  final List<AccentRecommendation> recommendations;
+  @JsonKey(name: 'user_profile')
+  final Map<String, dynamic> userProfile;
+
+  const AccentRecommendationsResponse({
+    required this.status,
+    required this.recommendations,
+    required this.userProfile,
+  });
+
+  factory AccentRecommendationsResponse.fromJson(Map<String, dynamic> json) => _$AccentRecommendationsResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$AccentRecommendationsResponseToJson(this);
+}
+
+@JsonSerializable()
+class PracticeSessionCreateRequest {
+  @JsonKey(name: 'target_accent')
+  final String targetAccent;
+  @JsonKey(name: 'voice_gender')
+  final String voiceGender;
+  @JsonKey(name: 'tts_provider')
+  final String? ttsProvider;
+  @JsonKey(name: 'session_name')
+  final String? sessionName;
+
+  const PracticeSessionCreateRequest({
+    required this.targetAccent,
+    required this.voiceGender,
+    this.ttsProvider,
+    this.sessionName,
+  });
+
+  factory PracticeSessionCreateRequest.fromJson(Map<String, dynamic> json) => _$PracticeSessionCreateRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$PracticeSessionCreateRequestToJson(this);
+}
+
+@JsonSerializable()
+class PracticeSessionResponse {
+  final String status;
+  final String message;
+  final TrainingSession session;
+  @JsonKey(name: 'practice_info')
+  final Map<String, dynamic> practiceInfo;
+
+  const PracticeSessionResponse({
+    required this.status,
+    required this.message,
+    required this.session,
+    required this.practiceInfo,
+  });
+
+  factory PracticeSessionResponse.fromJson(Map<String, dynamic> json) => _$PracticeSessionResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$PracticeSessionResponseToJson(this);
+}
+
+@JsonSerializable()
+class PracticeAudioResponse {
+  final String status;
+  @JsonKey(name: 'audio_url')
+  final String audioUrl;
+  @JsonKey(name: 'generation_info')
+  final Map<String, dynamic> generationInfo;
+
+  const PracticeAudioResponse({
+    required this.status,
+    required this.audioUrl,
+    required this.generationInfo,
+  });
+
+  factory PracticeAudioResponse.fromJson(Map<String, dynamic> json) => _$PracticeAudioResponseFromJson(json);
+  Map<String, dynamic> toJson() => _$PracticeAudioResponseToJson(this);
+}
+
+@JsonSerializable()
+class ReanalyzeRequest {
+  @JsonKey(name: 'prompt_text')
+  final String? promptText;
+  @JsonKey(name: 'force_complete_reanalysis')
+  final bool? forceCompleteReanalysis;
+
+  const ReanalyzeRequest({
+    this.promptText,
+    this.forceCompleteReanalysis,
+  });
+
+  factory ReanalyzeRequest.fromJson(Map<String, dynamic> json) => _$ReanalyzeRequestFromJson(json);
+  Map<String, dynamic> toJson() => _$ReanalyzeRequestToJson(this);
 }

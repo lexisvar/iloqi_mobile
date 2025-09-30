@@ -236,50 +236,6 @@ paths:
                 $ref: '#/components/schemas/UserProfile'
           description: ''
   /api/auth/profile/update/:
-    patch:
-      operationId: auth_profile_update_partial_update
-      description: Update user profile information including language preferences
-        and learning goals
-      summary: Update user profile
-      tags:
-      - User Profile
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
-            examples:
-              ProfileUpdateExample:
-                value:
-                  l1_language: Spanish
-                  target_accent: UK
-                  proficiency_level: intermediate
-                  learning_goals: Improve pronunciation for business presentations
-                summary: Profile Update Example
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-              examples:
-                ProfileUpdateExample:
-                  value:
-                    l1_language: Spanish
-                    target_accent: UK
-                    proficiency_level: intermediate
-                    learning_goals: Improve pronunciation for business presentations
-                  summary: Profile Update Example
-          description: ''
     put:
       operationId: auth_profile_update_update
       description: Update user profile information including language preferences
@@ -306,6 +262,50 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/UserProfileUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                ProfileUpdateExample:
+                  value:
+                    l1_language: Spanish
+                    target_accent: UK
+                    proficiency_level: intermediate
+                    learning_goals: Improve pronunciation for business presentations
+                  summary: Profile Update Example
+          description: ''
+    patch:
+      operationId: auth_profile_update_partial_update
+      description: Update user profile information including language preferences
+        and learning goals
+      summary: Update user profile
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+            examples:
+              ProfileUpdateExample:
+                value:
+                  l1_language: Spanish
+                  target_accent: UK
+                  proficiency_level: intermediate
+                  learning_goals: Improve pronunciation for business presentations
+                summary: Profile Update Example
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -410,11 +410,120 @@ paths:
   /api/samples/voice-samples/:
     get:
       operationId: samples_voice_samples_list
-      description: |-
-        List user's voice samples or create a new one.
-
-        GET: Return list of user's voice samples
-        POST: Upload and create a new voice sample
+      description: "\n    # \U0001F3AD **ELOQI COMPLETE USER JOURNEY - From Voice\
+        \ to Perfect Accent**\n\n    **Welcome to Eloqi - The world's first AI-powered\
+        \ Accent Twin Training Platform!**\n\n    This endpoint starts your complete\
+        \ accent training journey. Upload your voice and unlock the revolutionary\
+        \ Accent Twin system that generates your voice speaking in perfect target\
+        \ accents.\n\n    ## \U0001F680 **COMPLETE 9-STEP USER JOURNEY FLOWCHART**\n\
+        \n    ### **PHASE 1: Account & Voice Analysis (Steps 1-3)**\n    ```\n   \
+        \ ┌─────────────────────────────────────────────────────────────┐\n    │ 1.\
+        \ \U0001F510 REGISTER ACCOUNT                                      │\n   \
+        \ │    POST /api/auth/register/ → JWT tokens                    │\n    │ \
+        \                                                            │\n    │ 2. \U0001F3A4\
+        \ UPLOAD VOICE SAMPLE ← YOU ARE HERE                    │\n    │    POST /api/samples/voice-samples/\
+        \ → Upload audio          │\n    │    • Supports: WAV, MP3, M4A, OGG, WEBM\
+        \ (up to 50MB)       │\n    │    • Automatic validation & metadata extraction\
+        \            │\n    │                                                    \
+        \         │\n    │ 3. \U0001F50D ANALYZE VOICE (Automatic)               \
+        \             │\n    │    POST /api/samples/voice-samples/{id}/analyze/  \
+        \          │\n    │    → Whisper transcription + LibROSA audio features  \
+        \      │\n    │    → GPT-4o AI feedback + accent detection               \
+        \  │\n    │    → Voice gender analysis (F0: 79.68Hz → male ✅)         │\n\
+        \    └─────────────────────────────────────────────────────────────┘\n   \
+        \ ```\n\n    ### **PHASE 2: Accent Twin Generation (Steps 4-6) - ✨ MAIN FEATURE**\n\
+        \    ```\n    ┌─────────────────────────────────────────────────────────────┐\n\
+        \    │ 4. \U0001F3AD GENERATE ACCENT TWIN (Revolutionary!)               \
+        \ │\n    │    POST /api/samples/accent-twins/ → Create twin            │\n\
+        \    │    → Choose accent: US \U0001F1FA\U0001F1F8, UK \U0001F1EC\U0001F1E7\
+        , AU \U0001F1E6\U0001F1FA, CA \U0001F1E8\U0001F1E6, IE \U0001F1EE\U0001F1EA\
+        \    │\n    │    → Smart voice matching: Gender-aware model selection    │\n\
+        \    │    → Processing: ~1.3s with Edge TTS or ElevenLabs         │\n    │\
+        \                                                             │\n    │ 5.\
+        \ \U0001F4CA MONITOR GENERATION                                   │\n    │\
+        \    GET /api/samples/accent-twins/{id}/status/               │\n    │   \
+        \ → Real-time progress updates                             │\n    │      \
+        \                                                       │\n    │ 6. \U0001F3A7\
+        \ DOWNLOAD & COMPARE                                   │\n    │    GET /api/samples/accent-twins/{id}/\
+        \ → Download audio     │\n    │    → Compare your voice vs. perfect accent\
+        \ pronunciation    │\n    │    → Identify specific pronunciation gaps    \
+        \               │\n    └─────────────────────────────────────────────────────────────┘\n\
+        \    ```\n\n    ### **PHASE 3: Personalized Training (Steps 7-9)**\n    ```\n\
+        \    ┌─────────────────────────────────────────────────────────────┐\n   \
+        \ │ 7. \U0001F3AF GET AI RECOMMENDATIONS                               │\n\
+        \    │    GET /api/samples/recommendations/ → Personalized tips    │\n   \
+        \ │    → Difficulty analysis for each accent                    │\n    │ \
+        \   → Phonetic challenges & learning strategies             │\n    │     \
+        \                                                        │\n    │ 8. \U0001F3C3\
+        \ CREATE PRACTICE SESSIONS                              │\n    │    POST /api/samples/training-sessions/\
+        \ → Practice setup    │\n    │    → Generate practice audio with target accent\
+        \            │\n    │    → Track progress and improvement                \
+        \        │\n    │                                                        \
+        \     │\n    │ 9. \U0001F4C8 TRACK PROGRESS & ANALYTICS                  \
+        \         │\n    │    GET /api/samples/progress/ → Comprehensive metrics \
+        \     │\n    │    → Scores, streaks, improvement trends                  \
+        \ │\n    │    → Accent detection statistics                           │\n\
+        \    └─────────────────────────────────────────────────────────────┘\n   \
+        \ ```\n\n    ## \U0001F3AD **WHAT MAKES ACCENT TWINS REVOLUTIONARY?**\n\n\
+        \    ### **\U0001F504 Before Eloqi (Traditional Methods)**\n    ❌ Listen to\
+        \ native speakers and guess\n    ❌ Generic accent courses without personalization\n\
+        \    ❌ No direct comparison with your own voice\n    ❌ Trial-and-error learning\
+        \ approach\n\n    ### **✨ After Eloqi (Accent Twin Technology)**\n    ✅ **Direct\
+        \ Voice Comparison**: Hear YOUR voice in perfect accents\n    ✅ **AI-Powered\
+        \ Personalization**: Analysis of your specific speech patterns\n    ✅ **Scientific\
+        \ Learning**: Compare phoneme-by-phoneme differences\n    ✅ **Immediate Feedback**:\
+        \ Real-time generation and comparison\n    ✅ **Measurable Progress**: Track\
+        \ improvement with objective metrics\n\n    ## \U0001F3AF **SUPPORTED ACCENTS\
+        \ & VOICE MODELS**\n\n    ```json\n    {\n      \"US\": {\n        \"name\"\
+        : \"American English\",\n        \"male\": \"en-US-GuyNeural\",\n        \"\
+        female\": \"en-US-AriaNeural\",\n        \"characteristics\": \"General American,\
+        \ clear vowels\"\n      },\n      \"UK\": {\n        \"name\": \"British English\"\
+        ,\n        \"male\": \"en-GB-RyanNeural\",\n        \"female\": \"en-GB-SoniaNeural\"\
+        ,\n        \"characteristics\": \"Received Pronunciation, non-rhotic\"\n \
+        \     },\n      \"AU\": {\n        \"name\": \"Australian English\",\n   \
+        \     \"male\": \"en-AU-WilliamNeural\",\n        \"female\": \"en-AU-NatashaNeural\"\
+        ,\n        \"characteristics\": \"Broad accent, rising intonation\"\n    \
+        \  },\n      \"CA\": {\n        \"name\": \"Canadian English\",\n        \"\
+        male\": \"en-CA-LiamNeural\",\n        \"female\": \"en-CA-ClaraNeural\",\n\
+        \        \"characteristics\": \"Mild rhotic, polite intonation\"\n      },\n\
+        \      \"IE\": {\n        \"name\": \"Irish English\",\n        \"male\":\
+        \ \"en-IE-ConnorNeural\",\n        \"female\": \"en-IE-EmilyNeural\",\n  \
+        \      \"characteristics\": \"Melodic, unique vowel sounds\"\n      }\n  \
+        \  }\n    ```\n\n    ## ⚡ **TECHNICAL SPECIFICATIONS**\n\n    ### **Audio\
+        \ Format Support**\n    - **WAV**: Uncompressed, highest quality (recommended)\n\
+        \    - **MP3**: Compressed, good quality, smaller files\n    - **M4A**: AAC,\
+        \ mobile optimized, excellent quality\n    - **OGG**: Open format, web optimized\n\
+        \    - **WEBM**: Web format, streaming optimized\n\n    ### **File Requirements**\n\
+        \    - **Maximum Size**: 50MB\n    - **Duration**: 1-300 seconds (recommended:\
+        \ 10-60 seconds)\n    - **Sample Rate**: Auto-detected (16kHz optimal for\
+        \ analysis)\n    - **Channels**: Mono/Stereo auto-detected\n    - **Quality**:\
+        \ 24kHz minimum for best analysis\n\n    ### **Processing Pipeline**\n   \
+        \ 1. **Upload Validation**: Security checks, format verification\n    2. **Metadata\
+        \ Extraction**: Duration, sample rate, file size\n    3. **Storage**: Organized\
+        \ by user/date with secure paths\n    4. **Analysis Queue**: Background processing\
+        \ with status updates\n    5. **AI Enhancement**: GPT-4o feedback and recommendations\n\
+        \n    ## \U0001F680 **WHAT HAPPENS NEXT?**\n\n    After uploading your voice\
+        \ sample here:\n\n    1. **Immediate**: File validation and storage confirmation\n\
+        \    2. **Background**: Automatic ML analysis begins\n    3. **Notification**:\
+        \ Status updates via API polling\n    4. **Results**: Comprehensive analysis\
+        \ with AI feedback\n    5. **Unlock**: Access to Accent Twin generation and\
+        \ personalized training\n\n    ## \U0001F3AF **API WORKFLOW ENDPOINTS**\n\n\
+        \    ### **Authentication**\n    - `POST /api/auth/register/` - Start your\
+        \ journey\n    - `POST /api/auth/login/` - Get access tokens\n\n    ### **Voice\
+        \ Analysis (Current Phase)**\n    - `POST /api/samples/voice-samples/` ← **You\
+        \ are here**\n    - `POST /api/samples/voice-samples/{id}/analyze/` - ML analysis\n\
+        \    - `GET /api/samples/voice-samples/{id}/results/` - Get results\n\n  \
+        \  ### **Accent Twin Generation (Next Phase)**\n    - `POST /api/samples/accent-twins/`\
+        \ - Generate accent twin\n    - `GET /api/samples/accent-twins/{id}/status/`\
+        \ - Check progress\n    - `GET /api/samples/accent-twins/{id}/` - Download\
+        \ results\n\n    ### **Training & Progress**\n    - `GET /api/samples/recommendations/`\
+        \ - AI recommendations\n    - `POST /api/samples/training-sessions/` - Create\
+        \ practice\n    - `GET /api/samples/progress/` - Track improvement\n\n   \
+        \ ## \U0001F389 **READY TO START YOUR ACCENT TRAINING JOURNEY?**\n\n    Upload\
+        \ your voice sample now and unlock the revolutionary power of Accent Twins!\
+        \ Your perfect accent is just one analysis away.\n\n    **Note**: Accent Twin\
+        \ generation requires voice analysis completion first.\n    "
+      summary: 🎭 Complete Eloqi Accent Training Journey - Voice Samples
       parameters:
       - name: ordering
         required: false
@@ -445,48 +554,245 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedVoiceSampleList'
-          description: ''
+              examples:
+                UploadVoiceSample:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - file: <binary_audio_file>
+                      prompt_text: The quick brown fox jumps over the lazy dog.
+                      target_accent: US
+                  summary: Upload Voice Sample
+                  description: Upload a voice recording for analysis
+          description: List of user's voice samples
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVoiceSampleList'
+              examples:
+                UploadVoiceSample:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - file: <binary_audio_file>
+                      prompt_text: The quick brown fox jumps over the lazy dog.
+                      target_accent: US
+                  summary: Upload Voice Sample
+                  description: Upload a voice recording for analysis
+          description: Voice sample uploaded successfully
+        '400':
+          description: Invalid file format, size, or parameters
+        '413':
+          description: File too large (max 50MB)
     post:
       operationId: samples_voice_samples_create
-      description: |-
-        List user's voice samples or create a new one.
-
-        GET: Return list of user's voice samples
-        POST: Upload and create a new voice sample
+      description: "\n    # \U0001F3AD **ELOQI COMPLETE USER JOURNEY - From Voice\
+        \ to Perfect Accent**\n\n    **Welcome to Eloqi - The world's first AI-powered\
+        \ Accent Twin Training Platform!**\n\n    This endpoint starts your complete\
+        \ accent training journey. Upload your voice and unlock the revolutionary\
+        \ Accent Twin system that generates your voice speaking in perfect target\
+        \ accents.\n\n    ## \U0001F680 **COMPLETE 9-STEP USER JOURNEY FLOWCHART**\n\
+        \n    ### **PHASE 1: Account & Voice Analysis (Steps 1-3)**\n    ```\n   \
+        \ ┌─────────────────────────────────────────────────────────────┐\n    │ 1.\
+        \ \U0001F510 REGISTER ACCOUNT                                      │\n   \
+        \ │    POST /api/auth/register/ → JWT tokens                    │\n    │ \
+        \                                                            │\n    │ 2. \U0001F3A4\
+        \ UPLOAD VOICE SAMPLE ← YOU ARE HERE                    │\n    │    POST /api/samples/voice-samples/\
+        \ → Upload audio          │\n    │    • Supports: WAV, MP3, M4A, OGG, WEBM\
+        \ (up to 50MB)       │\n    │    • Automatic validation & metadata extraction\
+        \            │\n    │                                                    \
+        \         │\n    │ 3. \U0001F50D ANALYZE VOICE (Automatic)               \
+        \             │\n    │    POST /api/samples/voice-samples/{id}/analyze/  \
+        \          │\n    │    → Whisper transcription + LibROSA audio features  \
+        \      │\n    │    → GPT-4o AI feedback + accent detection               \
+        \  │\n    │    → Voice gender analysis (F0: 79.68Hz → male ✅)         │\n\
+        \    └─────────────────────────────────────────────────────────────┘\n   \
+        \ ```\n\n    ### **PHASE 2: Accent Twin Generation (Steps 4-6) - ✨ MAIN FEATURE**\n\
+        \    ```\n    ┌─────────────────────────────────────────────────────────────┐\n\
+        \    │ 4. \U0001F3AD GENERATE ACCENT TWIN (Revolutionary!)               \
+        \ │\n    │    POST /api/samples/accent-twins/ → Create twin            │\n\
+        \    │    → Choose accent: US \U0001F1FA\U0001F1F8, UK \U0001F1EC\U0001F1E7\
+        , AU \U0001F1E6\U0001F1FA, CA \U0001F1E8\U0001F1E6, IE \U0001F1EE\U0001F1EA\
+        \    │\n    │    → Smart voice matching: Gender-aware model selection    │\n\
+        \    │    → Processing: ~1.3s with Edge TTS or ElevenLabs         │\n    │\
+        \                                                             │\n    │ 5.\
+        \ \U0001F4CA MONITOR GENERATION                                   │\n    │\
+        \    GET /api/samples/accent-twins/{id}/status/               │\n    │   \
+        \ → Real-time progress updates                             │\n    │      \
+        \                                                       │\n    │ 6. \U0001F3A7\
+        \ DOWNLOAD & COMPARE                                   │\n    │    GET /api/samples/accent-twins/{id}/\
+        \ → Download audio     │\n    │    → Compare your voice vs. perfect accent\
+        \ pronunciation    │\n    │    → Identify specific pronunciation gaps    \
+        \               │\n    └─────────────────────────────────────────────────────────────┘\n\
+        \    ```\n\n    ### **PHASE 3: Personalized Training (Steps 7-9)**\n    ```\n\
+        \    ┌─────────────────────────────────────────────────────────────┐\n   \
+        \ │ 7. \U0001F3AF GET AI RECOMMENDATIONS                               │\n\
+        \    │    GET /api/samples/recommendations/ → Personalized tips    │\n   \
+        \ │    → Difficulty analysis for each accent                    │\n    │ \
+        \   → Phonetic challenges & learning strategies             │\n    │     \
+        \                                                        │\n    │ 8. \U0001F3C3\
+        \ CREATE PRACTICE SESSIONS                              │\n    │    POST /api/samples/training-sessions/\
+        \ → Practice setup    │\n    │    → Generate practice audio with target accent\
+        \            │\n    │    → Track progress and improvement                \
+        \        │\n    │                                                        \
+        \     │\n    │ 9. \U0001F4C8 TRACK PROGRESS & ANALYTICS                  \
+        \         │\n    │    GET /api/samples/progress/ → Comprehensive metrics \
+        \     │\n    │    → Scores, streaks, improvement trends                  \
+        \ │\n    │    → Accent detection statistics                           │\n\
+        \    └─────────────────────────────────────────────────────────────┘\n   \
+        \ ```\n\n    ## \U0001F3AD **WHAT MAKES ACCENT TWINS REVOLUTIONARY?**\n\n\
+        \    ### **\U0001F504 Before Eloqi (Traditional Methods)**\n    ❌ Listen to\
+        \ native speakers and guess\n    ❌ Generic accent courses without personalization\n\
+        \    ❌ No direct comparison with your own voice\n    ❌ Trial-and-error learning\
+        \ approach\n\n    ### **✨ After Eloqi (Accent Twin Technology)**\n    ✅ **Direct\
+        \ Voice Comparison**: Hear YOUR voice in perfect accents\n    ✅ **AI-Powered\
+        \ Personalization**: Analysis of your specific speech patterns\n    ✅ **Scientific\
+        \ Learning**: Compare phoneme-by-phoneme differences\n    ✅ **Immediate Feedback**:\
+        \ Real-time generation and comparison\n    ✅ **Measurable Progress**: Track\
+        \ improvement with objective metrics\n\n    ## \U0001F3AF **SUPPORTED ACCENTS\
+        \ & VOICE MODELS**\n\n    ```json\n    {\n      \"US\": {\n        \"name\"\
+        : \"American English\",\n        \"male\": \"en-US-GuyNeural\",\n        \"\
+        female\": \"en-US-AriaNeural\",\n        \"characteristics\": \"General American,\
+        \ clear vowels\"\n      },\n      \"UK\": {\n        \"name\": \"British English\"\
+        ,\n        \"male\": \"en-GB-RyanNeural\",\n        \"female\": \"en-GB-SoniaNeural\"\
+        ,\n        \"characteristics\": \"Received Pronunciation, non-rhotic\"\n \
+        \     },\n      \"AU\": {\n        \"name\": \"Australian English\",\n   \
+        \     \"male\": \"en-AU-WilliamNeural\",\n        \"female\": \"en-AU-NatashaNeural\"\
+        ,\n        \"characteristics\": \"Broad accent, rising intonation\"\n    \
+        \  },\n      \"CA\": {\n        \"name\": \"Canadian English\",\n        \"\
+        male\": \"en-CA-LiamNeural\",\n        \"female\": \"en-CA-ClaraNeural\",\n\
+        \        \"characteristics\": \"Mild rhotic, polite intonation\"\n      },\n\
+        \      \"IE\": {\n        \"name\": \"Irish English\",\n        \"male\":\
+        \ \"en-IE-ConnorNeural\",\n        \"female\": \"en-IE-EmilyNeural\",\n  \
+        \      \"characteristics\": \"Melodic, unique vowel sounds\"\n      }\n  \
+        \  }\n    ```\n\n    ## ⚡ **TECHNICAL SPECIFICATIONS**\n\n    ### **Audio\
+        \ Format Support**\n    - **WAV**: Uncompressed, highest quality (recommended)\n\
+        \    - **MP3**: Compressed, good quality, smaller files\n    - **M4A**: AAC,\
+        \ mobile optimized, excellent quality\n    - **OGG**: Open format, web optimized\n\
+        \    - **WEBM**: Web format, streaming optimized\n\n    ### **File Requirements**\n\
+        \    - **Maximum Size**: 50MB\n    - **Duration**: 1-300 seconds (recommended:\
+        \ 10-60 seconds)\n    - **Sample Rate**: Auto-detected (16kHz optimal for\
+        \ analysis)\n    - **Channels**: Mono/Stereo auto-detected\n    - **Quality**:\
+        \ 24kHz minimum for best analysis\n\n    ### **Processing Pipeline**\n   \
+        \ 1. **Upload Validation**: Security checks, format verification\n    2. **Metadata\
+        \ Extraction**: Duration, sample rate, file size\n    3. **Storage**: Organized\
+        \ by user/date with secure paths\n    4. **Analysis Queue**: Background processing\
+        \ with status updates\n    5. **AI Enhancement**: GPT-4o feedback and recommendations\n\
+        \n    ## \U0001F680 **WHAT HAPPENS NEXT?**\n\n    After uploading your voice\
+        \ sample here:\n\n    1. **Immediate**: File validation and storage confirmation\n\
+        \    2. **Background**: Automatic ML analysis begins\n    3. **Notification**:\
+        \ Status updates via API polling\n    4. **Results**: Comprehensive analysis\
+        \ with AI feedback\n    5. **Unlock**: Access to Accent Twin generation and\
+        \ personalized training\n\n    ## \U0001F3AF **API WORKFLOW ENDPOINTS**\n\n\
+        \    ### **Authentication**\n    - `POST /api/auth/register/` - Start your\
+        \ journey\n    - `POST /api/auth/login/` - Get access tokens\n\n    ### **Voice\
+        \ Analysis (Current Phase)**\n    - `POST /api/samples/voice-samples/` ← **You\
+        \ are here**\n    - `POST /api/samples/voice-samples/{id}/analyze/` - ML analysis\n\
+        \    - `GET /api/samples/voice-samples/{id}/results/` - Get results\n\n  \
+        \  ### **Accent Twin Generation (Next Phase)**\n    - `POST /api/samples/accent-twins/`\
+        \ - Generate accent twin\n    - `GET /api/samples/accent-twins/{id}/status/`\
+        \ - Check progress\n    - `GET /api/samples/accent-twins/{id}/` - Download\
+        \ results\n\n    ### **Training & Progress**\n    - `GET /api/samples/recommendations/`\
+        \ - AI recommendations\n    - `POST /api/samples/training-sessions/` - Create\
+        \ practice\n    - `GET /api/samples/progress/` - Track improvement\n\n   \
+        \ ## \U0001F389 **READY TO START YOUR ACCENT TRAINING JOURNEY?**\n\n    Upload\
+        \ your voice sample now and unlock the revolutionary power of Accent Twins!\
+        \ Your perfect accent is just one analysis away.\n\n    **Note**: Accent Twin\
+        \ generation requires voice analysis completion first.\n    "
+      summary: 🎭 Complete Eloqi Accent Training Journey - Voice Samples
       tags:
       - samples
       requestBody:
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/VoiceSampleRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/VoiceSampleRequest'
-        required: true
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Audio file to upload
+                prompt_text:
+                  type: string
+                  description: Text that was spoken in the recording (optional, helps
+                    with analysis)
+                  example: Please read this sample text aloud for pronunciation analysis.
+                target_accent:
+                  type: string
+                  enum:
+                  - US
+                  - UK
+                  - AU
+                  - CA
+                  - IE
+                  description: Target accent for training (optional)
+                  example: US
+              required:
+              - file
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVoiceSampleList'
+              examples:
+                UploadVoiceSample:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - file: <binary_audio_file>
+                      prompt_text: The quick brown fox jumps over the lazy dog.
+                      target_accent: US
+                  summary: Upload Voice Sample
+                  description: Upload a voice recording for analysis
+          description: List of user's voice samples
         '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/VoiceSample'
-          description: ''
+              examples:
+                UploadVoiceSample:
+                  value:
+                    file: <binary_audio_file>
+                    prompt_text: The quick brown fox jumps over the lazy dog.
+                    target_accent: US
+                  summary: Upload Voice Sample
+                  description: Upload a voice recording for analysis
+          description: Voice sample uploaded successfully
+        '400':
+          description: Invalid file format, size, or parameters
+        '413':
+          description: File too large (max 50MB)
   /api/samples/voice-samples/{id}/:
     get:
       operationId: samples_voice_samples_retrieve
-      description: |-
-        Retrieve or delete a specific voice sample.
-
-        GET: Return voice sample details
-        DELETE: Delete the voice sample and its file
+      description: "\n    **Voice Sample Details and Deletion**\n\n    **GET**: Retrieve\
+        \ detailed information about a specific voice sample, including:\n    - File\
+        \ metadata (size, duration, format)\n    - Analysis results (if completed)\n\
+        \    - Transcription and accent detection\n    - Audio features and quality\
+        \ metrics\n    - Associated training sessions\n\n    **DELETE**: Permanently\
+        \ remove the voice sample and associated files.\n    - Deletes audio file\
+        \ from storage\n    - Removes analysis data and metadata\n    - Cleans up\
+        \ empty directories\n    - Cannot be undone\n\n    **Security**: Users can\
+        \ only access their own voice samples.\n    "
+      summary: Retrieve or Delete Voice Sample
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: ID of the voice sample
         required: true
       tags:
       - samples
@@ -499,19 +805,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VoiceSample'
-          description: ''
+          description: Voice sample details with analysis data
+        '204':
+          description: Voice sample deleted successfully
+        '403':
+          description: Access denied - not your voice sample
+        '404':
+          description: Voice sample not found
     delete:
       operationId: samples_voice_samples_destroy
-      description: |-
-        Retrieve or delete a specific voice sample.
-
-        GET: Return voice sample details
-        DELETE: Delete the voice sample and its file
+      description: "\n    **Voice Sample Details and Deletion**\n\n    **GET**: Retrieve\
+        \ detailed information about a specific voice sample, including:\n    - File\
+        \ metadata (size, duration, format)\n    - Analysis results (if completed)\n\
+        \    - Transcription and accent detection\n    - Audio features and quality\
+        \ metrics\n    - Associated training sessions\n\n    **DELETE**: Permanently\
+        \ remove the voice sample and associated files.\n    - Deletes audio file\
+        \ from storage\n    - Removes analysis data and metadata\n    - Cleans up\
+        \ empty directories\n    - Cannot be undone\n\n    **Security**: Users can\
+        \ only access their own voice samples.\n    "
+      summary: Retrieve or Delete Voice Sample
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: ID of the voice sample
         required: true
       tags:
       - samples
@@ -519,42 +837,172 @@ paths:
       - jwtAuth: []
       - cookieAuth: []
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoiceSample'
+          description: Voice sample details with analysis data
         '204':
-          description: No response body
+          description: Voice sample deleted successfully
+        '403':
+          description: Access denied - not your voice sample
+        '404':
+          description: Voice sample not found
   /api/samples/voice-samples/{sample_id}/analyze/:
     post:
       operationId: samples_voice_samples_analyze_create
-      description: |-
-        Analyze a voice sample using ML pipeline.
-
-        POST /api/voice-samples/{id}/analyze/
-        Optional body: {"prompt_text": "Text that was supposed to be read"}
+      description: "\n    **Advanced Voice Analysis with AI Enhancement**\n\n    Performs\
+        \ comprehensive analysis of a voice sample using multiple analysis layers:\n\
+        \n    **1. ML Analysis Pipeline:**\n    - **Whisper Transcription**: Accurate\
+        \ speech-to-text conversion\n    - **LibROSA Audio Features**: MFCC, spectral\
+        \ analysis, pitch detection\n    - **Accent Classification**: ML-based accent\
+        \ detection with confidence scores\n    - **Voice Characteristics**: Gender\
+        \ detection, pitch analysis, speech patterns\n\n    **2. AI Enhancement (GPT-4o):**\n\
+        \    - **Professional Feedback**: Linguist-level pronunciation analysis\n\
+        \    - **Phonetic Recommendations**: Specific sound improvement suggestions\n\
+        \    - **Accent Authenticity Scoring**: How close to target accent\n    -\
+        \ **Personalized Coaching**: Tailored improvement strategies\n\n    **3. Quality\
+        \ Assessment:**\n    - **Pronunciation Scoring**: Text similarity and clarity\
+        \ metrics\n    - **Fluency Analysis**: Rhythm, pace, and naturalness evaluation\n\
+        \    - **Audio Quality**: SNR, signal quality, and technical metrics\n\n \
+        \   **Analysis Results Include:**\n    - Transcription with confidence score\n\
+        \    - Detected accent with confidence level\n    - Overall quality score\
+        \ (0-100)\n    - Detailed feedback and recommendations\n    - Phonetic analysis\
+        \ and improvement suggestions\n    - Audio feature analysis and quality metrics\n\
+        \n    **Processing Time**: Typically 10-30 seconds depending on audio length\
+        \ and complexity.\n    "
+      summary: Analyze Voice Sample with AI
       parameters:
       - in: path
         name: sample_id
         schema:
           type: integer
+        description: ID of the voice sample to analyze
         required: true
       tags:
       - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt_text:
+                  type: string
+                  description: Original text that was spoken (optional, improves analysis
+                    accuracy)
+                  example: Please read this sample text for pronunciation analysis.
+                force_reanalysis:
+                  type: boolean
+                  default: false
+                  description: Force re-analysis even if already analyzed
+            examples:
+              BasicAnalysis:
+                value: {}
+                summary: Basic Analysis
+                description: Analyze voice sample without prompt text
+              AnalysisWithPrompt:
+                value:
+                  prompt_text: The quick brown fox jumps over the lazy dog.
+                  force_reanalysis: false
+                summary: Analysis with Prompt
+                description: Analyze with known prompt text for better accuracy
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Voice sample analyzed successfully
+                  analysis:
+                    type: object
+                    properties:
+                      transcription:
+                        type: string
+                        example: Hello, this is a test recording.
+                      confidence_score:
+                        type: number
+                        example: 0.95
+                      detected_accent:
+                        type: string
+                        example: US
+                      accent_confidence:
+                        type: number
+                        example: 0.87
+                      overall_score:
+                        type: number
+                        example: 8.5
+                      pronunciation_score:
+                        type: number
+                        example: 0.82
+                      fluency_score:
+                        type: number
+                        example: 0.79
+                      feedback:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                        - Good pronunciation with room for improvement in clarity.
+                      phoneme_issues:
+                        type: array
+                        items:
+                          type: object
+                      audio_features:
+                        type: object
+              examples:
+                BasicAnalysis:
+                  value: {}
+                  summary: Basic Analysis
+                  description: Analyze voice sample without prompt text
+                AnalysisWithPrompt:
+                  value:
+                    prompt_text: The quick brown fox jumps over the lazy dog.
+                    force_reanalysis: false
+                  summary: Analysis with Prompt
+                  description: Analyze with known prompt text for better accuracy
+          description: Voice analysis completed successfully
+        '400':
+          description: Voice sample not found or already being analyzed
+        '404':
+          description: Voice sample does not exist
+        '429':
+          description: Too many analysis requests (rate limited)
+        '500':
+          description: Analysis failed due to server error
   /api/samples/voice-samples/{sample_id}/results/:
     get:
       operationId: samples_voice_samples_results_retrieve
-      description: |-
-        Get existing analysis results for a voice sample.
-
-        GET /api/voice-samples/{id}/results/
+      description: "\n    **Retrieve Existing Voice Analysis Results**\n\n    Returns\
+        \ the analysis results for a previously analyzed voice sample. If the sample\
+        \ hasn't been analyzed yet, returns appropriate status information.\n\n  \
+        \  **Analysis Results Include:**\n    - **Transcription**: Full text transcription\
+        \ with confidence score\n    - **Accent Detection**: Detected accent with\
+        \ confidence level\n    - **Quality Scores**: Overall, pronunciation, and\
+        \ fluency scores\n    - **AI Feedback**: Professional recommendations and\
+        \ improvement suggestions\n    - **Audio Features**: Technical audio analysis\
+        \ (pitch, spectral data, etc.)\n    - **Phonetic Analysis**: Detailed sound-by-sound\
+        \ breakdown\n\n    **Response Status:**\n    - `analyzed: true` - Analysis\
+        \ completed, full results returned\n    - `analyzed: false` - Sample not yet\
+        \ analyzed, basic info only\n\n    **Caching**: Results are cached after analysis\
+        \ for fast retrieval.\n    "
+      summary: Get Voice Analysis Results
       parameters:
       - in: path
         name: sample_id
         schema:
           type: integer
+        description: ID of the voice sample to retrieve results for
         required: true
       tags:
       - samples
@@ -563,37 +1011,180 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  analyzed:
+                    type: boolean
+                    example: true
+                  analysis:
+                    type: object
+                    description: Complete analysis results (only present if analyzed=true)
+                    properties:
+                      transcription:
+                        type: string
+                      confidence_score:
+                        type: number
+                      detected_accent:
+                        type: string
+                      accent_confidence:
+                        type: number
+                      overall_score:
+                        type: number
+                      pronunciation_score:
+                        type: number
+                      fluency_score:
+                        type: number
+                      feedback:
+                        type: array
+                        items:
+                          type: string
+                      phoneme_issues:
+                        type: array
+                      audio_features:
+                        type: object
+                  message:
+                    type: string
+                    description: Status message when analysis not available
+          description: Analysis results retrieved successfully
+        '404':
+          description: Voice sample not found
+        '403':
+          description: Access denied - not your voice sample
   /api/samples/voice-samples/{sample_id}/reanalyze/:
     post:
       operationId: samples_voice_samples_reanalyze_create
-      description: |-
-        Force re-analysis of a voice sample.
-
-        POST /api/voice-samples/{id}/reanalyze/
-        Optional body: {"prompt_text": "Text that was supposed to be read"}
+      description: "\n    **Force Re-analysis of Previously Analyzed Voice Sample**\n\
+        \n    Triggers a complete re-analysis of a voice sample that has already been\
+        \ analyzed. This is useful when:\n\n    - **Updated Analysis Pipeline**: New\
+        \ ML models or AI enhancements are available\n    - **Different Prompt Text**:\
+        \ Original prompt text was incorrect or incomplete\n    - **Quality Issues**:\
+        \ Previous analysis had technical problems\n    - **User Feedback**: User\
+        \ wants fresh analysis with different parameters\n\n    **Re-analysis Process:**\n\
+        \    1. **Clears Previous Results**: Removes old analysis data and scores\n\
+        \    2. **Fresh ML Analysis**: Re-runs Whisper, LibROSA, and accent classification\n\
+        \    3. **AI Enhancement**: Applies latest GPT-4o analysis and feedback\n\
+        \    4. **Updated Scoring**: Recalculates all quality metrics and recommendations\n\
+        \n    **Use Cases:**\n    - Getting updated analysis with improved AI models\n\
+        \    - Re-analyzing with corrected prompt text\n    - Troubleshooting analysis\
+        \ quality issues\n    - Comparing analysis results over time\n\n    **Note**:\
+        \ Re-analysis may take similar time to initial analysis (10-30 seconds).\n\
+        \    "
+      summary: Force Re-analysis of Voice Sample
       parameters:
       - in: path
         name: sample_id
         schema:
           type: integer
+        description: ID of the voice sample to re-analyze
         required: true
       tags:
       - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt_text:
+                  type: string
+                  description: Corrected or updated prompt text (optional)
+                  example: Please read this corrected sample text aloud.
+                force_complete_reanalysis:
+                  type: boolean
+                  default: true
+                  description: Force complete re-analysis including cached results
+            examples:
+              Re-analyzeWithCorrectedText:
+                value:
+                  prompt_text: The corrected text that was actually spoken.
+                  force_complete_reanalysis: true
+                summary: Re-analyze with Corrected Text
+                description: Re-analyze with corrected prompt text
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Voice sample re-analyzed successfully
+                  analysis:
+                    type: object
+                    description: Fresh analysis results
+                    properties:
+                      transcription:
+                        type: string
+                      confidence_score:
+                        type: number
+                      detected_accent:
+                        type: string
+                      overall_score:
+                        type: number
+                      feedback:
+                        type: array
+                        items:
+                          type: string
+              examples:
+                Re-analyzeWithCorrectedText:
+                  value:
+                    prompt_text: The corrected text that was actually spoken.
+                    force_complete_reanalysis: true
+                  summary: Re-analyze with Corrected Text
+                  description: Re-analyze with corrected prompt text
+          description: Re-analysis completed successfully
+        '400':
+          description: Voice sample not found or not previously analyzed
+        '404':
+          description: Voice sample does not exist
+        '429':
+          description: Too many re-analysis requests
+        '500':
+          description: Re-analysis failed
   /api/samples/progress/:
     get:
       operationId: samples_progress_retrieve
-      description: |-
-        Get user's accent training progress.
-
-        GET /api/progress/
-        Optional query params: ?target_accent=US
+      description: "\n    **Comprehensive User Progress and Statistics**\n\n    Returns\
+        \ detailed progress information for the authenticated user's accent training\
+        \ journey.\n\n    **Progress Metrics Include:**\n    - **Overall Statistics**:\
+        \ Total samples, analyzed samples, average scores\n    - **Performance Tracking**:\
+        \ Best scores, improvement trends, consistency\n    - **Practice Streaks**:\
+        \ Current and longest daily practice streaks\n    - **Accent-Specific Progress**:\
+        \ Progress filtered by target accent\n    - **Recent Activity**: Latest practice\
+        \ sessions and improvements\n\n    **Scoring System:**\n    - **Overall Score**:\
+        \ 0-100 scale combining pronunciation, fluency, and accent authenticity\n\
+        \    - **Improvement Trends**: Percentage improvement over time\n    - **Consistency\
+        \ Score**: How consistent performance has been\n\n    **Streak Tracking:**\n\
+        \    - **Current Streak**: Consecutive days of practice\n    - **Longest Streak**:\
+        \ Personal best consecutive practice days\n    - **Last Practice Date**: When\
+        \ user last practiced\n\n    **Optional Filtering:**\n    Use `?target_accent=US`\
+        \ to get progress for specific accent training.\n    "
+      summary: Get User Progress Overview
+      parameters:
+      - in: query
+        name: target_accent
+        schema:
+          type: string
+          enum:
+          - AU
+          - CA
+          - IE
+          - UK
+          - US
+        description: Filter progress by specific target accent (US, UK, AU, CA, IE)
       tags:
       - samples
       security:
@@ -601,15 +1192,89 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  progress:
+                    type: object
+                    properties:
+                      user_id:
+                        type: integer
+                      target_accent:
+                        type: string
+                        nullable: true
+                      total_samples:
+                        type: integer
+                        example: 25
+                      analyzed_samples:
+                        type: integer
+                        example: 23
+                      average_score:
+                        type: number
+                        example: 7.8
+                      best_score:
+                        type: number
+                        example: 9.2
+                      current_streak:
+                        type: integer
+                        example: 5
+                      longest_streak:
+                        type: integer
+                        example: 12
+                      last_practice_date:
+                        type: string
+                        format: date
+                        nullable: true
+                      pronunciation_progress:
+                        type: number
+                        example: 15.3
+                      fluency_progress:
+                        type: number
+                        example: 8.7
+                      accent_consistency:
+                        type: number
+                        example: 82.5
+                      recent_sessions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            score:
+                              type: number
+                            accent:
+                              type: string
+              examples:
+                OverallProgress:
+                  value: {}
+                  summary: Overall Progress
+                  description: Get complete progress overview
+                USAccentProgress:
+                  value: {}
+                  summary: US Accent Progress
+                  description: Get progress for US accent training only
+          description: User progress data retrieved successfully
+        '500':
+          description: Error retrieving progress data
   /api/samples/progress/details/:
     get:
       operationId: samples_progress_details_retrieve
-      description: |-
-        Retrieve or update user progress.
-
-        GET: Return user's progress information
-        PATCH: Update progress settings (e.g., target accent)
+      description: "\n    **User Progress Settings and Preferences**\n\n    **GET**:\
+        \ Retrieve current user progress settings and preferences.\n    - Target accent\
+        \ preferences\n    - Progress tracking settings\n    - Personal goals and\
+        \ milestones\n\n    **PATCH**: Update user progress settings and preferences.\n\
+        \    - Change target accent for training\n    - Update learning goals\n  \
+        \  - Modify progress tracking preferences\n\n    **Automatic Updates**: Progress\
+        \ metrics are automatically updated when retrieved,\n    including current\
+        \ streaks, average scores, and improvement trends.\n    "
+      summary: User Progress Management
       tags:
       - samples
       security:
@@ -621,14 +1286,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProgress'
-          description: ''
+          description: User progress settings updated
+        '400':
+          description: Invalid update data
+        '404':
+          description: User progress not found
     put:
       operationId: samples_progress_details_update
-      description: |-
-        Retrieve or update user progress.
-
-        GET: Return user's progress information
-        PATCH: Update progress settings (e.g., target accent)
+      description: "\n    **User Progress Settings and Preferences**\n\n    **GET**:\
+        \ Retrieve current user progress settings and preferences.\n    - Target accent\
+        \ preferences\n    - Progress tracking settings\n    - Personal goals and\
+        \ milestones\n\n    **PATCH**: Update user progress settings and preferences.\n\
+        \    - Change target accent for training\n    - Update learning goals\n  \
+        \  - Modify progress tracking preferences\n\n    **Automatic Updates**: Progress\
+        \ metrics are automatically updated when retrieved,\n    including current\
+        \ streaks, average scores, and improvement trends.\n    "
+      summary: User Progress Management
       tags:
       - samples
       requestBody:
@@ -651,14 +1324,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProgress'
-          description: ''
+          description: User progress settings updated
+        '400':
+          description: Invalid update data
+        '404':
+          description: User progress not found
     patch:
       operationId: samples_progress_details_partial_update
-      description: |-
-        Retrieve or update user progress.
-
-        GET: Return user's progress information
-        PATCH: Update progress settings (e.g., target accent)
+      description: "\n    **User Progress Settings and Preferences**\n\n    **GET**:\
+        \ Retrieve current user progress settings and preferences.\n    - Target accent\
+        \ preferences\n    - Progress tracking settings\n    - Personal goals and\
+        \ milestones\n\n    **PATCH**: Update user progress settings and preferences.\n\
+        \    - Change target accent for training\n    - Update learning goals\n  \
+        \  - Modify progress tracking preferences\n\n    **Automatic Updates**: Progress\
+        \ metrics are automatically updated when retrieved,\n    including current\
+        \ streaks, average scores, and improvement trends.\n    "
+      summary: User Progress Management
       tags:
       - samples
       requestBody:
@@ -681,14 +1362,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserProgress'
-          description: ''
+          description: User progress settings updated
+        '400':
+          description: Invalid update data
+        '404':
+          description: User progress not found
   /api/samples/recommendations/:
     get:
       operationId: samples_recommendations_retrieve
-      description: |-
-        Get personalized training recommendations.
-
-        GET /api/recommendations/
+      description: "\n    **AI-Powered Training Recommendations**\n\n    Generates\
+        \ personalized training recommendations based on the user's current progress,\n\
+        \    performance patterns, and learning objectives.\n\n    **Recommendation\
+        \ Types:**\n    - **Practice Focus**: Specific accent features to work on\n\
+        \    - **Exercise Types**: Recommended training activities\n    - **Difficulty\
+        \ Adjustment**: Suggested practice intensity\n    - **Progress Goals**: Short-term\
+        \ and long-term targets\n    - **Motivational Content**: Encouragement based\
+        \ on progress\n\n    **Factors Considered:**\n    - Current skill level and\
+        \ progress trends\n    - Recent performance and improvement areas\n    - Practice\
+        \ consistency and streak data\n    - Target accent and learning goals\n  \
+        \  - Time since last practice session\n    "
+      summary: Get Personalized Training Recommendations
       tags:
       - samples
       security:
@@ -696,14 +1389,73 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: practice_focus
+                        title:
+                          type: string
+                          example: Focus on vowel clarity
+                        description:
+                          type: string
+                          example: Work on distinguishing between /ɪ/ and /i:/ sounds
+                        priority:
+                          type: string
+                          enum:
+                          - high
+                          - medium
+                          - low
+                        exercise_type:
+                          type: string
+                          example: phonetic_drill
+                        estimated_time:
+                          type: string
+                          example: 15 minutes
+                  next_session_suggestion:
+                    type: object
+                    properties:
+                      recommended_time:
+                        type: string
+                        example: tomorrow
+                      suggested_duration:
+                        type: integer
+                        example: 20
+                      focus_area:
+                        type: string
+                        example: stress_patterns
+          description: Training recommendations generated successfully
+        '500':
+          description: Error generating recommendations
   /api/samples/statistics/accents/:
     get:
       operationId: samples_statistics_accents_retrieve
-      description: |-
-        Get accent detection statistics for the user.
-
-        GET /api/statistics/accents/
+      description: "\n    **Accent Detection Analytics and Insights**\n\n    Provides\
+        \ comprehensive statistics about the user's accent detection patterns,\n \
+        \   performance trends, and accent distribution across all analyzed voice\
+        \ samples.\n\n    **Statistics Include:**\n    - **Total Analyzed Samples**:\
+        \ Number of voice samples processed\n    - **Accent Distribution**: Breakdown\
+        \ of detected accents with percentages\n    - **Confidence Levels**: Average\
+        \ confidence scores for accent detection\n    - **Most Detected Accent**:\
+        \ Primary accent pattern identified\n    - **Detection Trends**: How accent\
+        \ detection has evolved over time\n\n    **Use Cases:**\n    - Understanding\
+        \ user's natural accent tendencies\n    - Tracking improvement in accent consistency\n\
+        \    - Identifying accent mixing patterns\n    - Performance analytics for\
+        \ training insights\n\n    **Data Sources:**\n    - All analyzed voice samples\
+        \ for the authenticated user\n    - ML-based accent classification results\n\
+        \    - Confidence scores from Whisper and accent detection models\n    "
+      summary: Get Accent Detection Statistics
       tags:
       - samples
       security:
@@ -711,15 +1463,65 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  statistics:
+                    type: object
+                    properties:
+                      total_samples:
+                        type: integer
+                        example: 25
+                      accent_distribution:
+                        type: object
+                        example:
+                          US: 12
+                          UK: 8
+                          Neutral: 5
+                        description: Count of samples per detected accent
+                      average_confidence:
+                        type: number
+                        example: 0.78
+                      most_detected_accent:
+                        type: string
+                        example: US
+                      confidence_distribution:
+                        type: object
+                        properties:
+                          high:
+                            type: integer
+                            description: Samples with >0.8 confidence
+                          medium:
+                            type: integer
+                            description: Samples with 0.6-0.8 confidence
+                          low:
+                            type: integer
+                            description: Samples with <0.6 confidence
+          description: Accent statistics retrieved successfully
+        '500':
+          description: Error retrieving statistics
   /api/samples/training-sessions/:
     get:
       operationId: samples_training_sessions_list
-      description: |-
-        List user's training sessions or create a new one.
-
-        GET: Return list of user's training sessions
-        POST: Create a new training session
+      description: "\n    **Training Session Management**\n\n    **GET**: Retrieve\
+        \ all training sessions for the authenticated user.\n    - Includes session\
+        \ details, scores, and completion status\n    - Sorted by creation date (newest\
+        \ first)\n    - Shows associated voice samples and exercises\n\n    **POST**:\
+        \ Create a new training session for accent practice.\n    - Define session\
+        \ name, exercise type, and target accent\n    - Set prompt text for reading\
+        \ exercises\n    - Automatically associates with user's voice samples\n\n\
+        \    **Session Types:**\n    - `reading`: Reading comprehension and pronunciation\n\
+        \    - `conversation`: Conversational practice exercises\n    - `phonetic`:\
+        \ Focused phonetic training drills\n    - `accent_drill`: Accent-specific\
+        \ practice exercises\n    - `free_speech`: Free-form speech practice\n\n \
+        \   **Progress Tracking**: Sessions track completion status, scores, and duration.\n\
+        \    "
+      summary: Training Sessions Management
       parameters:
       - name: ordering
         required: false
@@ -750,52 +1552,213 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PaginatedTrainingSessionList'
-          description: ''
+              examples:
+                CreateReadingSession:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - name: US Accent Reading Practice
+                      exercise_type: reading
+                      target_accent: US
+                      prompt_text: The quick brown fox jumps over the lazy dog.
+                  summary: Create Reading Session
+                  description: Create a reading practice session
+                CreateConversationSession:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - name: UK Accent Conversation
+                      exercise_type: conversation
+                      target_accent: UK
+                  summary: Create Conversation Session
+                  description: Create a conversation practice session
+          description: List of user's training sessions
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTrainingSessionList'
+              examples:
+                CreateReadingSession:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - name: US Accent Reading Practice
+                      exercise_type: reading
+                      target_accent: US
+                      prompt_text: The quick brown fox jumps over the lazy dog.
+                  summary: Create Reading Session
+                  description: Create a reading practice session
+                CreateConversationSession:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - name: UK Accent Conversation
+                      exercise_type: conversation
+                      target_accent: UK
+                  summary: Create Conversation Session
+                  description: Create a conversation practice session
+          description: Training session created successfully
+        '400':
+          description: Invalid session data
     post:
       operationId: samples_training_sessions_create
-      description: |-
-        List user's training sessions or create a new one.
-
-        GET: Return list of user's training sessions
-        POST: Create a new training session
+      description: "\n    **Training Session Management**\n\n    **GET**: Retrieve\
+        \ all training sessions for the authenticated user.\n    - Includes session\
+        \ details, scores, and completion status\n    - Sorted by creation date (newest\
+        \ first)\n    - Shows associated voice samples and exercises\n\n    **POST**:\
+        \ Create a new training session for accent practice.\n    - Define session\
+        \ name, exercise type, and target accent\n    - Set prompt text for reading\
+        \ exercises\n    - Automatically associates with user's voice samples\n\n\
+        \    **Session Types:**\n    - `reading`: Reading comprehension and pronunciation\n\
+        \    - `conversation`: Conversational practice exercises\n    - `phonetic`:\
+        \ Focused phonetic training drills\n    - `accent_drill`: Accent-specific\
+        \ practice exercises\n    - `free_speech`: Free-form speech practice\n\n \
+        \   **Progress Tracking**: Sessions track completion status, scores, and duration.\n\
+        \    "
+      summary: Training Sessions Management
       tags:
       - samples
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/TrainingSessionRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/TrainingSessionRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/TrainingSessionRequest'
-        required: true
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Session name or title
+                  example: US Accent Practice Session
+                exercise_type:
+                  type: string
+                  enum:
+                  - reading
+                  - conversation
+                  - phonetic
+                  - accent_drill
+                  - free_speech
+                  description: Type of training exercise
+                target_accent:
+                  type: string
+                  enum:
+                  - US
+                  - UK
+                  - AU
+                  - CA
+                  - IE
+                  description: Target accent for training
+                prompt_text:
+                  type: string
+                  description: Text for reading exercises (optional)
+                  example: Please read this text aloud for accent practice.
+              required:
+              - name
+              - exercise_type
+            examples:
+              CreateReadingSession:
+                value:
+                  name: US Accent Reading Practice
+                  exercise_type: reading
+                  target_accent: US
+                  prompt_text: The quick brown fox jumps over the lazy dog.
+                summary: Create Reading Session
+                description: Create a reading practice session
+              CreateConversationSession:
+                value:
+                  name: UK Accent Conversation
+                  exercise_type: conversation
+                  target_accent: UK
+                summary: Create Conversation Session
+                description: Create a conversation practice session
       security:
       - jwtAuth: []
       - cookieAuth: []
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTrainingSessionList'
+              examples:
+                CreateReadingSession:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - name: US Accent Reading Practice
+                      exercise_type: reading
+                      target_accent: US
+                      prompt_text: The quick brown fox jumps over the lazy dog.
+                  summary: Create Reading Session
+                  description: Create a reading practice session
+                CreateConversationSession:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - name: UK Accent Conversation
+                      exercise_type: conversation
+                      target_accent: UK
+                  summary: Create Conversation Session
+                  description: Create a conversation practice session
+          description: List of user's training sessions
         '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TrainingSession'
-          description: ''
+              examples:
+                CreateReadingSession:
+                  value:
+                    name: US Accent Reading Practice
+                    exercise_type: reading
+                    target_accent: US
+                    prompt_text: The quick brown fox jumps over the lazy dog.
+                  summary: Create Reading Session
+                  description: Create a reading practice session
+                CreateConversationSession:
+                  value:
+                    name: UK Accent Conversation
+                    exercise_type: conversation
+                    target_accent: UK
+                  summary: Create Conversation Session
+                  description: Create a conversation practice session
+          description: Training session created successfully
+        '400':
+          description: Invalid session data
   /api/samples/training-sessions/{id}/:
     get:
       operationId: samples_training_sessions_retrieve
-      description: |-
-        Retrieve, update, or delete a training session.
-
-        GET: Return training session details
-        PATCH: Update training session
-        DELETE: Delete training session
+      description: "\n    **Individual Training Session Management**\n\n    **GET**:\
+        \ Retrieve detailed information about a specific training session.\n    -\
+        \ Session metadata, scores, and completion status\n    - Associated voice\
+        \ samples and analysis results\n    - Progress metrics and exercise details\n\
+        \n    **PATCH**: Update training session information.\n    - Modify session\
+        \ name or settings\n    - Update completion status or scores\n    - Change\
+        \ exercise parameters\n\n    **DELETE**: Permanently remove a training session.\n\
+        \    - Deletes session record and associated data\n    - Does not delete voice\
+        \ samples (only the session organization)\n\n    **Session States:**\n   \
+        \ - `is_completed`: Whether the session has been finished\n    - `session_score`:\
+        \ Average score for all samples in session\n    - `duration_minutes`: Total\
+        \ time spent on session\n    - `sample_count`: Number of voice samples in\
+        \ session\n    "
+      summary: Training Session Details
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: ID of the training session
         required: true
       tags:
       - samples
@@ -808,20 +1771,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TrainingSession'
-          description: ''
+          description: Training session updated
+        '204':
+          description: Training session deleted
+        '403':
+          description: Access denied - not your session
+        '404':
+          description: Training session not found
     put:
       operationId: samples_training_sessions_update
-      description: |-
-        Retrieve, update, or delete a training session.
-
-        GET: Return training session details
-        PATCH: Update training session
-        DELETE: Delete training session
+      description: "\n    **Individual Training Session Management**\n\n    **GET**:\
+        \ Retrieve detailed information about a specific training session.\n    -\
+        \ Session metadata, scores, and completion status\n    - Associated voice\
+        \ samples and analysis results\n    - Progress metrics and exercise details\n\
+        \n    **PATCH**: Update training session information.\n    - Modify session\
+        \ name or settings\n    - Update completion status or scores\n    - Change\
+        \ exercise parameters\n\n    **DELETE**: Permanently remove a training session.\n\
+        \    - Deletes session record and associated data\n    - Does not delete voice\
+        \ samples (only the session organization)\n\n    **Session States:**\n   \
+        \ - `is_completed`: Whether the session has been finished\n    - `session_score`:\
+        \ Average score for all samples in session\n    - `duration_minutes`: Total\
+        \ time spent on session\n    - `sample_count`: Number of voice samples in\
+        \ session\n    "
+      summary: Training Session Details
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: ID of the training session
         required: true
       tags:
       - samples
@@ -846,20 +1824,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TrainingSession'
-          description: ''
+          description: Training session updated
+        '204':
+          description: Training session deleted
+        '403':
+          description: Access denied - not your session
+        '404':
+          description: Training session not found
     patch:
       operationId: samples_training_sessions_partial_update
-      description: |-
-        Retrieve, update, or delete a training session.
-
-        GET: Return training session details
-        PATCH: Update training session
-        DELETE: Delete training session
+      description: "\n    **Individual Training Session Management**\n\n    **GET**:\
+        \ Retrieve detailed information about a specific training session.\n    -\
+        \ Session metadata, scores, and completion status\n    - Associated voice\
+        \ samples and analysis results\n    - Progress metrics and exercise details\n\
+        \n    **PATCH**: Update training session information.\n    - Modify session\
+        \ name or settings\n    - Update completion status or scores\n    - Change\
+        \ exercise parameters\n\n    **DELETE**: Permanently remove a training session.\n\
+        \    - Deletes session record and associated data\n    - Does not delete voice\
+        \ samples (only the session organization)\n\n    **Session States:**\n   \
+        \ - `is_completed`: Whether the session has been finished\n    - `session_score`:\
+        \ Average score for all samples in session\n    - `duration_minutes`: Total\
+        \ time spent on session\n    - `sample_count`: Number of voice samples in\
+        \ session\n    "
+      summary: Training Session Details
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: ID of the training session
         required: true
       tags:
       - samples
@@ -883,20 +1876,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TrainingSession'
-          description: ''
+          description: Training session updated
+        '204':
+          description: Training session deleted
+        '403':
+          description: Access denied - not your session
+        '404':
+          description: Training session not found
     delete:
       operationId: samples_training_sessions_destroy
-      description: |-
-        Retrieve, update, or delete a training session.
-
-        GET: Return training session details
-        PATCH: Update training session
-        DELETE: Delete training session
+      description: "\n    **Individual Training Session Management**\n\n    **GET**:\
+        \ Retrieve detailed information about a specific training session.\n    -\
+        \ Session metadata, scores, and completion status\n    - Associated voice\
+        \ samples and analysis results\n    - Progress metrics and exercise details\n\
+        \n    **PATCH**: Update training session information.\n    - Modify session\
+        \ name or settings\n    - Update completion status or scores\n    - Change\
+        \ exercise parameters\n\n    **DELETE**: Permanently remove a training session.\n\
+        \    - Deletes session record and associated data\n    - Does not delete voice\
+        \ samples (only the session organization)\n\n    **Session States:**\n   \
+        \ - `is_completed`: Whether the session has been finished\n    - `session_score`:\
+        \ Average score for all samples in session\n    - `duration_minutes`: Total\
+        \ time spent on session\n    - `sample_count`: Number of voice samples in\
+        \ session\n    "
+      summary: Training Session Details
       parameters:
       - in: path
         name: id
         schema:
           type: integer
+        description: ID of the training session
         required: true
       tags:
       - samples
@@ -904,238 +1912,43 @@ paths:
       - jwtAuth: []
       - cookieAuth: []
       responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrainingSession'
+          description: Training session updated
         '204':
-          description: No response body
+          description: Training session deleted
+        '403':
+          description: Access denied - not your session
+        '404':
+          description: Training session not found
   /api/samples/training-sessions/{session_id}/complete/:
     post:
       operationId: samples_training_sessions_complete_create
-      description: |-
-        Mark a training session as completed and calculate final score.
-
-        POST /api/training-sessions/{id}/complete/
+      description: "\n    **Mark Training Session as Completed**\n\n    Finalizes\
+        \ a training session, calculates final performance scores, and updates user\
+        \ progress metrics.\n\n    **Completion Process:**\n    1. **Validation**:\
+        \ Ensures session belongs to user and isn't already completed\n    2. **Score\
+        \ Calculation**: Computes average score from all analyzed samples in session\n\
+        \    3. **Progress Update**: Updates user progress metrics and streaks\n \
+        \   4. **Session Closure**: Sets completion timestamp and final status\n\n\
+        \    **Score Calculation:**\n    - **Session Score**: Average of all pronunciation,\
+        \ fluency, and accent scores\n    - **Weighted Average**: Pronunciation (40%),\
+        \ Fluency (30%), Accent Authenticity (30%)\n    - **Sample Count**: Number\
+        \ of voice samples analyzed in session\n\n    **Progress Impact:**\n    -\
+        \ Updates practice streaks and consistency metrics\n    - Contributes to overall\
+        \ progress tracking\n    - Affects personalized recommendations\n    - Updates\
+        \ last practice date\n\n    **Use Cases:**\n    - End of practice session\n\
+        \    - Session timeout handling\n    - Manual session completion\n    "
+      summary: Complete Training Session
       parameters:
       - in: path
         name: session_id
         schema:
           type: integer
-        required: true
-      tags:
-      - samples
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/samples/accent-twins/:
-    get:
-      operationId: samples_accent_twins_list
-      description: "\n    **List User's Accent Twins (GET)**\n    Returns all accent\
-        \ twins created by the authenticated user, including their generation status.\n\
-        \n    **Create New Accent Twin (POST)**  \n    Generates a new accent twin\
-        \ using our enhanced TTS system with pluggable providers.\n    \n    **Supported\
-        \ TTS Providers:**\n    - `edge_tts`: Microsoft Edge TTS (Free, recommended)\
-        \ - Supports US, UK, AU, CA, IE accents\n    - `elevenlabs`: ElevenLabs Premium\
-        \ TTS (Coming soon)\n    \n    **Generation Process:**\n    1. Creates an\
-        \ accent twin record with 'pending' status\n    2. Queues TTS generation using\
-        \ the selected provider\n    3. Updates status to 'completed' with audio file\
-        \ when ready\n    4. Supports automatic fallback between providers\n    "
-      summary: List and Create Accent Twins
-      parameters:
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
-        schema:
-          type: string
-      - name: page
-        required: false
-        in: query
-        description: A page number within the paginated result set.
-        schema:
-          type: integer
-      - name: search
-        required: false
-        in: query
-        description: A search term.
-        schema:
-          type: string
-      tags:
-      - samples
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedAccentTwinList'
-              examples:
-                CreateUSAccentTwin:
-                  value:
-                    count: 123
-                    next: http://api.example.org/accounts/?page=4
-                    previous: http://api.example.org/accounts/?page=2
-                    results:
-                    - original_sample: 1
-                      target_accent: US
-                      tts_provider: edge_tts
-                      voice_model: en-US-AriaNeural
-                  summary: Create US Accent Twin
-                CreateUKAccentTwin:
-                  value:
-                    count: 123
-                    next: http://api.example.org/accounts/?page=4
-                    previous: http://api.example.org/accounts/?page=2
-                    results:
-                    - original_sample: 1
-                      target_accent: UK
-                      tts_provider: edge_tts
-                      voice_model: en-GB-SoniaNeural
-                  summary: Create UK Accent Twin
-          description: List of accent twins
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedAccentTwinList'
-              examples:
-                CreateUSAccentTwin:
-                  value:
-                    count: 123
-                    next: http://api.example.org/accounts/?page=4
-                    previous: http://api.example.org/accounts/?page=2
-                    results:
-                    - original_sample: 1
-                      target_accent: US
-                      tts_provider: edge_tts
-                      voice_model: en-US-AriaNeural
-                  summary: Create US Accent Twin
-                CreateUKAccentTwin:
-                  value:
-                    count: 123
-                    next: http://api.example.org/accounts/?page=4
-                    previous: http://api.example.org/accounts/?page=2
-                    results:
-                    - original_sample: 1
-                      target_accent: UK
-                      tts_provider: edge_tts
-                      voice_model: en-GB-SoniaNeural
-                  summary: Create UK Accent Twin
-          description: Accent twin creation started
-    post:
-      operationId: samples_accent_twins_create
-      description: "\n    **List User's Accent Twins (GET)**\n    Returns all accent\
-        \ twins created by the authenticated user, including their generation status.\n\
-        \n    **Create New Accent Twin (POST)**  \n    Generates a new accent twin\
-        \ using our enhanced TTS system with pluggable providers.\n    \n    **Supported\
-        \ TTS Providers:**\n    - `edge_tts`: Microsoft Edge TTS (Free, recommended)\
-        \ - Supports US, UK, AU, CA, IE accents\n    - `elevenlabs`: ElevenLabs Premium\
-        \ TTS (Coming soon)\n    \n    **Generation Process:**\n    1. Creates an\
-        \ accent twin record with 'pending' status\n    2. Queues TTS generation using\
-        \ the selected provider\n    3. Updates status to 'completed' with audio file\
-        \ when ready\n    4. Supports automatic fallback between providers\n    "
-      summary: List and Create Accent Twins
-      tags:
-      - samples
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AccentTwinCreateRequest'
-            examples:
-              CreateUSAccentTwin:
-                value:
-                  original_sample: 1
-                  target_accent: US
-                  tts_provider: edge_tts
-                  voice_model: en-US-AriaNeural
-                summary: Create US Accent Twin
-              CreateUKAccentTwin:
-                value:
-                  original_sample: 1
-                  target_accent: UK
-                  tts_provider: edge_tts
-                  voice_model: en-GB-SoniaNeural
-                summary: Create UK Accent Twin
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/AccentTwinCreateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/AccentTwinCreateRequest'
-        required: true
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PaginatedAccentTwinList'
-              examples:
-                CreateUSAccentTwin:
-                  value:
-                    count: 123
-                    next: http://api.example.org/accounts/?page=4
-                    previous: http://api.example.org/accounts/?page=2
-                    results:
-                    - original_sample: 1
-                      target_accent: US
-                      tts_provider: edge_tts
-                      voice_model: en-US-AriaNeural
-                  summary: Create US Accent Twin
-                CreateUKAccentTwin:
-                  value:
-                    count: 123
-                    next: http://api.example.org/accounts/?page=4
-                    previous: http://api.example.org/accounts/?page=2
-                    results:
-                    - original_sample: 1
-                      target_accent: UK
-                      tts_provider: edge_tts
-                      voice_model: en-GB-SoniaNeural
-                  summary: Create UK Accent Twin
-          description: List of accent twins
-        '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccentTwin'
-              examples:
-                CreateUSAccentTwin:
-                  value:
-                    original_sample: 1
-                    target_accent: US
-                    tts_provider: edge_tts
-                    voice_model: en-US-AriaNeural
-                  summary: Create US Accent Twin
-                CreateUKAccentTwin:
-                  value:
-                    original_sample: 1
-                    target_accent: UK
-                    tts_provider: edge_tts
-                    voice_model: en-GB-SoniaNeural
-                  summary: Create UK Accent Twin
-          description: Accent twin creation started
-  /api/samples/accent-twins/{id}/:
-    get:
-      operationId: samples_accent_twins_retrieve
-      description: "\n    **Retrieve Accent Twin (GET)**\n    Returns details of a\
-        \ specific accent twin including TTS generation status and audio file URL.\n\
-        \    \n    **Delete Accent Twin (DELETE)**\n    Permanently removes the accent\
-        \ twin and its generated audio files.\n    \n    **Status Values:**\n    -\
-        \ `pending`: TTS generation queued\n    - `processing`: Currently generating\
-        \ audio\n    - `completed`: Audio file ready for download\n    - `failed`:\
-        \ Generation failed (check error_message)\n    "
-      summary: Retrieve or Delete Accent Twin
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
+        description: ID of the training session to complete
         required: true
       tags:
       - samples
@@ -1147,74 +1960,155 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccentTwin'
-          description: Accent twin details
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Training session completed successfully
+                  session_score:
+                    type: number
+                    example: 8.2
+                  samples_analyzed:
+                    type: integer
+                    example: 5
+                  completion_time:
+                    type: string
+                    format: date-time
+                  progress_impact:
+                    type: object
+                    properties:
+                      streak_extended:
+                        type: boolean
+                        example: true
+                      current_streak:
+                        type: integer
+                        example: 7
+                      average_score_updated:
+                        type: boolean
+                        example: true
+          description: Training session completed successfully
+        '400':
+          description: Session already completed or invalid
         '404':
-          description: Accent twin not found
-        '204':
-          description: Accent twin deleted
-    delete:
-      operationId: samples_accent_twins_destroy
-      description: "\n    **Retrieve Accent Twin (GET)**\n    Returns details of a\
-        \ specific accent twin including TTS generation status and audio file URL.\n\
-        \    \n    **Delete Accent Twin (DELETE)**\n    Permanently removes the accent\
-        \ twin and its generated audio files.\n    \n    **Status Values:**\n    -\
-        \ `pending`: TTS generation queued\n    - `processing`: Currently generating\
-        \ audio\n    - `completed`: Audio file ready for download\n    - `failed`:\
-        \ Generation failed (check error_message)\n    "
-      summary: Retrieve or Delete Accent Twin
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - samples
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccentTwin'
-          description: Accent twin details
-        '404':
-          description: Accent twin not found
-        '204':
-          description: Accent twin deleted
-  /api/samples/voice-samples/{sample_id}/generate-accent-twin/:
-    post:
-      operationId: samples_voice_samples_generate_accent_twin_create
-      description: "\n    **Enhanced TTS Accent Twin Generation**\n    \n    Generates\
-        \ an accent twin for an analyzed voice sample using our pluggable TTS architecture.\n\
-        \    This endpoint creates realistic accent variations of the user's speech\
-        \ using advanced TTS providers.\n    \n    **Prerequisites:**\n    - Voice\
-        \ sample must be uploaded and analyzed\n    - Sample must have transcription\
-        \ data available\n    \n    **TTS Providers & Features:**\n    - **Edge TTS**\
-        \ (Default, Free): Microsoft's neural voices with natural accents\n      -\
-        \ Supports: US, UK, AU, CA, IE accents\n      - High quality neural voice\
-        \ models\n      - Fast generation (~1-2 seconds)\n    - **ElevenLabs** (Premium,\
-        \ Coming Soon): Ultra-realistic voice cloning\n      - Professional voice\
-        \ models\n      - Custom voice training capabilities\n    \n    **Supported\
-        \ Accents:**\n    - `US`: American English (en-US-AriaNeural, en-US-JennyNeural)\n\
-        \    - `UK`: British English (en-GB-SoniaNeural, en-GB-RyanNeural) \n    -\
-        \ `AU`: Australian English (en-AU-NatashaNeural, en-AU-WilliamNeural)\n  \
-        \  - `CA`: Canadian English (en-CA-ClaraNeural, en-CA-LiamNeural)\n    - `IE`:\
-        \ Irish English (en-IE-EmilyNeural, en-IE-ConnorNeural)\n    \n    **Generation\
-        \ Process:**\n    1. Validates voice sample and transcription\n    2. Creates\
-        \ or updates accent twin record\n    3. Generates audio using selected TTS\
-        \ provider\n    4. Returns immediate response with generation status\n   \
-        \ 5. Audio becomes available when status = 'completed'\n    "
-      summary: Generate Accent Twin for Voice Sample
+          description: Training session not found
+        '403':
+          description: Access denied - not your session
+  /api/samples/voice-samples/{sample_id}/accent-recommendations/:
+    get:
+      operationId: samples_voice_samples_accent_recommendations_retrieve
+      description: "\n    **Analyze Voice and Get Accent Recommendations**\n\n   \
+        \ Analyzes the user's voice characteristics and provides personalized accent\
+        \ learning recommendations.\n    Uses advanced phonetic analysis to determine\
+        \ which accents would be easiest to learn based on\n    the user's current\
+        \ speech patterns, native accent tendencies, and linguistic background.\n\n\
+        \    **Analysis Factors:**\n    - Phonetic inventory compatibility\n    -\
+        \ Vowel/consonant system similarities\n    - Stress pattern alignment\n  \
+        \  - Cultural/linguistic proximity\n    - Historical language relationships\n\
+        \n    **Recommendation Categories:**\n    - **Easy**: High success rate, quick\
+        \ learning curve\n    - **Moderate**: Balanced difficulty and progress\n \
+        \   - **Challenging**: Significant adaptation required\n    - **Difficult**:\
+        \ Major phonetic system changes needed\n\n    **Response includes:**\n   \
+        \ - Difficulty score (0-1, lower = easier)\n    - Detailed reasoning for each\
+        \ recommendation\n    - Phonetic similarities and challenges\n    - Estimated\
+        \ learning time\n    - Success probability\n    "
+      summary: Get Accent Recommendations
       parameters:
       - in: path
         name: sample_id
         schema:
           type: integer
-        description: ID of the voice sample to generate accent twin for
+        description: ID of the analyzed voice sample
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        accent_code:
+                          type: string
+                          example: US
+                        accent_name:
+                          type: string
+                          example: American English
+                        difficulty:
+                          type: string
+                          enum:
+                          - easy
+                          - moderate
+                          - challenging
+                          - difficult
+                        difficulty_score:
+                          type: number
+                          example: 0.25
+                        reasons:
+                          type: array
+                          items:
+                            type: string
+                        phonetic_similarities:
+                          type: array
+                          items:
+                            type: string
+                        phonetic_challenges:
+                          type: array
+                          items:
+                            type: string
+                        estimated_learning_time:
+                          type: string
+                          example: 2-4 weeks
+                        success_probability:
+                          type: number
+                          example: 0.85
+                  user_profile:
+                    type: object
+                    properties:
+                      detected_accent:
+                        type: string
+                      vowel_system:
+                        type: string
+                      f0_characteristics:
+                        type: string
+          description: Accent recommendations with difficulty analysis
+        '400':
+          description: Voice sample not analyzed
+        '404':
+          description: Voice sample not found
+  /api/samples/voice-samples/{sample_id}/practice-sessions/:
+    post:
+      operationId: samples_voice_samples_practice_sessions_create
+      description: "\n    **Create a Personalized Accent Practice Session**\n\n  \
+        \  Creates a practice session for learning a specific accent with the user's\
+        \ preferred voice gender.\n    Uses the analyzed voice sample to provide targeted\
+        \ practice exercises.\n\n    **Features:**\n    - Voice gender selection (male/female)\n\
+        \    - TTS provider selection (Edge TTS free, ElevenLabs premium)\n    - Personalized\
+        \ practice prompts based on analysis\n    - Progress tracking integration\n\
+        \n    **Supported Accents:**\n    - US: American English\n    - UK: British\
+        \ English\n    - AU: Australian English\n    - CA: Canadian English\n    -\
+        \ IE: Irish English\n    "
+      summary: Create Practice Session
+      parameters:
+      - in: path
+        name: sample_id
+        schema:
+          type: integer
+        description: ID of the analyzed voice sample
         required: true
       tags:
       - samples
@@ -1232,8 +2126,13 @@ paths:
                   - AU
                   - CA
                   - IE
-                  default: US
-                  description: Target accent for generation
+                  description: Accent to practice
+                voice_gender:
+                  type: string
+                  enum:
+                  - male
+                  - female
+                  description: Preferred voice gender for practice
                 tts_provider:
                   type: string
                   enum:
@@ -1241,38 +2140,106 @@ paths:
                   - elevenlabs
                   default: edge_tts
                   description: TTS provider to use
-                voice_model:
+                session_name:
                   type: string
-                  description: Specific voice model (auto-selected if not provided)
-                  examples:
-                  - en-US-AriaNeural
-                  - en-GB-SoniaNeural
-                generation_params:
-                  type: object
-                  description: Additional provider-specific parameters
-                  properties:
-                    voice_speed:
-                      type: number
-                      default: 1.0
-                    voice_pitch:
-                      type: number
-                      default: 1.0
+                  description: Optional custom name for the session
               required:
               - target_accent
+              - voice_gender
             examples:
-              GenerateUSAccentTwin:
+              CreateUSAccentPracticeSession:
                 value:
                   target_accent: US
+                  voice_gender: female
                   tts_provider: edge_tts
-                  voice_model: en-US-AriaNeural
-                summary: Generate US Accent Twin
-              GenerateUKAccentWithCustomSpeed:
-                value:
-                  target_accent: UK
-                  tts_provider: edge_tts
-                  generation_params:
-                    voice_speed: 0.9
-                summary: Generate UK Accent with Custom Speed
+                  session_name: American Accent Practice
+                summary: Create US Accent Practice Session
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Practice session created
+                  session:
+                    $ref: '#/components/schemas/TrainingSession'
+                  practice_info:
+                    type: object
+                    properties:
+                      accent_name:
+                        type: string
+                        example: American English
+                      voice_gender:
+                        type: string
+                        example: female
+                      tts_provider:
+                        type: string
+                        example: edge_tts
+                      recommended_exercises:
+                        type: array
+                        items:
+                          type: string
+              examples:
+                CreateUSAccentPracticeSession:
+                  value:
+                    target_accent: US
+                    voice_gender: female
+                    tts_provider: edge_tts
+                    session_name: American Accent Practice
+                  summary: Create US Accent Practice Session
+          description: Practice session created successfully
+        '400':
+          description: Invalid parameters or voice sample not analyzed
+        '404':
+          description: Voice sample not found
+  /api/samples/practice-sessions/{session_id}/generate-audio/:
+    post:
+      operationId: samples_practice_sessions_generate_audio_create
+      description: "\n    **Generate Practice Audio for Accent Learning**\n\n    Creates\
+        \ audio samples using the selected accent and voice gender for practice.\n\
+        \    Uses the transcription from the analyzed voice sample to generate practice\
+        \ audio.\n\n    **Features:**\n    - Uses transcription from user's analyzed\
+        \ voice\n    - Applies selected accent and voice characteristics\n    - Supports\
+        \ both Edge TTS (free) and ElevenLabs (premium)\n    - Returns audio file\
+        \ for immediate practice\n\n    **Use Cases:**\n    - Listen to target accent\
+        \ pronunciation\n    - Compare with user's own speech\n    - Practice shadowing\
+        \ exercises\n    - Build accent familiarity\n    "
+      summary: Generate Practice Audio
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: integer
+        description: ID of the practice session
+        required: true
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: Text to generate audio for (optional, uses sample transcription
+                    if not provided)
+                tts_provider:
+                  type: string
+                  enum:
+                  - edge_tts
+                  - elevenlabs
+                  default: edge_tts
+                  description: TTS provider to use
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -1286,11 +2253,9 @@ paths:
                   status:
                     type: string
                     example: success
-                  message:
+                  audio_url:
                     type: string
-                    example: Accent twin generated successfully
-                  accent_twin:
-                    $ref: '#/components/schemas/AccentTwin'
+                    example: /media/practice_audio/...
                   generation_info:
                     type: object
                     properties:
@@ -1302,97 +2267,26 @@ paths:
                         example: en-US-AriaNeural
                       processing_time:
                         type: number
-                        example: 1.5
-                      file_size:
+                        example: 1.2
+                      text_length:
                         type: integer
-                        example: 69552
-              examples:
-                GenerateUSAccentTwin:
-                  value:
-                    target_accent: US
-                    tts_provider: edge_tts
-                    voice_model: en-US-AriaNeural
-                  summary: Generate US Accent Twin
-                GenerateUKAccentWithCustomSpeed:
-                  value:
-                    target_accent: UK
-                    tts_provider: edge_tts
-                    generation_params:
-                      voice_speed: 0.9
-                  summary: Generate UK Accent with Custom Speed
-          description: Accent twin generation successful
+                        example: 45
+          description: Practice audio generated successfully
         '400':
-          description: Voice sample not analyzed or missing transcription
+          description: Invalid parameters or no transcription available
         '404':
-          description: Voice sample not found
-  /api/samples/accent-twins/{twin_id}/status/:
-    get:
-      operationId: samples_accent_twins_status_retrieve
-      description: |-
-        Get the status of an accent twin generation.
-
-        GET /api/accent-twins/{id}/status/
-      parameters:
-      - in: path
-        name: twin_id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - samples
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/samples/accent-twins/{twin_id}/compare/:
-    post:
-      operationId: samples_accent_twins_compare_create
-      description: |-
-        Compare an accent twin with its original sample for detailed analysis.
-
-        POST /api/accent-twins/{id}/compare/
-      parameters:
-      - in: path
-        name: twin_id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - samples
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
-  /api/samples/accent-twins/available-accents/:
-    get:
-      operationId: samples_accent_twins_available_accents_retrieve
-      description: |-
-        Get list of available target accents for accent twin generation.
-
-        GET /api/accent-twins/available-accents/
-      tags:
-      - samples
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: No response body
+          description: Practice session not found
   /api/samples/tts/status/:
     get:
       operationId: samples_tts_status_retrieve
-      description: "\n    **Enhanced TTS System Information**\n    \n    Provides\
-        \ comprehensive information about the TTS system capabilities, including:\n\
-        \    - Available TTS providers and their status\n    - Supported accents and\
-        \ voice models\n    - System health and performance metrics\n    - Recent\
-        \ generation statistics\n    \n    **Use this endpoint to:**\n    - Check\
-        \ TTS provider availability before generation\n    - Get list of supported\
-        \ accents and voice models\n    - Monitor system performance and health\n\
-        \    - Troubleshoot TTS generation issues\n    "
+      description: "\n    **Enhanced TTS System Information**\n\n    Provides comprehensive\
+        \ information about the TTS system capabilities, including:\n    - Available\
+        \ TTS providers and their status\n    - Supported accents and voice models\n\
+        \    - System health and performance metrics\n    - Recent generation statistics\n\
+        \n    **Use this endpoint to:**\n    - Check TTS provider availability before\
+        \ generation\n    - Get list of supported accents and voice models\n    -\
+        \ Monitor system performance and health\n    - Troubleshoot TTS generation\
+        \ issues\n    "
       summary: TTS System Status and Capabilities
       tags:
       - samples
@@ -1446,21 +2340,6 @@ paths:
                       average_processing_time:
                         type: number
           description: TTS system status and capabilities
-  /api/samples/accent-twins/process-pending/:
-    post:
-      operationId: samples_accent_twins_process_pending_create
-      description: "\n    **Manual Processing Endpoint**\n    \n    Processes all\
-        \ pending accent twins immediately. Useful when Celery is not available\n\
-        \    and accent twins are stuck in pending status.\n    "
-      summary: Process Pending Accent Twins
-      tags:
-      - samples
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          description: Processing results
   /api/training/sessions/:
     get:
       operationId: training_sessions_retrieve
@@ -1837,128 +2716,6 @@ paths:
           description: ''
 components:
   schemas:
-    AccentTwin:
-      type: object
-      description: Serializer for AccentTwin model with detailed generation information.
-      properties:
-        id:
-          type: integer
-          readOnly: true
-        user:
-          type: string
-          format: uuid
-          readOnly: true
-          description: User who owns this accent twin
-        user_username:
-          type: string
-          readOnly: true
-        original_sample:
-          type: integer
-          description: Original voice sample used for generation
-        original_sample_info:
-          type: string
-          readOnly: true
-        target_accent:
-          type: string
-          description: Target accent for the synthesized voice (e.g., 'US', 'UK',
-            'AU')
-          maxLength: 50
-        tts_provider:
-          allOf:
-          - $ref: '#/components/schemas/TtsProviderEnum'
-          default: coqui
-        voice_model:
-          type: string
-          description: Specific voice model or speaker ID used
-          maxLength: 100
-        generation_status:
-          allOf:
-          - $ref: '#/components/schemas/GenerationStatusEnum'
-          readOnly: true
-        accent_twin_file:
-          type: string
-          format: uri
-          readOnly: true
-          nullable: true
-          description: Generated accent twin audio file
-        file_url:
-          type: string
-          readOnly: true
-        generation_params:
-          description: Parameters used for generation (quality, speed, etc.)
-        processing_time:
-          type: number
-          format: double
-          readOnly: true
-          nullable: true
-          description: Time taken for generation in seconds
-        error_message:
-          type: string
-          readOnly: true
-          description: Error message if generation failed
-        similarity_score:
-          type: number
-          format: double
-          readOnly: true
-          nullable: true
-          description: Similarity score between original and accent twin (0-100)
-        phoneme_gaps:
-          readOnly: true
-          description: Detailed phoneme-level differences for training
-        is_ready:
-          type: string
-          readOnly: true
-        created_at:
-          type: string
-          format: date-time
-          readOnly: true
-        updated_at:
-          type: string
-          format: date-time
-          readOnly: true
-      required:
-      - accent_twin_file
-      - created_at
-      - error_message
-      - file_url
-      - generation_status
-      - id
-      - is_ready
-      - original_sample
-      - original_sample_info
-      - phoneme_gaps
-      - processing_time
-      - similarity_score
-      - target_accent
-      - updated_at
-      - user
-      - user_username
-    AccentTwinCreateRequest:
-      type: object
-      description: Simplified serializer for creating accent twins.
-      properties:
-        original_sample:
-          type: integer
-          description: Original voice sample used for generation
-        target_accent:
-          type: string
-          minLength: 1
-          description: Target accent for the synthesized voice (e.g., 'US', 'UK',
-            'AU')
-          maxLength: 50
-        tts_provider:
-          allOf:
-          - $ref: '#/components/schemas/TtsProviderEnum'
-          default: coqui
-        voice_model:
-          type: string
-          description: Specific voice model or speaker ID used
-          maxLength: 100
-        generation_params:
-          description: Parameters used for generation (quality, speed, etc.)
-      required:
-      - original_sample
-      - target_accent
     ChangePasswordRequest:
       type: object
       description: Serializer for changing user password.
@@ -2004,18 +2761,6 @@ components:
         * `phonetic` - Phonetic Training
         * `accent_drill` - Accent Drill
         * `free_speech` - Free Speech
-    GenerationStatusEnum:
-      enum:
-      - pending
-      - processing
-      - completed
-      - failed
-      type: string
-      description: |-
-        * `pending` - Generation Pending
-        * `processing` - Processing
-        * `completed` - Completed Successfully
-        * `failed` - Generation Failed
     JWTResponse:
       type: object
       description: Serializer for JWT token response.
@@ -2032,26 +2777,6 @@ components:
       - access
       - refresh
       - user
-    PaginatedAccentTwinList:
-      type: object
-      properties:
-        count:
-          type: integer
-          example: 123
-        next:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=4
-        previous:
-          type: string
-          nullable: true
-          format: uri
-          example: http://api.example.org/accounts/?page=2
-        results:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccentTwin'
     PaginatedTrainingSessionList:
       type: object
       properties:
@@ -2289,18 +3014,6 @@ components:
           description: Session duration
       required:
       - name
-    TtsProviderEnum:
-      enum:
-      - coqui
-      - bark
-      - edge_tts
-      - gtts
-      type: string
-      description: |-
-        * `coqui` - Coqui TTS
-        * `bark` - Bark TTS
-        * `edge_tts` - Microsoft Edge TTS
-        * `gtts` - Google TTS
     UserLoginRequest:
       type: object
       description: Serializer for user login.
@@ -2633,29 +3346,6 @@ components:
       - updated_at
       - user
       - user_username
-    VoiceSampleRequest:
-      type: object
-      description: Serializer for VoiceSample model with enhanced analysis fields.
-      properties:
-        file:
-          type: string
-          format: binary
-          writeOnly: true
-          description: 'Supported formats: WAV, MP3, M4A, OGG, WEBM. Max size: 50MB'
-          pattern: (?:wav|mp3|m4a|ogg|webm)$
-        prompt_text:
-          type: string
-          description: Text that was supposed to be read (optional)
-        target_accent:
-          type: string
-          description: Target accent for training
-          maxLength: 50
-        training_session:
-          type: integer
-          nullable: true
-          description: Training session this sample belongs to
-      required:
-      - file
   securitySchemes:
     cookieAuth:
       type: apiKey

@@ -1,10 +1,10 @@
-# Eloqi Mobile - Flutter App
+# iloqi Mobile - Flutter App
 
 🎭 Revolutionary Accent Training with AI-powered Accent Twin Technology
 
 ## Overview
 
-Eloqi Mobile is the Flutter frontend for the Eloqi accent training platform. This app provides users with an intuitive interface to interact with the comprehensive Eloqi API, featuring AI-powered voice analysis, accent twin generation, and personalized training programs.
+iloqi Mobile is the Flutter frontend for the iloqi accent training platform. This app provides users with an intuitive interface to interact with the comprehensive iloqi API, featuring AI-powered voice analysis, accent twin generation, and personalized training programs.
 
 ## Features
 
@@ -72,7 +72,7 @@ lib/
 - Flutter SDK 3.1.0 or higher
 - Dart SDK 3.0.0 or higher
 - Android Studio / VS Code with Flutter extensions
-- Running Eloqi API backend (http://localhost:8000)
+- Running iloqi API backend (http://localhost:8000)
 
 ### Installation
 
@@ -98,14 +98,14 @@ lib/
 
 ### Configuration
 
-The app is configured to connect to the Eloqi API at `http://localhost:8000`. To change this:
+The app is configured to connect to the iloqi API at `http://localhost:8000`. To change this:
 
 1. Update the base URL in `lib/core/di/injection_container.dart`
 2. Update the base URL in API service files in `lib/core/services/`
 
 ## API Integration
 
-The app integrates with the comprehensive Eloqi REST API:
+The app integrates with the comprehensive iloqi REST API:
 
 - **Authentication**: JWT tokens with refresh mechanism
 - **Voice Analysis**: Multi-provider ML analysis pipeline
@@ -225,7 +225,7 @@ The app integrates with 15+ REST endpoints:
 
 ## License
 
-This project is part of the Eloqi ecosystem - Revolutionary Accent Training Platform.
+This project is part of the iloqi ecosystem - Revolutionary Accent Training Platform.
 
 ## Support
 
@@ -236,4 +236,4 @@ For support and questions:
 
 ---
 
-**Eloqi Mobile** - Making accent training personal, intuitive, and effective. 🎭✨
+**iloqi Mobile** - Making accent training personal, intuitive, and effective. 🎭✨

@@ -4,15 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../routing/app_router.dart';
 import '../theme/app_theme.dart';
 
-class EloqiApp extends ConsumerWidget {
-  const EloqiApp({super.key});
+class IloqiApp extends ConsumerWidget {
+  const IloqiApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     
     return MaterialApp.router(
-      title: 'Eloqi - Accent Training',
+      title: 'iloqi - Accent Training',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

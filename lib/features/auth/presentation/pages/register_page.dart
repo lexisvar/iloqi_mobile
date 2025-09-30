@@ -111,7 +111,7 @@ class _RegisterPageState extends ConsumerState<RegisterPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Text(
-                    'Join Eloqi',
+                    'Join iloqi',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,

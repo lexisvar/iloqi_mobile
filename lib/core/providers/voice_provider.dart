@@ -3,7 +3,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_sound/flutter_sound.dart';
+import 'package:flutter_sound/flutter_sound.dart' hide PlayerState;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
@@ -14,17 +14,7 @@ import '../services/voice_api_service.dart';
 import '../di/injection_container.dart';
 
 // Providers
-final voiceApiServiceProviclass AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
-  final VoiceApiService _voiceApiService;
-  final AudioPlaybackNotifier _audioPlaybackNotifier;
-  Timer? _pollTimer;
-  AudioPlayer? _audioPlayer;
-  final Map<String, String> _downloadedFiles = {}; // Cache for downloaded files
-
-  AccentTwinNotifier(this._voiceApiService, this._audioPlaybackNotifier) 
-      : super(const AsyncValue.data(null));
-
-  Future<void> generateAccentTwin(int sampleId, String targetAccent, {int attempt = 1}) async {vider<VoiceApiService>((ref) {
+final voiceApiServiceProvider = Provider<VoiceApiService>((ref) {
   return ServiceLocator.instance.voiceApi;
 });
 
@@ -37,10 +27,7 @@ final voiceAnalysisProvider = StateNotifierProvider<VoiceAnalysisNotifier, Async
 });
 
 final accentTwinProvider = StateNotifierProvider<AccentTwinNotifier, AsyncValue<AccentTwin?>>((ref) {
-  return AccentTwinNotifier(
-    ref.watch(voiceApiServiceProvider), 
-    ref.watch(audioPlaybackProvider.notifier)
-  );
+  return AccentTwinNotifier(ref.watch(voiceApiServiceProvider));
 });
 
 // Voice Recording State
@@ -293,7 +280,7 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
           android: AudioContextAndroid(
             isSpeakerphoneOn: true,
             stayAwake: true,
-            contentType: AndroidContentType.speech,
+            contentType: AndroidContentType.music,
             usageType: AndroidUsageType.media,
             audioFocus: AndroidAudioFocus.gain,
           ),
@@ -481,35 +468,97 @@ class VoiceAnalysisNotifier extends StateNotifier<AsyncValue<VoiceAnalysis?>> {
 
     try {
       final file = File(audioFilePath);
-      
+
       if (!file.existsSync()) {
         throw Exception('Audio file not found');
       }
 
       debugPrint('🔬 Step 1: Uploading voice sample: $audioFilePath');
-      
+
       // Step 1: Upload the voice sample
       final voiceSample = await _voiceApiService.uploadVoiceSample(file);
       _currentSample = voiceSample; // Store for accent twin generation
       debugPrint('✅ Voice sample uploaded with ID: ${voiceSample.id}');
-      
-      // Step 2: Trigger analysis and get results directly
+
+      // Step 2: Trigger analysis
       debugPrint('🔬 Step 2: Analyzing voice sample ID: ${voiceSample.id}');
       final analysisResponse = await _voiceApiService.analyzeVoiceSample(voiceSample.id);
-      debugPrint('✅ Analysis completed successfully');
-      
-      // Step 3: Create VoiceAnalysis from the direct response
+      debugPrint('✅ Analysis request completed successfully');
+
+      // Step 3: Create VoiceAnalysis from the response
       final voiceAnalysis = VoiceAnalysis(
         status: analysisResponse.status,
         message: analysisResponse.message,
         analysis: analysisResponse.analysis,
       );
-      
+
       state = AsyncValue.data(voiceAnalysis);
       debugPrint('✅ Voice analysis completed: ${voiceAnalysis.detectedAccent}');
-      
+
     } catch (e, stackTrace) {
       debugPrint('❌ Voice analysis error: $e');
+      state = AsyncValue.error(e, stackTrace);
+    }
+  }
+
+  Future<void> refreshAnalysisResults() async {
+    if (_currentSample == null) {
+      debugPrint('⚠️ No current sample to refresh analysis for');
+      return;
+    }
+
+    try {
+      debugPrint('🔄 Refreshing analysis results for sample: ${_currentSample!.id}');
+      final resultsResponse = await _voiceApiService.getAnalysisResults(_currentSample!.id);
+
+      if (resultsResponse.analyzed && resultsResponse.analysis != null) {
+        final voiceAnalysis = VoiceAnalysis(
+          status: resultsResponse.status,
+          message: resultsResponse.message ?? 'Analysis completed',
+          analysis: resultsResponse.analysis!,
+        );
+        state = AsyncValue.data(voiceAnalysis);
+        debugPrint('✅ Analysis results refreshed');
+      } else {
+        debugPrint('ℹ️ Analysis not yet completed');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('❌ Error refreshing analysis results: $e');
+      // Don't update state on refresh errors to preserve existing data
+    }
+  }
+
+  Future<void> reanalyzeVoice({String? promptText, bool forceCompleteReanalysis = false}) async {
+    if (_currentSample == null) {
+      debugPrint('⚠️ No current sample to re-analyze');
+      return;
+    }
+
+    state = const AsyncValue.loading();
+
+    try {
+      debugPrint('🔄 Re-analyzing voice sample: ${_currentSample!.id}');
+      final reanalyzeRequest = ReanalyzeRequest(
+        promptText: promptText,
+        forceCompleteReanalysis: forceCompleteReanalysis,
+      );
+
+      final analysisResponse = await _voiceApiService.reanalyzeVoiceSample(
+        _currentSample!.id,
+        reanalyzeRequest,
+      );
+
+      final voiceAnalysis = VoiceAnalysis(
+        status: analysisResponse.status,
+        message: analysisResponse.message,
+        analysis: analysisResponse.analysis,
+      );
+
+      state = AsyncValue.data(voiceAnalysis);
+      debugPrint('✅ Voice re-analysis completed');
+
+    } catch (e, stackTrace) {
+      debugPrint('❌ Voice re-analysis error: $e');
       state = AsyncValue.error(e, stackTrace);
     }
   }
@@ -560,11 +609,14 @@ class VoiceAnalysisNotifier extends StateNotifier<AsyncValue<VoiceAnalysis?>> {
 // Accent Twin Notifier
 class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
   final VoiceApiService _voiceApiService;
+  late final AudioPlaybackNotifier _audioPlaybackNotifier;
   Timer? _pollTimer;
   AudioPlayer? _audioPlayer;
   final Map<String, String> _downloadedFiles = {}; // Cache downloaded files
 
-  AccentTwinNotifier(this._voiceApiService) : super(const AsyncValue.data(null));
+  AccentTwinNotifier(this._voiceApiService) : super(const AsyncValue.data(null)) {
+    _audioPlaybackNotifier = AudioPlaybackNotifier();
+  }
 
   Future<void> generateAccentTwin(int sampleId, String targetAccent, {int retryCount = 0}) async {
     state = const AsyncValue.loading();
@@ -787,7 +839,7 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
             // Ensure clean audio player state
             _audioPlayer?.dispose();
             _audioPlayer = null;
-            await Future.delayed(Duration(milliseconds: 200)); // Allow cleanup
+            await Future.delayed(const Duration(milliseconds: 200)); // Allow cleanup
             
             _audioPlayer = AudioPlayer();
             
@@ -800,12 +852,12 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
                 ],
               ),
               android: AudioContextAndroid(
-                  isSpeakerphoneOn: true,
-                  stayAwake: true,
-                  contentType: AndroidContentType.speech,
-                  usageType: AndroidUsageType.media,
-                  audioFocus: AndroidAudioFocus.gain,
-                ),
+                isSpeakerphoneOn: true,
+                stayAwake: true,
+                contentType: AndroidContentType.music,
+                usageType: AndroidUsageType.media,
+                audioFocus: AndroidAudioFocus.gain,
+              ),
               ));
             
             await _audioPlayer!.play(DeviceFileSource(localPath));
@@ -833,6 +885,7 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
                   break;
                 case PlayerState.stopped:
                 case PlayerState.completed:
+                case PlayerState.disposed:
                   _audioPlaybackNotifier.updateState(AudioPlayerState.stopped);
                   break;
               }
@@ -863,7 +916,7 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
           android: AudioContextAndroid(
             isSpeakerphoneOn: true,
             stayAwake: true,
-            contentType: AndroidContentType.speech,
+            contentType: AndroidContentType.music,
             usageType: AndroidUsageType.media,
             audioFocus: AndroidAudioFocus.gain,
           ),
@@ -934,7 +987,7 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
       _audioPlayer = null; // Reset to null first
       
       // Allow disposal to complete and audio session to reset
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 200));
       
       _audioPlayer = AudioPlayer();
       
@@ -977,7 +1030,7 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
         debugPrint('🔄 Final attempt: Playing without audio context...');
         _audioPlayer?.dispose();
         _audioPlayer = null;
-        await Future.delayed(Duration(milliseconds: 300));
+        await Future.delayed(const Duration(milliseconds: 300));
         
         _audioPlayer = AudioPlayer();
         // No audio context setup - use default

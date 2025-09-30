@@ -74,7 +74,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
               ),
               SizedBox(height: 24),
               Text(
-                'Eloqi',
+                'iloqi',
                 style: TextStyle(
                   fontSize: 48,
                   fontWeight: FontWeight.bold,
