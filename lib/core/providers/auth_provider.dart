@@ -14,7 +14,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     _checkAuthStatus();
   }
 
-  Future<void> _checkAuthStatus() async {
+  Future<void> checkAuthStatus() async {
     try {
       final token = await StorageService.read('access_token');
       final refreshToken = await StorageService.read('refresh_token');

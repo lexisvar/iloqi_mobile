@@ -266,6 +266,8 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
       });
       if (!mounted) return;
       if (success) {
+        // Refresh auth state to ensure router gets updated user data
+        await ref.read(authStateProvider.notifier).checkAuthStatus();
         setState(() => _step = OnboardingStep.micPermission);
       } else {
         setState(() => _error = 'Failed to save your profile. Please try again.');

@@ -49,10 +49,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       } catch (e) {
         hasConsent = false;
       }
+
+      // Check if user has completed profile but still needs consent
+      final hasProfileData = currentUser?.l1Language != null && currentUser?.targetAccent != null;
       final needsOnboarding = isLoggedIn &&
-          ((currentUser?.l1Language == null) ||
-           (currentUser?.targetAccent == null) ||
-           !hasConsent);
+          (!hasProfileData || !hasConsent);
 
       print('🔍 Router redirect - location: ${state.matchedLocation}, isLoggedIn: $isLoggedIn, needsOnboarding: $needsOnboarding, isOnAuthPage: $isOnAuthPage, isOnOnboarding: $isOnOnboardingPage');
 
