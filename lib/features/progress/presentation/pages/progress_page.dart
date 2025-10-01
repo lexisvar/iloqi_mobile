@@ -11,9 +11,17 @@ class ProgressPage extends ConsumerStatefulWidget {
   const ProgressPage({super.key});
 
   @override
+  ConsumerState<ProgressPage> createState() => _ProgressPageState();
+}
+
+class _ProgressPageState extends ConsumerState<ProgressPage> {
+  @override
   void initState() {
     super.initState();
-    _loadProgressData();
+    // Add a post-frame callback to load data after the widget is built
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProgressData();
+    });
   }
 
   Future<void> _loadProgressData() async {

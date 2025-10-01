@@ -43,7 +43,7 @@ class _AccentTwinStepState extends ConsumerState<AccentTwinStep> {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -64,7 +64,7 @@ class _AccentTwinStepState extends ConsumerState<AccentTwinStep> {
         const SizedBox(height: 24),
 
         // Mode Toggle and Text Input
-        _buildControlsSection(context, ref),
+        _buildControlsSection(context),
         const SizedBox(height: 24),
 
         // Accent selection
@@ -117,40 +117,40 @@ class _AccentTwinStepState extends ConsumerState<AccentTwinStep> {
                         name: 'American',
                         code: 'US',
                         isSelected: _selectedAccent == 'US',
-                        onTap: () => _selectAccent('US', ref),
-                        isLoading: accentTwinState.isLoading && _selectedAccent == 'US',
+                        onTap: () => _selectAccent('US'),
+                        isLoading: widget.accentTwinState.isLoading && _selectedAccent == 'US',
                       ),
                       _AccentOptionCard(
                         flag: '🇬🇧',
                         name: 'British',
                         code: 'UK',
                         isSelected: _selectedAccent == 'UK',
-                        onTap: () => _selectAccent('UK', ref),
-                        isLoading: accentTwinState.isLoading && _selectedAccent == 'UK',
+                        onTap: () => _selectAccent('UK'),
+                        isLoading: widget.accentTwinState.isLoading && _selectedAccent == 'UK',
                       ),
                       _AccentOptionCard(
                         flag: '🇦🇺',
                         name: 'Australian',
                         code: 'AU',
                         isSelected: _selectedAccent == 'AU',
-                        onTap: () => _selectAccent('AU', ref),
-                        isLoading: accentTwinState.isLoading && _selectedAccent == 'AU',
+                        onTap: () => _selectAccent('AU'),
+                        isLoading: widget.accentTwinState.isLoading && _selectedAccent == 'AU',
                       ),
                       _AccentOptionCard(
                         flag: '🇨🇦',
                         name: 'Canadian',
                         code: 'CA',
                         isSelected: _selectedAccent == 'CA',
-                        onTap: () => _selectAccent('CA', ref),
-                        isLoading: accentTwinState.isLoading && _selectedAccent == 'CA',
+                        onTap: () => _selectAccent('CA'),
+                        isLoading: widget.accentTwinState.isLoading && _selectedAccent == 'CA',
                       ),
                       _AccentOptionCard(
                         flag: '🇮🇪',
                         name: 'Irish',
                         code: 'IE',
                         isSelected: _selectedAccent == 'IE',
-                        onTap: () => _selectAccent('IE', ref),
-                        isLoading: accentTwinState.isLoading && _selectedAccent == 'IE',
+                        onTap: () => _selectAccent('IE'),
+                        isLoading: widget.accentTwinState.isLoading && _selectedAccent == 'IE',
                       ),
                     ],
                   ),
@@ -295,7 +295,7 @@ class _AccentTwinStepState extends ConsumerState<AccentTwinStep> {
     );
   }
 
-  Widget _buildControlsSection(BuildContext context, WidgetRef ref) {
+  Widget _buildControlsSection(BuildContext context) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
@@ -403,7 +403,7 @@ class _AccentTwinStepState extends ConsumerState<AccentTwinStep> {
     );
   }
 
-  void _selectAccent(String accent, WidgetRef ref) {
+  void _selectAccent(String accent) {
     setState(() => _selectedAccent = accent);
     if (widget.currentSample != null) {
       ref.read(accentTwinProvider.notifier).generateAccentTwin(

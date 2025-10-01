@@ -111,7 +111,7 @@ class ResultsStep extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              analysis.detectedAccent.toUpperCase(),
+                              analysis.analysis.detectedAccent.toUpperCase(),
                               style: const TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.bold,
@@ -133,7 +133,7 @@ class ResultsStep extends ConsumerWidget {
                       child: _MetricCard(
                         icon: Icons.trending_up,
                         label: 'Confidence',
-                        value: '${(analysis.confidence * 100).toStringAsFixed(1)}%',
+                        value: '${(analysis.analysis.confidenceScore * 100).toStringAsFixed(1)}%',
                         color: Colors.blue,
                       ),
                     ),
@@ -142,7 +142,7 @@ class ResultsStep extends ConsumerWidget {
                       child: _MetricCard(
                         icon: Icons.high_quality,
                         label: 'Audio Quality',
-                        value: '${(analysis.audioQuality * 100).toStringAsFixed(1)}%',
+                        value: '${(analysis.analysis.overallScore * 100).toStringAsFixed(1)}%',
                         color: Colors.green,
                       ),
                     ),
@@ -157,7 +157,7 @@ class ResultsStep extends ConsumerWidget {
                       child: _MetricCard(
                         icon: Icons.timer,
                         label: 'Duration',
-                        value: '${analysis.duration.toStringAsFixed(1)}s',
+                        value: '${analysis.analysis.audioFeatures.duration.toStringAsFixed(1)}s',
                         color: Colors.orange,
                       ),
                     ),
@@ -166,9 +166,7 @@ class ResultsStep extends ConsumerWidget {
                       child: _MetricCard(
                         icon: Icons.waves,
                         label: 'Pronunciation',
-                        value: analysis.pronunciationScore != null
-                            ? '${(analysis.pronunciationScore! * 100).toStringAsFixed(1)}%'
-                            : 'N/A',
+                        value: '${(analysis.analysis.pronunciationScore * 100).toStringAsFixed(1)}%',
                         color: Colors.purple,
                       ),
                     ),
@@ -182,7 +180,7 @@ class ResultsStep extends ConsumerWidget {
         const SizedBox(height: 24),
 
         // Transcription if available
-        if (analysis.transcription.isNotEmpty) ...[
+        if (analysis.analysis.transcription.isNotEmpty) ...[
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
@@ -220,7 +218,7 @@ class ResultsStep extends ConsumerWidget {
                     ),
                     child: SingleChildScrollView(
                       child: Text(
-                        analysis.transcription,
+                        analysis.analysis.transcription,
                         style: const TextStyle(
                           fontSize: 16,
                           fontStyle: FontStyle.italic,
@@ -237,7 +235,7 @@ class ResultsStep extends ConsumerWidget {
         ],
 
         // AI Feedback and Recommendations
-        if (analysis.feedback.isNotEmpty || (analysis.phonemeIssues.isNotEmpty)) ...[
+        if (analysis.analysis.feedback.isNotEmpty || analysis.analysis.phonemeIssues.isNotEmpty) ...[
           Card(
             elevation: 2,
             shape: RoundedRectangleBorder(
@@ -264,7 +262,7 @@ class ResultsStep extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  ...analysis.feedback.map((feedback) => Padding(
+                  ...analysis.analysis.feedback.map((feedback) => Padding(
                     padding: const EdgeInsets.only(bottom: 8),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,7 +281,7 @@ class ResultsStep extends ConsumerWidget {
                       ],
                     ),
                   )),
-                  if (analysis.phonemeIssues.isNotEmpty) ...[
+                  if (analysis.analysis.phonemeIssues.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
                       'Phoneme Issues:',
@@ -293,10 +291,10 @@ class ResultsStep extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ...analysis.phonemeIssues.map((issue) => Padding(
+                    ...analysis.analysis.phonemeIssues.map((issue) => Padding(
                       padding: const EdgeInsets.only(bottom: 4),
                       child: Text(
-                        '• $issue',
+                        '• ${issue.toString()}',
                         style: TextStyle(
                           color: Colors.grey.shade600,
                           fontSize: 12,

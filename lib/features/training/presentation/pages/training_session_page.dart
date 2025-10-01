@@ -593,7 +593,7 @@ class _ComparisonButton extends StatelessWidget {
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor: color.withOpacity(0.1),
-        foregroundColor: color.shade800,
+        foregroundColor: color,
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
