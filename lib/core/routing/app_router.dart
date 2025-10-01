@@ -59,6 +59,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       print('🔍 Final onboarding decision - needsOnboarding: $needsOnboarding (profile: $hasProfileData, consent: $hasConsent)');
 
+      // Special case: If user is on onboarding page and has profile but no consent, let them continue
+      if (isOnOnboardingPage && hasProfileData && !hasConsent) {
+        print('🔍 User on onboarding with profile but no consent - allowing continuation');
+        return null;
+      }
+
       print('🔍 Router redirect - location: ${state.matchedLocation}, isLoggedIn: $isLoggedIn, needsOnboarding: $needsOnboarding, isOnAuthPage: $isOnAuthPage, isOnOnboarding: $isOnOnboardingPage');
 
       // Let splash handle initial navigation

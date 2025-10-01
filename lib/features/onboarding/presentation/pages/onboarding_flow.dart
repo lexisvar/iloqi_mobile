@@ -279,6 +279,19 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
         final currentUser = ref.read(currentUserProvider);
         print('📝 Updated user - l1: ${currentUser?.l1Language}, accent: ${currentUser?.targetAccent}');
 
+        // Check if user already has consent (maybe from previous session)
+        try {
+          final existingConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
+          if (existingConsent) {
+            print('📝 User already has consent, skipping to status');
+            setState(() => _step = OnboardingStep.status);
+            return;
+          }
+        } catch (e) {
+          print('📝 Error checking existing consent: $e');
+        }
+
+        print('📝 Proceeding to mic permission step');
         setState(() => _step = OnboardingStep.micPermission);
       } else {
         setState(() => _error = 'Failed to save your profile. Please try again.');

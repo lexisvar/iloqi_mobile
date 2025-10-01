@@ -110,6 +110,16 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     }
   }
 
+  Future<void> resetOnboarding() async {
+    try {
+      // Clear consent flag to allow re-onboarding
+      await StorageService.delete('consent_accent_twin');
+      print('🔄 Onboarding reset - consent cleared');
+    } catch (e) {
+      print('🔄 Error resetting onboarding: $e');
+    }
+  }
+
   AuthResult _handleDioError(DioException error, {required bool isLogin}) {
     if (error.type == DioExceptionType.connectionError) {
       return AuthResult.failure(
