@@ -1038,12 +1038,19 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    return _result.data!;
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
   }
 
   @override
-  Future<Map<String, dynamic>> recordConsent(
-      Map<String, dynamic> body) async {
+  Future<Map<String, dynamic>> recordConsent(Map<String, dynamic> body) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
@@ -1066,7 +1073,15 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    return _result.data!;
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
   }
 
   @override
@@ -1099,7 +1114,15 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    return _result.data!;
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
   }
 
   @override
@@ -1125,7 +1148,15 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    return _result.data!;
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
   }
 
   @override
@@ -1151,7 +1182,15 @@ class _VoiceApiService implements VoiceApiService {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-    return _result.data!;
+    late Map<String, dynamic> _value;
+    try {
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
   }
 
   RequestOptions _setStreamType<T>(RequestOptions requestOptions) {
