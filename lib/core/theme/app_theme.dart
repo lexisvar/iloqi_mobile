@@ -1,17 +1,36 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFF6C63FF);
-  static const Color secondaryColor = Color(0xFF03DAC6);
-  static const Color accentColor = Color(0xFFFF6B6B);
-  static const Color backgroundColor = Color(0xFFF8F9FA);
-  static const Color surfaceColor = Color(0xFFFFFFFF);
-  static const Color errorColor = Color(0xFFB00020);
-  
-  // Dark theme colors
-  static const Color darkBackgroundColor = Color(0xFF121212);
-  static const Color darkSurfaceColor = Color(0xFF1E1E1E);
-  static const Color darkPrimaryColor = Color(0xFF8A82FF);
+  // Primary Brand Colors
+  static const Color primaryColor = Color(0xFF6750A4);    // Purple
+  static const Color secondaryColor = Color(0xFF7BDAA0);  // Green
+  static const Color tertiaryColor = Color(0xFF7BDAA0);   // Green (same as secondary)
+  static const Color errorColor = Color(0xFFB3261E);      // Red
+
+  // Light Theme Surface Colors
+  static const Color backgroundColor = Color(0xFFFFFBFE);
+  static const Color surfaceColor = Color(0xFFFFFBFE);
+  static const Color surfaceVariant = Color(0xFFE7E0EC);
+  static const Color surfaceTint = Color(0xFF6750A4);
+
+  // Dark Theme Colors
+  static const Color darkBackgroundColor = Color(0xFF1C1B1F);
+  static const Color darkSurfaceColor = Color(0xFF1C1B1F);
+  static const Color darkSurfaceVariant = Color(0xFF49454F);
+  static const Color darkSurfaceTint = Color(0xFFD0BCFF);
+  static const Color darkPrimaryColor = Color(0xFFD0BCFF);
+
+  // Spacing Scale (8/12/16)
+  static const double spacingXS = 8.0;
+  static const double spacingSM = 12.0;
+  static const double spacingMD = 16.0;
+  static const double spacingLG = 24.0;
+  static const double spacingXL = 32.0;
+
+  // Corner Radius
+  static const double cornerRadius = 16.0;
+  static const double cornerRadiusSM = 12.0;
+  static const double cornerRadiusLG = 20.0;
 
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -19,10 +38,21 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       primary: primaryColor,
       secondary: secondaryColor,
-      tertiary: accentColor,
+      tertiary: tertiaryColor,
       background: backgroundColor,
       surface: surfaceColor,
+      surfaceVariant: surfaceVariant,
+      surfaceTint: surfaceTint,
       error: errorColor,
+      onPrimary: Colors.white,
+      onSecondary: Color(0xFF006E2A),
+      onTertiary: Color(0xFF006E2A),
+      onBackground: Color(0xFF1C1B1F),
+      onSurface: Color(0xFF1C1B1F),
+      onSurfaceVariant: Color(0xFF49454F),
+      onError: Colors.white,
+      outline: Color(0xFF79747E),
+      outlineVariant: Color(0xFFCAC4D0),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -40,10 +70,23 @@ class AppTheme {
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: spacingLG, vertical: spacingMD),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(cornerRadius),
         ),
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: spacingLG, vertical: spacingMD),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius),
+        ),
+        side: const BorderSide(color: primaryColor),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -53,17 +96,18 @@ class AppTheme {
     cardTheme: CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(cornerRadius),
       ),
       color: surfaceColor,
+      margin: const EdgeInsets.all(spacingXS),
     ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(cornerRadiusSM),
       ),
       filled: true,
-      fillColor: Colors.grey.shade50,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      fillColor: surfaceVariant,
+      contentPadding: const EdgeInsets.symmetric(horizontal: spacingMD, vertical: spacingMD),
     ),
   );
 
@@ -73,10 +117,21 @@ class AppTheme {
     colorScheme: const ColorScheme.dark(
       primary: darkPrimaryColor,
       secondary: secondaryColor,
-      tertiary: accentColor,
+      tertiary: tertiaryColor,
       background: darkBackgroundColor,
       surface: darkSurfaceColor,
+      surfaceVariant: darkSurfaceVariant,
+      surfaceTint: darkSurfaceTint,
       error: errorColor,
+      onPrimary: Color(0xFF1C1B1F),
+      onSecondary: Color(0xFF006E2A),
+      onTertiary: Color(0xFF006E2A),
+      onBackground: Color(0xFFE6E1E5),
+      onSurface: Color(0xFFE6E1E5),
+      onSurfaceVariant: Color(0xFFCAC4D0),
+      onError: Colors.white,
+      outline: Color(0xFF938F99),
+      outlineVariant: Color(0xFF49454F),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: Colors.transparent,
@@ -92,12 +147,25 @@ class AppTheme {
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: darkPrimaryColor,
-        foregroundColor: Colors.white,
+        foregroundColor: Color(0xFF1C1B1F),
         elevation: 2,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: spacingLG, vertical: spacingMD),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(cornerRadius),
         ),
+        textStyle: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: spacingLG, vertical: spacingMD),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius),
+        ),
+        side: const BorderSide(color: darkPrimaryColor),
         textStyle: const TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
@@ -107,17 +175,18 @@ class AppTheme {
     cardTheme: CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(cornerRadius),
       ),
       color: darkSurfaceColor,
+      margin: const EdgeInsets.all(spacingXS),
     ),
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(cornerRadiusSM),
       ),
       filled: true,
-      fillColor: Colors.grey.shade800,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      fillColor: darkSurfaceVariant,
+      contentPadding: const EdgeInsets.symmetric(horizontal: spacingMD, vertical: spacingMD),
     ),
   );
 }
