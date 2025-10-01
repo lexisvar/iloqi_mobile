@@ -11,7 +11,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   final AuthApiService _authApi;
 
   AuthNotifier(this._authApi) : super(const AsyncValue.loading()) {
-    _checkAuthStatus();
+    checkAuthStatus();
   }
 
   Future<void> checkAuthStatus() async {
