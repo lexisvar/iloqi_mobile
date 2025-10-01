@@ -46,14 +46,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       bool hasConsent = false;
       try {
         hasConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
+        print('🔐 Consent check: $hasConsent (key: consent_accent_twin)');
       } catch (e) {
+        print('🔐 Consent check failed: $e');
         hasConsent = false;
       }
 
       // Check if user has completed profile but still needs consent
       final hasProfileData = currentUser?.l1Language != null && currentUser?.targetAccent != null;
-      final needsOnboarding = isLoggedIn &&
-          (!hasProfileData || !hasConsent);
+      print('🔍 Profile check - hasProfileData: $hasProfileData, l1: ${currentUser?.l1Language}, accent: ${currentUser?.targetAccent}');
+      final needsOnboarding = isLoggedIn && (!hasProfileData || !hasConsent);
+
+      print('🔍 Final onboarding decision - needsOnboarding: $needsOnboarding (profile: $hasProfileData, consent: $hasConsent)');
 
       print('🔍 Router redirect - location: ${state.matchedLocation}, isLoggedIn: $isLoggedIn, needsOnboarding: $needsOnboarding, isOnAuthPage: $isOnAuthPage, isOnOnboarding: $isOnOnboardingPage');
 

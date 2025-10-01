@@ -142,6 +142,7 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
           minutesPerDay: _minutesPerDay,
           targetAccent: _targetAccent,
           onChanged: (l1, reg, g, min, accent) {
+            print('🎯 Form changed - l1: $l1, accent: $accent');
             _l1Language = l1;
             _region = reg;
             _goal = g;
@@ -257,6 +258,8 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
     _formKey.currentState!.save();
 
     try {
+      print('📝 Submitting profile - l1: $_l1Language, accent: $_targetAccent, minutes: $_minutesPerDay');
+
       // Persist user profile
       final success = await ref.read(authStateProvider.notifier).updateProfile({
         'l1_language': _l1Language ?? '',
@@ -264,10 +267,18 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
         'preferred_session_duration': _minutesPerDay,
         // Optional custom fields could be stored server-side later (goal/region)
       });
+
+      print('📝 Profile update success: $success');
+
       if (!mounted) return;
       if (success) {
         // Refresh auth state to ensure router gets updated user data
         await ref.read(authStateProvider.notifier).checkAuthStatus();
+
+        // Verify the current user state
+        final currentUser = ref.read(currentUserProvider);
+        print('📝 Updated user - l1: ${currentUser?.l1Language}, accent: ${currentUser?.targetAccent}');
+
         setState(() => _step = OnboardingStep.micPermission);
       } else {
         setState(() => _error = 'Failed to save your profile. Please try again.');
@@ -312,6 +323,11 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
 
       // Persist local flag for splash/router checks
       await ServiceLocator.instance.prefs.setBool('consent_accent_twin', true);
+      print('✅ Consent saved to SharedPreferences: consent_accent_twin = true');
+
+      // Verify it was saved
+      final savedConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
+      print('✅ Consent verification: $savedConsent');
 
       if (!mounted) return;
       setState(() => _step = OnboardingStep.status);
@@ -474,6 +490,7 @@ class _L1GoalsStep extends StatelessWidget {
                     selected: accent == a,
                     onSelected: (sel) {
                       if (sel) {
+                        print('🎯 Accent selected: $a');
                         accent = a;
                         onChanged(l1, reg, g, mins, accent);
                       }
