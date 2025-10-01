@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+import '../config/api_config.dart';
 import '../services/auth_api_service.dart';
 import '../services/voice_api_service.dart';
 import 'dio_interceptors.dart';
@@ -38,15 +39,12 @@ Future<void> init() async {
     ),
   );
 
-  // Dio setup with production Railway URL
+  // Dio setup with centralized API configuration
   sl._dio = Dio(BaseOptions(
-    baseUrl: 'https://iloqi-production.up.railway.app/api/',
-    connectTimeout: const Duration(seconds: 30),
-    receiveTimeout: const Duration(seconds: 30),
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
+    baseUrl: ApiConfig.baseUrl,
+    connectTimeout: ApiConfig.connectTimeout,
+    receiveTimeout: ApiConfig.receiveTimeout,
+    headers: ApiConfig.defaultHeaders,
   ));
 
   // Add interceptors
@@ -56,6 +54,10 @@ Future<void> init() async {
     responseBody: true,
     logPrint: (obj) => print(obj.toString()),
   ));
+
+  // Debug: Show which API environment is being used
+  print('🌐 API Environment: ${ApiConfig.environmentName}');
+  print('🔗 Base URL: ${ApiConfig.baseUrl}');
 
   // API services
   sl._authApiService = AuthApiService(sl._dio);

@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../config/api_config.dart';
 import '../models/user_model.dart';
 
 part 'auth_api_service.g.dart';
 
-@RestApi(baseUrl: 'https://iloqi-production.up.railway.app/api/')
+@RestApi(baseUrl: ApiConfig.baseUrl)
 abstract class AuthApiService {
   factory AuthApiService(Dio dio, {String baseUrl}) = _AuthApiService;
 

@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../config/api_config.dart';
 import '../models/voice_models.dart';
 
 part 'voice_api_service.g.dart';
 
-@RestApi(baseUrl: 'https://iloqi-production.up.railway.app/api/')
+@RestApi(baseUrl: ApiConfig.baseUrl)
 abstract class VoiceApiService {
   factory VoiceApiService(Dio dio, {String baseUrl}) = _VoiceApiService;
 
@@ -146,21 +147,21 @@ abstract class VoiceApiService {
   // Audio quality inspection (multipart)
   @POST('samples/audio/inspect/')
   @MultiPart()
-  Future<Map<String, dynamic>> inspectAudioQuality(@Part() File file);
+  Future<dynamic> inspectAudioQuality(@Part() File file);
 
   // Consent APIs
   @POST('samples/consent/record/')
-  Future<Map<String, dynamic>> recordConsent(@Body() Map<String, dynamic> body);
+  Future<dynamic> recordConsent(@Body() Map<String, dynamic> body);
 
   @GET('samples/consent/check/')
-  Future<Map<String, dynamic>> checkConsent(
+  Future<dynamic> checkConsent(
     @Query('consent_type') String consentType, [
     @Query('voice_sample_id') int? voiceSampleId,
   ]);
 
   @GET('samples/consent/history/')
-  Future<Map<String, dynamic>> getConsentHistory();
+  Future<dynamic> getConsentHistory();
 
   @POST('samples/consent/{consent_id}/revoke/')
-  Future<Map<String, dynamic>> revokeConsent(@Path('consent_id') int consentId);
+  Future<dynamic> revokeConsent(@Path('consent_id') int consentId);
 }

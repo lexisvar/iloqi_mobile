@@ -14,7 +14,7 @@ class _AuthApiService implements AuthApiService {
     this.baseUrl,
     this.errorLogger,
   }) {
-    baseUrl ??= 'https://iloqi-production.up.railway.app/api/';
+    baseUrl ??= 'http://172.20.10.13:8000/api/';
   }
 
   final Dio _dio;
