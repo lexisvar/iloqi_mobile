@@ -386,7 +386,7 @@ POST /api/samples/accent-twins/{id}/compare/
 
 ---
 
-#### 5.4 Practice Sessions (Not Started)
+#### 5.4 Practice Sessions (Completed)
 
 **To Implement:**
 
@@ -1284,6 +1284,12 @@ const labelSmall = TextStyle(fontSize: 11, fontWeight: FontWeight.w500);
 ---
 
 ## Changelog
+
+- 2025-10-01 v1.4: Implemented complete Practice Sessions with 3-step workflow: Listen → Record → Compare, and instant feedback functionality. Enhanced TrainingPage with personalized session creation and training type selection. Created TrainingSessionPage with step-by-step guided practice including audio playback, recording, and A/B comparison.
+  - Affected files:
+    - [lib/features/training/presentation/pages/training_page.dart](lib/features/training/presentation/pages/training_page.dart)
+    - [lib/features/training/presentation/pages/training_session_page.dart](lib/features/training/presentation/pages/training_session_page.dart)
+  - Features: 3-step training workflow, personalized session creation, real-time recording with visual feedback, A/B comparison interface, instant feedback dialog, session completion and saving, comprehensive error handling.
 
 - 2025-10-01 v1.3: Implemented complete Accent Twin Generation with text input, mode toggle, A/B comparison, and support for all 5 target accents (US, UK, AU, CA, IE). Enhanced AccentTwinPage with comprehensive UI, added stateful AccentTwinStep with custom phrase input, quick phrase buttons, Hi-Fi vs Generic mode toggle, and A/B comparison functionality.
   - Affected files:
