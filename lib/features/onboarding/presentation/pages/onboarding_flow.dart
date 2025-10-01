@@ -4,12 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/models/voice_models.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/services/voice_api_service.dart';
+
+// Provider to track onboarding state
+final onboardingInProgressProvider = StateProvider<bool>((ref) => false);
+
+// Provider to track current onboarding step
+final onboardingStepProvider = StateProvider<OnboardingStep>((ref) => OnboardingStep.l1Goals);
 
 enum OnboardingStep { l1Goals, micPermission, enrollment, analysis, consent, status }
 
@@ -20,8 +27,81 @@ class OnboardingFlowPage extends ConsumerStatefulWidget {
   ConsumerState<OnboardingFlowPage> createState() => _OnboardingFlowPageState();
 }
 
-class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
-  OnboardingStep _step = OnboardingStep.l1Goals;
+class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with WidgetsBindingObserver {
+  bool _isSubmittingProfile = false; // Add flag to prevent router interference
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    final currentStep = ref.read(onboardingStepProvider);
+    print('🔄 OnboardingFlowPage initState - initial step: $currentStep');
+    
+    // Determine the correct step based on user state
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _determineCorrectStep();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    print('🔄 App lifecycle state changed: $state');
+    
+    if (state == AppLifecycleState.resumed) {
+      // App resumed, possibly from Settings
+      print('🔄 App resumed, re-determining correct step');
+      
+      // Add a delay to allow iOS to update permission status
+      Future.delayed(const Duration(milliseconds: 1000), () {
+        if (mounted) {
+          _determineCorrectStep();
+        }
+      });
+    }
+  }
+
+  void _determineCorrectStep() async {
+    final authState = ref.read(authStateProvider);
+    final hasConsent = ref.read(consentProvider);
+    
+    authState.whenData((user) async {
+      if (user != null) {
+        final hasProfileData = user.l1Language != null && user.targetAccent != null;
+        
+        if (hasProfileData && hasConsent) {
+          // User has both profile and consent - go to final step
+          print('🔄 User has profile and consent, setting step to status');
+          ref.read(onboardingStepProvider.notifier).state = OnboardingStep.status;
+        } else if (hasProfileData && !hasConsent) {
+          // User has profile but no consent - check microphone permission
+          final micStatus = await Permission.microphone.status;
+          print('🔄 User has profile but no consent, mic permission: $micStatus');
+          
+          if (micStatus.isGranted) {
+            // Mic permission already granted, go to enrollment
+            print('🔄 Mic permission granted, setting step to enrollment');
+            ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+          } else {
+            // Need mic permission first
+            print('🔄 Need mic permission, setting step to micPermission');
+            ref.read(onboardingStepProvider.notifier).state = OnboardingStep.micPermission;
+          }
+        } else {
+          // User needs to set up profile - stay on first step
+          print('🔄 User needs profile setup, staying on l1Goals');
+          ref.read(onboardingStepProvider.notifier).state = OnboardingStep.l1Goals;
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    print('🔄 OnboardingFlowPage dispose');
+    super.dispose();
+  }
 
   // L1 & goals form
   final _formKey = GlobalKey<FormState>();
@@ -43,13 +123,15 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
 
   @override
   Widget build(BuildContext context) {
+    final currentStep = ref.watch(onboardingStepProvider);
+    print('🔄 OnboardingFlowPage build - current step: $currentStep');
     final recordingState = ref.watch(voiceRecordingProvider);
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Get Started'),
-        leading: _step == OnboardingStep.l1Goals
+        leading: currentStep == OnboardingStep.l1Goals
             ? null
             : IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -60,14 +142,14 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 250),
           child: Padding(
-            key: ValueKey(_step),
+            key: ValueKey(currentStep),
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildStepperHeader(theme),
+                _buildStepperHeader(theme, currentStep),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: _buildStepContent(context, recordingState),
+                  child: _buildStepContent(context, recordingState, currentStep),
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
@@ -82,9 +164,9 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
   }
 
   // Header showing progress
-  Widget _buildStepperHeader(ThemeData theme) {
+  Widget _buildStepperHeader(ThemeData theme, OnboardingStep currentStep) {
     final steps = OnboardingStep.values;
-    final idx = _step.index;
+    final idx = currentStep.index;
     return Row(
       children: steps.map((s) {
         final sIdx = s.index;
@@ -131,8 +213,8 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
     );
   }
 
-  Widget _buildStepContent(BuildContext context, VoiceRecordingState recordingState) {
-    switch (_step) {
+  Widget _buildStepContent(BuildContext context, VoiceRecordingState recordingState, OnboardingStep currentStep) {
+    switch (currentStep) {
       case OnboardingStep.l1Goals:
         return _L1GoalsStep(
           formKey: _formKey,
@@ -142,20 +224,25 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
           minutesPerDay: _minutesPerDay,
           targetAccent: _targetAccent,
           onChanged: (l1, reg, g, min, accent) {
-            print('🎯 Form changed - l1: $l1, accent: $accent');
-            _l1Language = l1;
-            _region = reg;
-            _goal = g;
-            _minutesPerDay = min;
-            _targetAccent = accent;
+            print('🎯 Form changed - l1: $l1, region: $reg, goal: $g, minutes: $min, accent: $accent');
+            setState(() {
+              _l1Language = l1;
+              _region = reg;
+              _goal = g;
+              _minutesPerDay = min;
+              _targetAccent = accent;
+            });
           },
           onContinue: _submitProfile,
         );
 
       case OnboardingStep.micPermission:
         return _MicPermissionStep(
-          onAllow: _requestMicPermission,
+          onAllow: _handleMicrophonePermission,
           onOpenSettings: openAppSettings,
+          onCheckPermission: _recheckMicrophonePermission,
+          onMicrophoneConfirmed: _microphoneConfirmed,
+          onDebugSkip: _debugSkipMicPermission,
         );
 
       case OnboardingStep.enrollment:
@@ -197,7 +284,7 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
             }
 
             // Auto-advance to analysis step
-            setState(() => _step = OnboardingStep.analysis);
+            ref.read(onboardingStepProvider.notifier).state = OnboardingStep.analysis;
           },
           onReRecord: () {
             ref.read(voiceRecordingProvider.notifier).clearRecording();
@@ -208,11 +295,11 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
         return _AnalysisStep(
           recordingState: recordingState,
           analysisState: ref.watch(voiceAnalysisProvider),
-          onAnalysisComplete: () => setState(() => _step = OnboardingStep.consent),
+          onAnalysisComplete: () => ref.read(onboardingStepProvider.notifier).state = OnboardingStep.consent,
           onReRecord: () {
             ref.read(voiceRecordingProvider.notifier).clearRecording();
             ref.read(voiceAnalysisProvider.notifier).clearAnalysis();
-            setState(() => _step = OnboardingStep.enrollment);
+            ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
           },
         );
 
@@ -249,13 +336,18 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
 
   // Actions
   void _onBack() {
-    if (_step.index == 0) return;
-    setState(() => _step = OnboardingStep.values[_step.index - 1]);
+    final currentStep = ref.read(onboardingStepProvider);
+    if (currentStep.index == 0) return;
+    ref.read(onboardingStepProvider.notifier).state = OnboardingStep.values[currentStep.index - 1];
   }
 
   Future<void> _submitProfile() async {
     if (!_formKey.currentState!.validate()) return;
     _formKey.currentState!.save();
+
+    // Set flag to prevent router interference
+    ref.read(onboardingInProgressProvider.notifier).state = true;
+    setState(() => _isSubmittingProfile = true);
 
     try {
       print('📝 Submitting profile - l1: $_l1Language, accent: $_targetAccent, minutes: $_minutesPerDay');
@@ -272,44 +364,148 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
 
       if (!mounted) return;
       if (success) {
-        // Refresh auth state to ensure router gets updated user data
-        await ref.read(authStateProvider.notifier).checkAuthStatus();
-
-        // Verify the current user state
-        final currentUser = ref.read(currentUserProvider);
-        print('📝 Updated user - l1: ${currentUser?.l1Language}, accent: ${currentUser?.targetAccent}');
-
         // Check if user already has consent (maybe from previous session)
-        try {
-          final existingConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
-          if (existingConsent) {
-            print('📝 User already has consent, skipping to status');
-            setState(() => _step = OnboardingStep.status);
-            return;
-          }
-        } catch (e) {
-          print('📝 Error checking existing consent: $e');
+        final existingConsent = ref.read(consentProvider);
+        if (existingConsent) {
+          print('📝 User already has consent, skipping to status');
+          ref.read(onboardingStepProvider.notifier).state = OnboardingStep.status;
+          ref.read(onboardingInProgressProvider.notifier).state = false;
+          return;
         }
 
         print('📝 Proceeding to mic permission step');
-        setState(() => _step = OnboardingStep.micPermission);
+        ref.read(onboardingStepProvider.notifier).state = OnboardingStep.micPermission;
+        print('📝 Step set to: ${ref.read(onboardingStepProvider)}');
+        // Keep the flag true until onboarding is complete
       } else {
         setState(() => _error = 'Failed to save your profile. Please try again.');
+        ref.read(onboardingInProgressProvider.notifier).state = false;
       }
     } catch (e) {
       setState(() => _error = 'Error saving profile: $e');
+      ref.read(onboardingInProgressProvider.notifier).state = false;
+    } finally {
+      setState(() => _isSubmittingProfile = false);
     }
   }
 
-  Future<void> _requestMicPermission() async {
+  // Enhanced microphone permission handling
+  Future<void> _handleMicrophonePermission() async {
+    print('🎤 Starting comprehensive microphone permission check...');
+    
+    try {
+      // Step 1: Check current status
+      var status = await Permission.microphone.status;
+      print('🎤 Current permission status: $status');
+      
+      if (status.isGranted) {
+        print('🎤 Permission already granted, advancing to enrollment');
+        ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+        return;
+      }
+      
+      // Step 2: If not granted, check if we can request
+      if (status.isDenied) {
+        print('🎤 Permission denied, attempting to request...');
+        status = await Permission.microphone.request();
+        print('🎤 After request, status: $status');
+        
+        if (status.isGranted) {
+          print('🎤 Permission granted after request, advancing to enrollment');
+          ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+          return;
+        }
+      }
+      
+      // Step 3: Handle permanently denied or restricted
+      if (status.isPermanentlyDenied || status.isRestricted) {
+        print('🎤 Permission permanently denied or restricted');
+        if (mounted) {
+          setState(() => _error = 'Microphone access is required. Please enable it in Settings > Privacy & Security > Microphone, then restart the app.');
+        }
+        return;
+      }
+      
+      // Step 4: Handle other denial cases
+      if (mounted) {
+        setState(() => _error = 'Microphone permission is required to continue. Please try again.');
+      }
+      
+    } catch (e) {
+      print('🎤 Error handling microphone permission: $e');
+      if (mounted) {
+        setState(() => _error = 'Error accessing microphone permissions: $e');
+      }
+    }
+  }
+
+  // Method for when user says they've enabled permission in Settings
+  Future<void> _recheckMicrophonePermission() async {
+    print('🎤 Rechecking microphone permission after Settings...');
     setState(() => _error = null);
-    final status = await Permission.microphone.request();
-    if (status.isGranted) {
-      setState(() => _step = OnboardingStep.enrollment);
-    } else if (status.isPermanentlyDenied) {
-      setState(() => _error = 'Microphone permission permanently denied. Open Settings to enable.');
-    } else {
-      setState(() => _error = 'Microphone permission denied. Please allow to continue.');
+    
+    try {
+      // Force refresh permission status
+      final status = await Permission.microphone.status;
+      print('🎤 Rechecked permission status: $status');
+      
+      if (status.isGranted) {
+        print('🎤 Permission now granted! Advancing to enrollment');
+        ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+      } else {
+        print('🎤 Permission still not granted: $status');
+        setState(() => _error = 'Permission still not enabled. Please check Settings > Privacy & Security > Microphone and enable access for this app.');
+      }
+    } catch (e) {
+      print('🎤 Error rechecking permission: $e');
+      setState(() => _error = 'Error checking permission: $e');
+    }
+  }
+
+  // Debug method to skip permission (for development only)
+  void _debugSkipMicPermission() {
+    print('🎤 DEBUG: Skipping microphone permission');
+    ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+  }
+
+  // Method to advance when microphone is confirmed working (bypasses cached permission check)
+  void _microphoneConfirmed() {
+    print('🎤 Microphone confirmed working through real test - advancing to enrollment');
+    ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+  }
+
+  Future<void> _checkMicPermission() async {
+    print('🎤 Checking microphone permission...');
+    
+    try {
+      // Check current status
+      var status = await Permission.microphone.status;
+      print('🎤 Initial permission status: $status');
+      
+      // On iOS, sometimes we need to refresh the status after returning from Settings
+      if (status.isDenied || status.isPermanentlyDenied) {
+        // Wait a bit and check again
+        await Future.delayed(const Duration(milliseconds: 500));
+        status = await Permission.microphone.status;
+        print('🎤 Refreshed permission status: $status');
+      }
+      
+      if (!mounted) return;
+      
+      if (status.isGranted) {
+        print('🎤 Permission is granted, advancing to enrollment');
+        ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+      } else {
+        print('🎤 Permission still not granted: $status');
+        // Update the UI to reflect current status
+        if (mounted) {
+          setState(() {
+            // Trigger a rebuild to update the permission button
+          });
+        }
+      }
+    } catch (e) {
+      print('🎤 Error checking microphone permission: $e');
     }
   }
 
@@ -335,15 +531,17 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> {
       debugPrint('Consent record: $resp');
 
       // Persist local flag for splash/router checks
-      await ServiceLocator.instance.prefs.setBool('consent_accent_twin', true);
-      print('✅ Consent saved to SharedPreferences: consent_accent_twin = true');
+      await ref.read(consentProvider.notifier).setConsent(true);
+      print('✅ Consent saved via provider: consent_accent_twin = true');
 
-      // Verify it was saved
-      final savedConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
-      print('✅ Consent verification: $savedConsent');
+      // Clear onboarding flag since we're now complete
+      ref.read(onboardingInProgressProvider.notifier).state = false;
+
+      // Refresh auth state after consent is complete to trigger router update
+      await ref.read(authStateProvider.notifier).checkAuthStatus();
 
       if (!mounted) return;
-      setState(() => _step = OnboardingStep.status);
+      ref.read(onboardingStepProvider.notifier).state = OnboardingStep.status;
     } catch (e) {
       setState(() => _error = 'Failed to submit consent: $e');
     } finally {
@@ -362,6 +560,7 @@ class _ErrorBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      constraints: const BoxConstraints(maxHeight: 120), // Limit height
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.red.shade50,
@@ -373,9 +572,11 @@ class _ErrorBanner extends StatelessWidget {
           Icon(Icons.error_outline, color: Colors.red.shade600),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              message,
-              style: TextStyle(color: Colors.red.shade800),
+            child: SingleChildScrollView(
+              child: Text(
+                message,
+                style: TextStyle(color: Colors.red.shade800),
+              ),
             ),
           ),
           IconButton(
@@ -432,12 +633,6 @@ class _L1GoalsStep extends StatelessWidget {
     ];
     final accents = <String>['US', 'UK', 'AU', 'CA', 'IE'];
 
-    String? l1 = l1Language;
-    String? reg = region;
-    String? g = goal;
-    int mins = minutesPerDay;
-    String accent = targetAccent;
-
     return Form(
       key: formKey,
       child: ListView(
@@ -446,11 +641,10 @@ class _L1GoalsStep extends StatelessWidget {
           Text('Your native language', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: l1,
+            value: l1Language,
             items: languages.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
             onChanged: (v) {
-              l1 = v;
-              onChanged(l1, reg, g, mins, accent);
+              onChanged(v, region, goal, minutesPerDay, targetAccent);
             },
             validator: (v) => v == null || v.isEmpty ? 'Please choose your native language' : null,
           ),
@@ -458,10 +652,9 @@ class _L1GoalsStep extends StatelessWidget {
           Text('Region (optional)'),
           const SizedBox(height: 8),
           TextFormField(
-            initialValue: reg,
+            initialValue: region,
             onChanged: (v) {
-              reg = v;
-              onChanged(l1, reg, g, mins, accent);
+              onChanged(l1Language, v, goal, minutesPerDay, targetAccent);
             },
             decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -472,11 +665,10 @@ class _L1GoalsStep extends StatelessWidget {
           Text('Goal'),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            value: g,
+            value: goal,
             items: goals.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
             onChanged: (v) {
-              g = v;
-              onChanged(l1, reg, g, mins, accent);
+              onChanged(l1Language, region, v, minutesPerDay, targetAccent);
             },
             validator: (v) => v == null || v.isEmpty ? 'Please choose a goal' : null,
           ),
@@ -484,11 +676,10 @@ class _L1GoalsStep extends StatelessWidget {
           Text('Time per day'),
           const SizedBox(height: 8),
           DropdownButtonFormField<int>(
-            value: mins,
+            value: minutesPerDay,
             items: [10, 15, 20, 25, 30].map((e) => DropdownMenuItem(value: e, child: Text('$e min'))).toList(),
             onChanged: (v) {
-              mins = v ?? 10;
-              onChanged(l1, reg, g, mins, accent);
+              onChanged(l1Language, region, goal, v ?? 10, targetAccent);
             },
           ),
           const SizedBox(height: 16),
@@ -500,12 +691,11 @@ class _L1GoalsStep extends StatelessWidget {
                 .map(
                   (a) => ChoiceChip(
                     label: Text(a),
-                    selected: accent == a,
+                    selected: targetAccent == a,
                     onSelected: (sel) {
                       if (sel) {
                         print('🎯 Accent selected: $a');
-                        accent = a;
-                        onChanged(l1, reg, g, mins, accent);
+                        onChanged(l1Language, region, goal, minutesPerDay, a);
                       }
                     },
                   ),
@@ -531,48 +721,387 @@ class _L1GoalsStep extends StatelessWidget {
   }
 }
 
-class _MicPermissionStep extends StatelessWidget {
+class _MicPermissionStep extends StatefulWidget {
   final VoidCallback onAllow;
   final Future<bool> Function() onOpenSettings;
+  final VoidCallback onCheckPermission;
+  final VoidCallback onMicrophoneConfirmed; // New callback for when mic is confirmed working
+  final VoidCallback? onDebugSkip;
 
-  const _MicPermissionStep({required this.onAllow, required this.onOpenSettings});
+  const _MicPermissionStep({
+    required this.onAllow, 
+    required this.onOpenSettings,
+    required this.onCheckPermission,
+    required this.onMicrophoneConfirmed,
+    this.onDebugSkip,
+  });
+
+  @override
+  State<_MicPermissionStep> createState() => _MicPermissionStepState();
+}
+
+class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBindingObserver {
+  PermissionStatus? _permissionStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkPermissionStatus();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Check permission when returning from Settings
+      _checkPermissionStatus();
+      widget.onCheckPermission();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _checkPermissionStatus() async {
+    final status = await Permission.microphone.status;
+    if (mounted) {
+      setState(() => _permissionStatus = status);
+      
+      // If permission is granted, automatically advance
+      if (status.isGranted) {
+        widget.onCheckPermission();
+      }
+    }
+  }
+
+  Future<void> _handleMicrophoneTap() async {
+    print('🎤 Microphone icon tapped, testing actual recording capability...');
+    
+    try {
+      // Test if we can actually initialize recording (this triggers native permission)
+      final recorder = FlutterSoundRecorder();
+      await recorder.openRecorder();
+      await recorder.closeRecorder();
+      
+      print('🎤 Microphone access confirmed through recording test');
+      
+      // Update state to granted and proceed
+      setState(() {
+        _permissionStatus = PermissionStatus.granted;
+      });
+      
+      widget.onMicrophoneConfirmed();
+      
+    } catch (e) {
+      print('🎤 Recording test failed: $e');
+      
+      // Check the cached permission status as fallback
+      final status = await Permission.microphone.status;
+      print('🎤 Fallback permission status: $status');
+      
+      setState(() {
+        _permissionStatus = status;
+      });
+      
+      // Try requesting permission if denied
+      if (status.isDenied) {
+        final requestedStatus = await Permission.microphone.request();
+        print('🎤 Permission request result: $requestedStatus');
+        
+        setState(() {
+          _permissionStatus = requestedStatus;
+        });
+        
+        if (requestedStatus.isGranted) {
+          widget.onCheckPermission();
+        }
+      }
+    }
+  }
+
+  Future<bool> _testMicrophoneAccess() async {
+    print('🎤 Testing microphone access through recording capability...');
+    
+    try {
+      // Test if we can actually initialize recording
+      final recorder = FlutterSoundRecorder();
+      await recorder.openRecorder();
+      await recorder.closeRecorder();
+      
+      print('🎤 Microphone access confirmed - recording is possible');
+      return true;
+      
+    } catch (e) {
+      print('🎤 Microphone access test failed: $e');
+      return false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Spacer(),
-        const Icon(Icons.mic, size: 96, color: Colors.deepPurple),
-        const SizedBox(height: 16),
-        Text(
-          'We need your microphone',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'To analyze your pronunciation.',
-          textAlign: TextAlign.center,
-        ),
-        const Spacer(),
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: onAllow,
-            child: const Text('Allow microphone'),
+    final isPermanentlyDenied = _permissionStatus == PermissionStatus.permanentlyDenied;
+    final isDenied = _permissionStatus == PermissionStatus.denied;
+    final isGranted = _permissionStatus == PermissionStatus.granted;
+    
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const SizedBox(height: 40),
+          
+          // Interactive microphone icon
+          GestureDetector(
+            onTap: _handleMicrophoneTap,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isGranted 
+                    ? Colors.green.withOpacity(0.1)
+                    : isPermanentlyDenied 
+                        ? Colors.red.withOpacity(0.1)
+                        : Colors.deepPurple.withOpacity(0.1),
+                border: Border.all(
+                  color: isGranted 
+                      ? Colors.green
+                      : isPermanentlyDenied 
+                          ? Colors.red
+                          : Colors.deepPurple,
+                  width: 3,
+                ),
+              ),
+              child: Icon(
+                isGranted ? Icons.mic : Icons.mic_off,
+                size: 60,
+                color: isGranted 
+                    ? Colors.green
+                    : isPermanentlyDenied 
+                        ? Colors.red
+                        : Colors.deepPurple,
+              ),
+            ),
           ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: OutlinedButton(
-            onPressed: onOpenSettings,
-            child: const Text('Open Settings'),
+          
+          const SizedBox(height: 16),
+          Text(
+            isGranted 
+                ? 'Microphone ready!'
+                : 'We need your microphone',
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              isGranted
+                  ? 'Perfect! You can now continue with voice setup.'
+                  : isPermanentlyDenied 
+                      ? 'Please enable microphone access in Settings to continue.'
+                      : isDenied
+                          ? 'Tap the microphone above to allow access.'
+                          : 'To analyze your pronunciation.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isGranted ? Colors.green.shade700 : null,
+              ),
+            ),
+          ),
+          if (isPermanentlyDenied) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'If this app doesn\'t appear in your microphone settings:',
+                    style: TextStyle(
+                      color: Colors.orange.shade800,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '1. Delete this app completely\n2. Reinstall from App Store\n3. Grant microphone permission when asked',
+                    style: TextStyle(
+                      color: Colors.orange.shade700,
+                      fontSize: 13,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ] else if (isDenied) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.touch_app, color: Colors.blue.shade600, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Tap the microphone icon above to get the permission dialog',
+                      style: TextStyle(
+                        color: Colors.blue.shade800,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
+          const SizedBox(height: 40),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                if (isGranted) ...[
+                  // Permission granted - show continue button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        // Double-check permission with real test before continuing
+                        print('🎤 Continue button: Testing microphone before proceeding...');
+                        final hasRealPermission = await _testMicrophoneAccess();
+                        if (hasRealPermission) {
+                          print('🎤 Continue button: Microphone confirmed working, advancing to enrollment...');
+                          // Directly advance to enrollment since we confirmed microphone works
+                          widget.onMicrophoneConfirmed();
+                        } else {
+                          print('🎤 Continue button: Microphone test failed, refreshing state...');
+                          setState(() {
+                            _permissionStatus = PermissionStatus.denied;
+                          });
+                        }
+                      },
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text('Continue'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ] else if (isPermanentlyDenied) ...[
+                  // Permission permanently denied - show settings option
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await widget.onOpenSettings();
+                      },
+                      child: const Text('Open Settings'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: OutlinedButton(
+                      onPressed: () async {
+                        // Test real microphone access before proceeding
+                        print('🎤 "I\'ve enabled it" button: Testing microphone...');
+                        final hasRealPermission = await _testMicrophoneAccess();
+                        if (hasRealPermission) {
+                          print('🎤 "I\'ve enabled it" button: Microphone confirmed working, proceeding...');
+                          setState(() {
+                            _permissionStatus = PermissionStatus.granted;
+                          });
+                          widget.onMicrophoneConfirmed();
+                        } else {
+                          print('🎤 "I\'ve enabled it" button: Microphone test failed, staying on current step...');
+                          setState(() {
+                            _permissionStatus = PermissionStatus.permanentlyDenied;
+                          });
+                        }
+                      },
+                      child: const Text('I\'ve enabled it'),
+                    ),
+                  ),
+                ] else ...[
+                  // Permission not yet requested or denied - show primary action
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _handleMicrophoneTap,
+                      icon: const Icon(Icons.mic),
+                      label: const Text('Allow Microphone Access'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () async {
+                      await widget.onOpenSettings();
+                    },
+                    child: const Text('Open Settings Manually'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          
+          // Debug section for development
+          if (widget.onDebugSkip != null) ...[
+            const SizedBox(height: 40),
+            const Divider(),
+            const SizedBox(height: 20),
+            Text(
+              'Debug Options (Development Only)',
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 40,
+              child: OutlinedButton(
+                onPressed: widget.onDebugSkip,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                  side: const BorderSide(color: Colors.red),
+                ),
+                child: const Text('DEBUG: Skip Permission'),
+              ),
+            ),
+          ],
+          const SizedBox(height: 40),
+        ],
+      ),
     );
   }
 }

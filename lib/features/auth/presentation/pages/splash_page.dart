@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/di/injection_container.dart';
+import '../../../onboarding/presentation/pages/onboarding_flow.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -22,6 +23,14 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
  Future<void> _checkAuthAndNavigate() async {
    print('🚀 Starting auth check and navigation');
+   
+   // Check if onboarding is in progress - if so, don't navigate
+   final onboardingInProgress = ref.read(onboardingInProgressProvider);
+   if (onboardingInProgress) {
+     print('🚀 Onboarding in progress, splash page will not navigate');
+     return;
+   }
+   
    await Future.delayed(const Duration(seconds: 2));
    
    if (!mounted) return;
@@ -52,16 +61,9 @@ class _SplashPageState extends ConsumerState<SplashPage> {
    final user = ref.read(currentUserProvider);
    final needsProfileSetup = user == null || user.l1Language == null || user.targetAccent == null;
 
-   // Use a persisted flag for consent to avoid async call in redirect
-   // This will be set after successful consent in onboarding
-   bool needsConsent = true;
-   try {
-     final prefs = ServiceLocator.instance.prefs;
-     needsConsent = !(prefs.getBool('consent_accent_twin') ?? false);
-   } catch (e) {
-     print('⚠️ Unable to read consent flag from prefs: $e');
-     needsConsent = true;
-   }
+   // Use consent provider to check consent status
+   final hasConsent = ref.read(consentProvider);
+   final needsConsent = !hasConsent;
 
    if (needsProfileSetup || needsConsent) {
      print('🧭 Redirecting to onboarding: needsProfile=$needsProfileSetup, needsConsent=$needsConsent');

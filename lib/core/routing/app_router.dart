@@ -18,7 +18,9 @@ import '../di/injection_container.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
-  
+  final hasConsent = ref.watch(consentProvider);
+  final onboardingInProgress = ref.watch(onboardingInProgressProvider);
+
   return GoRouter(
     initialLocation: '/splash',
     redirect: (context, state) {
@@ -42,15 +44,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isOnOnboardingPage = state.matchedLocation.startsWith('/onboarding');
 
       // Determine onboarding requirement when logged in
-      final currentUser = ref.read(currentUserProvider);
-      bool hasConsent = false;
-      try {
-        hasConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
-        print('🔐 Consent check: $hasConsent (key: consent_accent_twin)');
-      } catch (e) {
-        print('🔐 Consent check failed: $e');
-        hasConsent = false;
-      }
+      final currentUser = authState.valueOrNull;
+      print('🔐 Consent check: $hasConsent (key: consent_accent_twin)');
 
       // Check if user has completed profile but still needs consent
       final hasProfileData = currentUser?.l1Language != null && currentUser?.targetAccent != null;
@@ -58,6 +53,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final needsOnboarding = isLoggedIn && (!hasProfileData || !hasConsent);
 
       print('🔍 Final onboarding decision - needsOnboarding: $needsOnboarding (profile: $hasProfileData, consent: $hasConsent)');
+      print('🔍 Onboarding in progress: $onboardingInProgress');
+
+      // Prevent redirects during onboarding flow
+      if (onboardingInProgress && isOnOnboardingPage) {
+        print('🔍 Onboarding in progress, staying on onboarding page');
+        return null;
+      }
 
       // Special case: If user is on onboarding page and has profile but no consent, let them continue
       if (isOnOnboardingPage && hasProfileData && !hasConsent) {
@@ -67,8 +69,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       print('🔍 Router redirect - location: ${state.matchedLocation}, isLoggedIn: $isLoggedIn, needsOnboarding: $needsOnboarding, isOnAuthPage: $isOnAuthPage, isOnOnboarding: $isOnOnboardingPage');
 
-      // Let splash handle initial navigation
-      if (isOnSplashPage) {
+      // Prevent redirects during onboarding flow - stay on onboarding
+      if (onboardingInProgress) {
+        print('🔍 Onboarding in progress, forcing onboarding page');
+        if (!isOnOnboardingPage) {
+          return '/onboarding';
+        }
+        return null;
+      }
+
+      // Let splash handle initial navigation only if not in onboarding
+      if (isOnSplashPage && !onboardingInProgress) {
         return null;
       }
 
@@ -81,15 +92,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      // Logged in and needs onboarding → force onboarding
+      // Logged in and needs onboarding → force onboarding (but not if already there)
       if (needsOnboarding && !isOnOnboardingPage) {
-        print('🧭 Redirecting to onboarding');
+        print('🧭 Redirecting to onboarding - needsOnboarding: $needsOnboarding');
         return '/onboarding';
       }
 
       // Logged in and onboarding complete → prevent staying on onboarding
-      if (!needsOnboarding && isOnOnboardingPage) {
-        print('🧭 Onboarding complete, redirecting to home');
+      if (!needsOnboarding && isOnOnboardingPage && !onboardingInProgress) {
+        print('🧭 Onboarding complete, redirecting to home - needsOnboarding: $needsOnboarding');
         return '/home';
       }
 
@@ -199,13 +210,19 @@ class MainLayout extends StatelessWidget {
   }
 
   int _getCurrentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).matchedLocation;
-    if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/voice')) return 1;
-    if (location.startsWith('/training')) return 2;
-    if (location.startsWith('/progress')) return 3;
-    if (location.startsWith('/profile')) return 4;
-    return 0;
+    try {
+      final location = GoRouterState.of(context).matchedLocation;
+      if (location.startsWith('/home')) return 0;
+      if (location.startsWith('/voice')) return 1;
+      if (location.startsWith('/training')) return 2;
+      if (location.startsWith('/progress')) return 3;
+      if (location.startsWith('/profile')) return 4;
+      return 0;
+    } catch (e) {
+      // Fallback if GoRouterState is not available
+      print('Warning: Could not get GoRouterState: $e');
+      return 0;
+    }
   }
 
   void _onTabTapped(BuildContext context, int index) {

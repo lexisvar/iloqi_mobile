@@ -113,7 +113,7 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
   Future<void> resetOnboarding() async {
     try {
       // Clear consent flag to allow re-onboarding
-      await StorageService.delete('consent_accent_twin');
+      await ServiceLocator.instance.prefs.setBool('consent_accent_twin', false);
       print('🔄 Onboarding reset - consent cleared');
     } catch (e) {
       print('🔄 Error resetting onboarding: $e');
@@ -228,3 +228,28 @@ final currentUserProvider = Provider<User?>((ref) {
     error: (_, __) => null,
   );
 });
+
+// Consent state provider
+final consentProvider = StateNotifierProvider<ConsentNotifier, bool>((ref) {
+  return ConsentNotifier();
+});
+
+class ConsentNotifier extends StateNotifier<bool> {
+  ConsentNotifier() : super(false) {
+    _loadConsent();
+  }
+
+  Future<void> _loadConsent() async {
+    try {
+      final hasConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
+      state = hasConsent;
+    } catch (e) {
+      state = false;
+    }
+  }
+
+  Future<void> setConsent(bool value) async {
+    await ServiceLocator.instance.prefs.setBool('consent_accent_twin', value);
+    state = value;
+  }
+}
