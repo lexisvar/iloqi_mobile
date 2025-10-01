@@ -53,16 +53,12 @@
 	<!-- App Transport Security Settings for HTTP access -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
-			<key>172.20.10.13</key>
+			<key>iloqi-production.up.railway.app</key>
 			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.0</string>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<false/>
 			</dict>
 		</dict>
 	</dict>

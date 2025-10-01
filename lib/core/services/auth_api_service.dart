@@ -5,7 +5,7 @@ import '../models/user_model.dart';
 
 part 'auth_api_service.g.dart';
 
-@RestApi(baseUrl: 'http://172.20.10.13:8000/api/')
+@RestApi(baseUrl: 'https://iloqi-production.up.railway.app/api/')
 abstract class AuthApiService {
   factory AuthApiService(Dio dio, {String baseUrl}) = _AuthApiService;
 

@@ -14,7 +14,7 @@ class _VoiceApiService implements VoiceApiService {
     this.baseUrl,
     this.errorLogger,
   }) {
-    baseUrl ??= 'http://172.20.10.13:8000/api/';
+    baseUrl ??= 'https://iloqi-production.up.railway.app/api/';
   }
 
   final Dio _dio;
@@ -1040,7 +1040,8 @@ class _VoiceApiService implements VoiceApiService {
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
     late Map<String, dynamic> _value;
     try {
-      _value = _result.data!;
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -1074,7 +1075,8 @@ class _VoiceApiService implements VoiceApiService {
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
     late Map<String, dynamic> _value;
     try {
-      _value = _result.data!;
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -1114,7 +1116,8 @@ class _VoiceApiService implements VoiceApiService {
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
     late Map<String, dynamic> _value;
     try {
-      _value = _result.data!;
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -1147,7 +1150,8 @@ class _VoiceApiService implements VoiceApiService {
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
     late Map<String, dynamic> _value;
     try {
-      _value = _result.data!;
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;
@@ -1180,7 +1184,8 @@ class _VoiceApiService implements VoiceApiService {
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
     late Map<String, dynamic> _value;
     try {
-      _value = _result.data!;
+      _value = _result.data!.map((k, dynamic v) =>
+          MapEntry(k, dynamic.fromJson(v as Map<String, dynamic>)));
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

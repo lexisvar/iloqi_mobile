@@ -38,10 +38,9 @@ Future<void> init() async {
     ),
   );
 
-  // Dio setup with device-accessible IP
-  // Use your Mac's local IP address so iOS device can reach the API
+  // Dio setup with production Railway URL
   sl._dio = Dio(BaseOptions(
-    baseUrl: 'http://172.20.10.13:8000/api/',  // Your Mac's local IP
+    baseUrl: 'https://iloqi-production.up.railway.app/api/',
     connectTimeout: const Duration(seconds: 30),
     receiveTimeout: const Duration(seconds: 30),
     headers: {
