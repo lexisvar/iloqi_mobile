@@ -12,7 +12,9 @@ import '../../features/training/presentation/pages/training_page.dart';
 import '../../features/training/presentation/pages/training_session_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
+import '../../features/onboarding/presentation/pages/onboarding_flow.dart';
 import '../providers/auth_provider.dart';
+import '../di/injection_container.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
@@ -37,18 +39,50 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       final isOnAuthPage = state.matchedLocation.startsWith('/auth');
       final isOnSplashPage = state.matchedLocation == '/splash';
+      final isOnOnboardingPage = state.matchedLocation.startsWith('/onboarding');
 
-      print('🔍 Router redirect - location: ${state.matchedLocation}, isLoggedIn: $isLoggedIn, isOnAuthPage: $isOnAuthPage');
+      // Determine onboarding requirement when logged in
+      final currentUser = ref.read(currentUserProvider);
+      bool hasConsent = false;
+      try {
+        hasConsent = ServiceLocator.instance.prefs.getBool('consent_accent_twin') ?? false;
+      } catch (e) {
+        hasConsent = false;
+      }
+      final needsOnboarding = isLoggedIn &&
+          ((currentUser?.l1Language == null) ||
+           (currentUser?.targetAccent == null) ||
+           !hasConsent);
 
+      print('🔍 Router redirect - location: ${state.matchedLocation}, isLoggedIn: $isLoggedIn, needsOnboarding: $needsOnboarding, isOnAuthPage: $isOnAuthPage, isOnOnboarding: $isOnOnboardingPage');
+
+      // Let splash handle initial navigation
       if (isOnSplashPage) {
-        return null; // Let splash page handle navigation
+        return null;
       }
 
-      if (!isLoggedIn && !isOnAuthPage) {
-        print('🔍 Redirecting to login');
-        return '/auth/login';
+      // Not logged in → force auth (unless already on auth)
+      if (!isLoggedIn) {
+        if (!isOnAuthPage) {
+          print('🔍 Redirecting to login');
+          return '/auth/login';
+        }
+        return null;
       }
 
+      // Logged in and needs onboarding → force onboarding
+      if (needsOnboarding && !isOnOnboardingPage) {
+        print('🧭 Redirecting to onboarding');
+        return '/onboarding';
+      }
+
+      // Logged in and onboarding complete → prevent staying on onboarding
+      if (!needsOnboarding && isOnOnboardingPage) {
+        print('🧭 Onboarding complete, redirecting to home');
+        return '/home';
+      }
+
+      // Logged in users should not visit auth pages
       if (isLoggedIn && isOnAuthPage) {
         print('🔍 Redirecting to home');
         return '/home';
@@ -68,6 +102,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth/register',
         builder: (context, state) => const RegisterPage(),
+      ),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingFlowPage(),
       ),
       ShellRoute(
         builder: (context, state, child) => MainLayout(child: child),

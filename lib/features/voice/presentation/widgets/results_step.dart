@@ -8,11 +8,13 @@ import '../../../../core/models/voice_models.dart';
 class ResultsStep extends ConsumerWidget {
   final AsyncValue<VoiceAnalysis?> analysisState;
   final VoidCallback onCreateAccentTwin;
+  final bool isOnboardingContext;
 
   const ResultsStep({
     super.key,
     required this.analysisState,
     required this.onCreateAccentTwin,
+    this.isOnboardingContext = false,
   });
 
   @override
@@ -234,6 +236,81 @@ class ResultsStep extends ConsumerWidget {
           const SizedBox(height: 24),
         ],
 
+        // AI Feedback and Recommendations
+        if (analysis.feedback.isNotEmpty || (analysis.phonemeIssues.isNotEmpty)) ...[
+          Card(
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb,
+                        color: Colors.amber.shade600,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'AI Feedback',
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ...analysis.feedback.map((feedback) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.arrow_right, size: 16, color: Colors.grey.shade600),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            feedback,
+                            style: TextStyle(
+                              color: Colors.grey.shade700,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                  if (analysis.phonemeIssues.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Phoneme Issues:',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ...analysis.phonemeIssues.map((issue) => Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '• $issue',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                    )),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+
         // Next steps
         Card(
           elevation: 2,
@@ -246,14 +323,16 @@ class ResultsStep extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'What\'s Next?',
+                  isOnboardingContext ? 'Setup Complete!' : 'What\'s Next?',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Create your personalized accent twin to hear how you sound in different accents!',
+                  isOnboardingContext
+                      ? 'Your voice has been analyzed successfully. You can now access all features of the app!'
+                      : 'Create your personalized accent twin to hear how you sound in different accents!',
                   style: TextStyle(
                     color: Colors.grey.shade600,
                     fontSize: 16,
@@ -264,7 +343,9 @@ class ResultsStep extends ConsumerWidget {
                   width: double.infinity,
                   height: 56,
                   child: ElevatedButton(
-                    onPressed: onCreateAccentTwin,
+                    onPressed: isOnboardingContext
+                        ? () => Navigator.of(context).pop() // Return to onboarding flow
+                        : onCreateAccentTwin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).primaryColor,
                       foregroundColor: Colors.white,
@@ -273,9 +354,9 @@ class ResultsStep extends ConsumerWidget {
                       ),
                       elevation: 4,
                     ),
-                    child: const Text(
-                      'Create Accent Twin',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    child: Text(
+                      isOnboardingContext ? 'Continue Setup' : 'Create Accent Twin',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/auth_provider.dart';
+import '../../../../core/di/injection_container.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   const SplashPage({super.key});
@@ -19,35 +20,57 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     _checkAuthAndNavigate();
   }
 
-  Future<void> _checkAuthAndNavigate() async {
-    print('🚀 Starting auth check and navigation');
-    await Future.delayed(const Duration(seconds: 2));
-    
-    if (mounted) {
-      print('🚀 Widget still mounted, checking auth state');
-      final authState = ref.read(authStateProvider);
-      final isLoggedIn = authState.when(
-        data: (user) {
-          print('🚀 Auth state data: user = $user');
-          return user != null;
-        },
-        loading: () {
-          print('🚀 Auth state loading');
-          return false;
-        },
-        error: (error, _) {
-          print('🚀 Auth state error: $error');
-          return false;
-        },
-      );
+ Future<void> _checkAuthAndNavigate() async {
+   print('🚀 Starting auth check and navigation');
+   await Future.delayed(const Duration(seconds: 2));
+   
+   if (!mounted) return;
 
-      if (isLoggedIn) {
-        context.go('/home');
-      } else {
-        context.go('/auth/login');
-      }
-    }
-  }
+   print('🚀 Widget still mounted, checking auth state');
+   final authState = ref.read(authStateProvider);
+   final isLoggedIn = authState.when(
+     data: (user) {
+       print('🚀 Auth state data: user = $user');
+       return user != null;
+     },
+     loading: () {
+       print('🚀 Auth state loading');
+       return false;
+     },
+     error: (error, _) {
+       print('🚀 Auth state error: $error');
+       return false;
+     },
+   );
+
+   if (!isLoggedIn) {
+     context.go('/auth/login');
+     return;
+   }
+
+   // If logged in, check onboarding prerequisites (profile + consent)
+   final user = ref.read(currentUserProvider);
+   final needsProfileSetup = user == null || user.l1Language == null || user.targetAccent == null;
+
+   // Use a persisted flag for consent to avoid async call in redirect
+   // This will be set after successful consent in onboarding
+   bool needsConsent = true;
+   try {
+     final prefs = ServiceLocator.instance.prefs;
+     needsConsent = !(prefs.getBool('consent_accent_twin') ?? false);
+   } catch (e) {
+     print('⚠️ Unable to read consent flag from prefs: $e');
+     needsConsent = true;
+   }
+
+   if (needsProfileSetup || needsConsent) {
+     print('🧭 Redirecting to onboarding: needsProfile=$needsProfileSetup, needsConsent=$needsConsent');
+     context.go('/onboarding');
+     return;
+   }
+
+   context.go('/home');
+ }
 
   @override
   Widget build(BuildContext context) {

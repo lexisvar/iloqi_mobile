@@ -142,4 +142,25 @@ abstract class VoiceApiService {
   // TTS Status
   @GET('samples/tts/status/')
   Future<TtsStatusResponse> getTtsStatus();
+
+  // Audio quality inspection (multipart)
+  @POST('samples/audio/inspect/')
+  @MultiPart()
+  Future<Map<String, dynamic>> inspectAudioQuality(@Part() File file);
+
+  // Consent APIs
+  @POST('samples/consent/record/')
+  Future<Map<String, dynamic>> recordConsent(@Body() Map<String, dynamic> body);
+
+  @GET('samples/consent/check/')
+  Future<Map<String, dynamic>> checkConsent(
+    @Query('consent_type') String consentType, [
+    @Query('voice_sample_id') int? voiceSampleId,
+  ]);
+
+  @GET('samples/consent/history/')
+  Future<Map<String, dynamic>> getConsentHistory();
+
+  @POST('samples/consent/{consent_id}/revoke/')
+  Future<Map<String, dynamic>> revokeConsent(@Path('consent_id') int consentId);
 }

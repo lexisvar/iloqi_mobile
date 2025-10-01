@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/models/voice_models.dart';
@@ -12,7 +13,12 @@ import '../widgets/results_step.dart';
 import '../widgets/accent_twin_step.dart';
 
 class VoiceAnalysisPage extends ConsumerStatefulWidget {
-  const VoiceAnalysisPage({super.key});
+  final bool isOnboardingContext;
+
+  const VoiceAnalysisPage({
+    super.key,
+    this.isOnboardingContext = false,
+  });
 
   @override
   ConsumerState<VoiceAnalysisPage> createState() => _VoiceAnalysisPageState();
@@ -135,6 +141,7 @@ class _VoiceAnalysisPageState extends ConsumerState<VoiceAnalysisPage> {
         return ResultsStep(
           analysisState: analysisState,
           onCreateAccentTwin: () => setState(() => _currentStep = VoiceAnalysisStep.accentTwin),
+          isOnboardingContext: widget.isOnboardingContext,
         );
 
       case VoiceAnalysisStep.accentTwin:

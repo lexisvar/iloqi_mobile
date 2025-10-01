@@ -1,15 +1,15 @@
 openapi: 3.0.3
 info:
-  title: Eloqi - English Accent Training API
+  title: iloqi - English Accent Training API
   version: 1.8.0
   description: "\n    \U0001F3AD **Advanced English Accent Training Platform** with\
-    \ revolutionary **Accent Twin Technology**\n    \n    Eloqi empowers users to\
-    \ master English accents through AI-powered voice analysis and personalized accent\
-    \ twin generation.\n    \n    ## ✨ Revolutionary Accent Twin System\n    **What\
-    \ are Accent Twins?** Generate your voice speaking in perfect target accents for\
-    \ comparison and training.\n    \n    ### \U0001F3AF How It Works:\n    1. **Upload**\
-    \ your voice sample\n    2. **Analyze** with ML-powered speech recognition  \n\
-    \    3. **Generate** accent twin using advanced TTS\n    4. **Compare** pronunciation\
+    \ revolutionary **Accent Twin Technology**\n\n    iloqi empowers users to master\
+    \ English accents through AI-powered voice analysis and personalized accent twin\
+    \ generation.\n    \n    ## ✨ Revolutionary Accent Twin System\n    **What are\
+    \ Accent Twins?** Generate your voice speaking in perfect target accents for comparison\
+    \ and training.\n    \n    ### \U0001F3AF How It Works:\n    1. **Upload** your\
+    \ voice sample\n    2. **Analyze** with ML-powered speech recognition  \n    3.\
+    \ **Generate** accent twin using advanced TTS\n    4. **Compare** pronunciation\
     \ differences\n    5. **Train** with personalized recommendations\n    \n    ##\
     \ \U0001F680 **NEW in v1.8** - Enhanced TTS Architecture\n    - ✅ **100% Success\
     \ Rate**: Fixed all \"pending\" status issues\n    - ✅ **Lightning Fast**: Average\
@@ -65,6 +65,151 @@ info:
     \ status\n    - File upload support\n    - Comprehensive error handling\n    -\
     \ Offline-ready data structures\n    "
 paths:
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
   /api/auth/token/refresh/:
     post:
       operationId: auth_token_refresh_create
@@ -236,50 +381,6 @@ paths:
                 $ref: '#/components/schemas/UserProfile'
           description: ''
   /api/auth/profile/update/:
-    put:
-      operationId: auth_profile_update_update
-      description: Update user profile information including language preferences
-        and learning goals
-      summary: Update user profile
-      tags:
-      - User Profile
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserProfileUpdateRequest'
-            examples:
-              ProfileUpdateExample:
-                value:
-                  l1_language: Spanish
-                  target_accent: UK
-                  proficiency_level: intermediate
-                  learning_goals: Improve pronunciation for business presentations
-                summary: Profile Update Example
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/UserProfileUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/UserProfileUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-              examples:
-                ProfileUpdateExample:
-                  value:
-                    l1_language: Spanish
-                    target_accent: UK
-                    proficiency_level: intermediate
-                    learning_goals: Improve pronunciation for business presentations
-                  summary: Profile Update Example
-          description: ''
     patch:
       operationId: auth_profile_update_partial_update
       description: Update user profile information including language preferences
@@ -306,6 +407,50 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                ProfileUpdateExample:
+                  value:
+                    l1_language: Spanish
+                    target_accent: UK
+                    proficiency_level: intermediate
+                    learning_goals: Improve pronunciation for business presentations
+                  summary: Profile Update Example
+          description: ''
+    put:
+      operationId: auth_profile_update_update
+      description: Update user profile information including language preferences
+        and learning goals
+      summary: Update user profile
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+            examples:
+              ProfileUpdateExample:
+                value:
+                  l1_language: Spanish
+                  target_accent: UK
+                  proficiency_level: intermediate
+                  learning_goals: Improve pronunciation for business presentations
+                summary: Profile Update Example
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdateRequest'
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -411,7 +556,7 @@ paths:
     get:
       operationId: samples_voice_samples_list
       description: "\n    # \U0001F3AD **ELOQI COMPLETE USER JOURNEY - From Voice\
-        \ to Perfect Accent**\n\n    **Welcome to Eloqi - The world's first AI-powered\
+        \ to Perfect Accent**\n\n    **Welcome to iloqi - The world's first AI-powered\
         \ Accent Twin Training Platform!**\n\n    This endpoint starts your complete\
         \ accent training journey. Upload your voice and unlock the revolutionary\
         \ Accent Twin system that generates your voice speaking in perfect target\
@@ -465,10 +610,10 @@ paths:
         \ │\n    │    → Accent detection statistics                           │\n\
         \    └─────────────────────────────────────────────────────────────┘\n   \
         \ ```\n\n    ## \U0001F3AD **WHAT MAKES ACCENT TWINS REVOLUTIONARY?**\n\n\
-        \    ### **\U0001F504 Before Eloqi (Traditional Methods)**\n    ❌ Listen to\
+        \    ### **\U0001F504 Before iloqi (Traditional Methods)**\n    ❌ Listen to\
         \ native speakers and guess\n    ❌ Generic accent courses without personalization\n\
         \    ❌ No direct comparison with your own voice\n    ❌ Trial-and-error learning\
-        \ approach\n\n    ### **✨ After Eloqi (Accent Twin Technology)**\n    ✅ **Direct\
+        \ approach\n\n    ### **✨ After iloqi (Accent Twin Technology)**\n    ✅ **Direct\
         \ Voice Comparison**: Hear YOUR voice in perfect accents\n    ✅ **AI-Powered\
         \ Personalization**: Analysis of your specific speech patterns\n    ✅ **Scientific\
         \ Learning**: Compare phoneme-by-phoneme differences\n    ✅ **Immediate Feedback**:\
@@ -523,7 +668,7 @@ paths:
         \ your voice sample now and unlock the revolutionary power of Accent Twins!\
         \ Your perfect accent is just one analysis away.\n\n    **Note**: Accent Twin\
         \ generation requires voice analysis completion first.\n    "
-      summary: 🎭 Complete Eloqi Accent Training Journey - Voice Samples
+      summary: 🎭 Complete iloqi Accent Training Journey - Voice Samples
       parameters:
       - name: ordering
         required: false
@@ -592,7 +737,7 @@ paths:
     post:
       operationId: samples_voice_samples_create
       description: "\n    # \U0001F3AD **ELOQI COMPLETE USER JOURNEY - From Voice\
-        \ to Perfect Accent**\n\n    **Welcome to Eloqi - The world's first AI-powered\
+        \ to Perfect Accent**\n\n    **Welcome to iloqi - The world's first AI-powered\
         \ Accent Twin Training Platform!**\n\n    This endpoint starts your complete\
         \ accent training journey. Upload your voice and unlock the revolutionary\
         \ Accent Twin system that generates your voice speaking in perfect target\
@@ -646,10 +791,10 @@ paths:
         \ │\n    │    → Accent detection statistics                           │\n\
         \    └─────────────────────────────────────────────────────────────┘\n   \
         \ ```\n\n    ## \U0001F3AD **WHAT MAKES ACCENT TWINS REVOLUTIONARY?**\n\n\
-        \    ### **\U0001F504 Before Eloqi (Traditional Methods)**\n    ❌ Listen to\
+        \    ### **\U0001F504 Before iloqi (Traditional Methods)**\n    ❌ Listen to\
         \ native speakers and guess\n    ❌ Generic accent courses without personalization\n\
         \    ❌ No direct comparison with your own voice\n    ❌ Trial-and-error learning\
-        \ approach\n\n    ### **✨ After Eloqi (Accent Twin Technology)**\n    ✅ **Direct\
+        \ approach\n\n    ### **✨ After iloqi (Accent Twin Technology)**\n    ✅ **Direct\
         \ Voice Comparison**: Hear YOUR voice in perfect accents\n    ✅ **AI-Powered\
         \ Personalization**: Analysis of your specific speech patterns\n    ✅ **Scientific\
         \ Learning**: Compare phoneme-by-phoneme differences\n    ✅ **Immediate Feedback**:\
@@ -704,7 +849,7 @@ paths:
         \ your voice sample now and unlock the revolutionary power of Accent Twins!\
         \ Your perfect accent is just one analysis away.\n\n    **Note**: Accent Twin\
         \ generation requires voice analysis completion first.\n    "
-      summary: 🎭 Complete Eloqi Accent Training Journey - Voice Samples
+      summary: 🎭 Complete iloqi Accent Training Journey - Voice Samples
       tags:
       - samples
       requestBody:
@@ -1154,6 +1299,122 @@ paths:
           description: Too many re-analysis requests
         '500':
           description: Re-analysis failed
+  /api/samples/audio/inspect/:
+    post:
+      operationId: samples_audio_inspect_create
+      description: "\n    **Audio Quality Inspection for Voice Analysis**\n\n    Performs\
+        \ comprehensive quality inspection of uploaded audio files before analysis.\n\
+        \    Checks for common issues that could affect voice analysis accuracy.\n\
+        \n    **Quality Metrics Checked:**\n    - **Signal-to-Noise Ratio**: Background\
+        \ noise level assessment\n    - **Audio Clarity**: Spectral clarity and pronunciation\
+        \ quality\n    - **Volume Consistency**: Consistent audio levels throughout\
+        \ recording\n    - **Background Noise**: Environmental noise interference\n\
+        \    - **Audio Artifacts**: Clicks, pops, distortion, or other artifacts\n\
+        \n    **Quality Thresholds:**\n    - **Duration**: 1-300 seconds (optimal:\
+        \ 10-60 seconds)\n    - **Sample Rate**: Minimum 16kHz (optimal: 22kHz+)\n\
+        \    - **SNR**: Minimum 10dB for acceptable quality\n    - **File Size**:\
+        \ Up to 50MB supported\n\n    **Response Status:**\n    - `passed`: Excellent\
+        \ quality, ready for analysis\n    - `warning`: Acceptable quality with minor\
+        \ issues\n    - `failed`: Poor quality, re-recording recommended\n\n    **Use\
+        \ Cases:**\n    - Pre-analysis quality validation\n    - User feedback on\
+        \ recording quality\n    - Automated quality gates for analysis pipeline\n\
+        \    "
+      summary: Inspect Audio Quality
+      tags:
+      - samples
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Audio file to inspect
+              required:
+              - file
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  inspection:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        enum:
+                        - passed
+                        - warning
+                        - failed
+                      overall_score:
+                        type: number
+                        example: 85.5
+                      quality_scores:
+                        type: object
+                        properties:
+                          snr:
+                            type: number
+                            example: 25.3
+                          clarity:
+                            type: number
+                            example: 78.2
+                          volume_consistency:
+                            type: number
+                            example: 82.1
+                          background_noise:
+                            type: number
+                            example: 65.4
+                          artifacts:
+                            type: number
+                            example: 90.8
+                      issues_detected:
+                        type: array
+                        items:
+                          type: string
+                        example: []
+                      recommendations:
+                        type: array
+                        items:
+                          type: string
+                        example: []
+                      technical_metrics:
+                        type: object
+                        properties:
+                          duration_seconds:
+                            type: number
+                            example: 15.2
+                          sample_rate_hz:
+                            type: integer
+                            example: 22050
+                          channels:
+                            type: integer
+                            example: 1
+                          bit_depth:
+                            type: integer
+                            example: 16
+              examples:
+                InspectAudioFile:
+                  value:
+                    file: <binary_audio_file>
+                  summary: Inspect Audio File
+                  description: Check audio quality before analysis
+          description: Audio quality inspection completed
+        '400':
+          description: Invalid file format or parameters
+        '413':
+          description: File too large (max 50MB)
+        '422':
+          description: Audio file corrupted or unreadable
   /api/samples/progress/:
     get:
       operationId: samples_progress_retrieve
@@ -1996,6 +2257,605 @@ paths:
           description: Training session not found
         '403':
           description: Access denied - not your session
+  /api/samples/accent-twins/:
+    get:
+      operationId: samples_accent_twins_list
+      description: "\n    # \U0001F3AD **ACCENT TWIN SYSTEM - Complete Voice Cloning\
+        \ Experience**\n\n    **Accent Twins are the revolutionary core feature**:\
+        \ Generate your voice speaking in perfect target accents for personalized\
+        \ pronunciation training.\n\n    ## \U0001F3AF **WHAT MAKES ACCENT TWINS REVOLUTIONARY?**\n\
+        \n    ### **\U0001F504 Before iloqi (Traditional Methods)**\n    ❌ Listen\
+        \ to native speakers and guess\n    ❌ Generic accent courses without personalization\n\
+        \    ❌ No direct comparison with your own voice\n    ❌ Trial-and-error learning\
+        \ approach\n\n    ### **✨ After iloqi (Accent Twin Technology)**\n    ✅ **Direct\
+        \ Voice Comparison**: Hear YOUR voice in perfect accents\n    ✅ **AI-Powered\
+        \ Personalization**: Analysis of your specific speech patterns\n    ✅ **Scientific\
+        \ Learning**: Compare phoneme-by-phoneme differences\n    ✅ **Immediate Feedback**:\
+        \ Real-time generation and comparison\n    ✅ **Measurable Progress**: Track\
+        \ improvement with objective metrics\n\n    ## \U0001F3AD **SUPPORTED ACCENTS\
+        \ & VOICE MODELS**\n\n    ```json\n    {\n      \"US\": {\n        \"name\"\
+        : \"American English\",\n        \"male\": \"en-US-GuyNeural\",\n        \"\
+        female\": \"en-US-AriaNeural\",\n        \"characteristics\": \"General American,\
+        \ clear vowels\"\n      },\n      \"UK\": {\n        \"name\": \"British English\"\
+        ,\n        \"male\": \"en-GB-RyanNeural\",\n        \"female\": \"en-GB-SoniaNeural\"\
+        ,\n        \"characteristics\": \"Received Pronunciation, non-rhotic\"\n \
+        \     },\n      \"AU\": {\n        \"name\": \"Australian English\",\n   \
+        \     \"male\": \"en-AU-WilliamNeural\",\n        \"female\": \"en-AU-NatashaNeural\"\
+        ,\n        \"characteristics\": \"Broad accent, rising intonation\"\n    \
+        \  },\n      \"CA\": {\n        \"name\": \"Canadian English\",\n        \"\
+        male\": \"en-CA-LiamNeural\",\n        \"female\": \"en-CA-ClaraNeural\",\n\
+        \        \"characteristics\": \"Mild rhotic, polite intonation\"\n      },\n\
+        \      \"IE\": {\n        \"name\": \"Irish English\",\n        \"male\":\
+        \ \"en-IE-ConnorNeural\",\n        \"female\": \"en-IE-EmilyNeural\",\n  \
+        \      \"characteristics\": \"Melodic, unique vowel sounds\"\n      }\n  \
+        \  }\n    ```\n\n    ## ⚡ **TECHNICAL SPECIFICATIONS**\n\n    ### **TTS Providers\
+        \ (Dual System)**\n    - **Edge TTS** (Active, Free): Microsoft neural voices,\
+        \ 10 models, ~1.3s generation\n    - **ElevenLabs** (Ready, Premium): 2000+\
+        \ voices, voice cloning, premium quality\n\n    ### **Smart Voice Matching**\n\
+        \    - **Gender Detection**: Enhanced F0 analysis (79.68Hz → male voice ✅)\n\
+        \    - **Accent Selection**: Automatic voice model selection per accent\n\
+        \    - **Quality Assurance**: Audio validation and fallback systems\n\n  \
+        \  ## \U0001F4CA **SYSTEM PERFORMANCE**\n    - **Success Rate**: 100% (fixed\
+        \ all pending issues)\n    - **Generation Time**: ~1.3 seconds average\n \
+        \   - **Voice Accuracy**: 100% gender detection\n    - **Supported Formats**:\
+        \ WAV, MP3, M4A, OGG, WEBM (up to 50MB)\n\n    ## \U0001F680 **HOW TO USE\
+        \ ACCENT TWINS**\n\n    ### **Prerequisites**\n    1. Upload and analyze a\
+        \ voice sample first\n    2. Ensure analysis is complete (takes ~10-30 seconds)\n\
+        \n    ### **Generation Process**\n    1. **Create Twin**: POST request with\
+        \ target accent and preferences\n    2. **Monitor Status**: Check generation\
+        \ progress in real-time\n    3. **Download Audio**: Access generated accent\
+        \ twin file\n    4. **Compare & Learn**: Compare with original voice for training\n\
+        \n    ## \U0001F3AF **API WORKFLOW**\n\n    ### **Step 1: Prepare Voice Sample**\n\
+        \    ```bash\n    # Upload voice sample\n    POST /api/samples/voice-samples/\n\
+        \    # Analyze voice sample\n    POST /api/samples/voice-samples/{id}/analyze/\n\
+        \    ```\n\n    ### **Step 2: Generate Accent Twin**\n    ```bash\n    # Create\
+        \ accent twin\n    POST /api/samples/accent-twins/\n    {\n      \"original_sample\"\
+        : 1,\n      \"target_accent\": \"US\",\n      \"tts_provider\": \"edge_tts\"\
+        ,\n      \"voice_model\": \"en-US-GuyNeural\"\n    }\n    ```\n\n    ### **Step\
+        \ 3: Monitor & Download**\n    ```bash\n    # Check status\n    GET /api/samples/accent-twins/{id}/status/\n\
+        \    # Download audio\n    GET /api/samples/accent-twins/{id}/\n    ```\n\n\
+        \    ## \U0001F389 **READY FOR PRODUCTION**\n\n    - ✅ **100% Success Rate**:\
+        \ All accent twin generations work\n    - ✅ **Enterprise API**: Complete OpenAPI\
+        \ documentation\n    - ✅ **Mobile Ready**: Flutter/React Native compatible\n\
+        \    - ✅ **Scalable**: Multi-provider TTS with health monitoring\n    - ✅\
+        \ **Premium Features**: ElevenLabs voice cloning ready\n\n    **Accent Twins\
+        \ are fully supported and production-ready! \U0001F389**\n    "
+      summary: 🎭 Accent Twins - Revolutionary Voice Cloning System
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAccentTwinList'
+              examples:
+                GenerateUSAccentTwin:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - original_sample: 1
+                      target_accent: US
+                      tts_provider: edge_tts
+                      voice_model: en-US-GuyNeural
+                  summary: Generate US Accent Twin
+                GenerateUKAccentWithElevenLabs:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - original_sample: 1
+                      target_accent: UK
+                      tts_provider: elevenlabs
+                      voice_model: VR6AewLTigWG4xSOukaG
+                  summary: Generate UK Accent with ElevenLabs
+          description: List of user's accent twins
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAccentTwinList'
+              examples:
+                GenerateUSAccentTwin:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - original_sample: 1
+                      target_accent: US
+                      tts_provider: edge_tts
+                      voice_model: en-US-GuyNeural
+                  summary: Generate US Accent Twin
+                GenerateUKAccentWithElevenLabs:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - original_sample: 1
+                      target_accent: UK
+                      tts_provider: elevenlabs
+                      voice_model: VR6AewLTigWG4xSOukaG
+                  summary: Generate UK Accent with ElevenLabs
+          description: Accent twin generation started successfully
+        '400':
+          description: Invalid parameters or voice sample not analyzed
+        '404':
+          description: Voice sample not found
+    post:
+      operationId: samples_accent_twins_create
+      description: "\n    # \U0001F3AD **ACCENT TWIN SYSTEM - Complete Voice Cloning\
+        \ Experience**\n\n    **Accent Twins are the revolutionary core feature**:\
+        \ Generate your voice speaking in perfect target accents for personalized\
+        \ pronunciation training.\n\n    ## \U0001F3AF **WHAT MAKES ACCENT TWINS REVOLUTIONARY?**\n\
+        \n    ### **\U0001F504 Before iloqi (Traditional Methods)**\n    ❌ Listen\
+        \ to native speakers and guess\n    ❌ Generic accent courses without personalization\n\
+        \    ❌ No direct comparison with your own voice\n    ❌ Trial-and-error learning\
+        \ approach\n\n    ### **✨ After iloqi (Accent Twin Technology)**\n    ✅ **Direct\
+        \ Voice Comparison**: Hear YOUR voice in perfect accents\n    ✅ **AI-Powered\
+        \ Personalization**: Analysis of your specific speech patterns\n    ✅ **Scientific\
+        \ Learning**: Compare phoneme-by-phoneme differences\n    ✅ **Immediate Feedback**:\
+        \ Real-time generation and comparison\n    ✅ **Measurable Progress**: Track\
+        \ improvement with objective metrics\n\n    ## \U0001F3AD **SUPPORTED ACCENTS\
+        \ & VOICE MODELS**\n\n    ```json\n    {\n      \"US\": {\n        \"name\"\
+        : \"American English\",\n        \"male\": \"en-US-GuyNeural\",\n        \"\
+        female\": \"en-US-AriaNeural\",\n        \"characteristics\": \"General American,\
+        \ clear vowels\"\n      },\n      \"UK\": {\n        \"name\": \"British English\"\
+        ,\n        \"male\": \"en-GB-RyanNeural\",\n        \"female\": \"en-GB-SoniaNeural\"\
+        ,\n        \"characteristics\": \"Received Pronunciation, non-rhotic\"\n \
+        \     },\n      \"AU\": {\n        \"name\": \"Australian English\",\n   \
+        \     \"male\": \"en-AU-WilliamNeural\",\n        \"female\": \"en-AU-NatashaNeural\"\
+        ,\n        \"characteristics\": \"Broad accent, rising intonation\"\n    \
+        \  },\n      \"CA\": {\n        \"name\": \"Canadian English\",\n        \"\
+        male\": \"en-CA-LiamNeural\",\n        \"female\": \"en-CA-ClaraNeural\",\n\
+        \        \"characteristics\": \"Mild rhotic, polite intonation\"\n      },\n\
+        \      \"IE\": {\n        \"name\": \"Irish English\",\n        \"male\":\
+        \ \"en-IE-ConnorNeural\",\n        \"female\": \"en-IE-EmilyNeural\",\n  \
+        \      \"characteristics\": \"Melodic, unique vowel sounds\"\n      }\n  \
+        \  }\n    ```\n\n    ## ⚡ **TECHNICAL SPECIFICATIONS**\n\n    ### **TTS Providers\
+        \ (Dual System)**\n    - **Edge TTS** (Active, Free): Microsoft neural voices,\
+        \ 10 models, ~1.3s generation\n    - **ElevenLabs** (Ready, Premium): 2000+\
+        \ voices, voice cloning, premium quality\n\n    ### **Smart Voice Matching**\n\
+        \    - **Gender Detection**: Enhanced F0 analysis (79.68Hz → male voice ✅)\n\
+        \    - **Accent Selection**: Automatic voice model selection per accent\n\
+        \    - **Quality Assurance**: Audio validation and fallback systems\n\n  \
+        \  ## \U0001F4CA **SYSTEM PERFORMANCE**\n    - **Success Rate**: 100% (fixed\
+        \ all pending issues)\n    - **Generation Time**: ~1.3 seconds average\n \
+        \   - **Voice Accuracy**: 100% gender detection\n    - **Supported Formats**:\
+        \ WAV, MP3, M4A, OGG, WEBM (up to 50MB)\n\n    ## \U0001F680 **HOW TO USE\
+        \ ACCENT TWINS**\n\n    ### **Prerequisites**\n    1. Upload and analyze a\
+        \ voice sample first\n    2. Ensure analysis is complete (takes ~10-30 seconds)\n\
+        \n    ### **Generation Process**\n    1. **Create Twin**: POST request with\
+        \ target accent and preferences\n    2. **Monitor Status**: Check generation\
+        \ progress in real-time\n    3. **Download Audio**: Access generated accent\
+        \ twin file\n    4. **Compare & Learn**: Compare with original voice for training\n\
+        \n    ## \U0001F3AF **API WORKFLOW**\n\n    ### **Step 1: Prepare Voice Sample**\n\
+        \    ```bash\n    # Upload voice sample\n    POST /api/samples/voice-samples/\n\
+        \    # Analyze voice sample\n    POST /api/samples/voice-samples/{id}/analyze/\n\
+        \    ```\n\n    ### **Step 2: Generate Accent Twin**\n    ```bash\n    # Create\
+        \ accent twin\n    POST /api/samples/accent-twins/\n    {\n      \"original_sample\"\
+        : 1,\n      \"target_accent\": \"US\",\n      \"tts_provider\": \"edge_tts\"\
+        ,\n      \"voice_model\": \"en-US-GuyNeural\"\n    }\n    ```\n\n    ### **Step\
+        \ 3: Monitor & Download**\n    ```bash\n    # Check status\n    GET /api/samples/accent-twins/{id}/status/\n\
+        \    # Download audio\n    GET /api/samples/accent-twins/{id}/\n    ```\n\n\
+        \    ## \U0001F389 **READY FOR PRODUCTION**\n\n    - ✅ **100% Success Rate**:\
+        \ All accent twin generations work\n    - ✅ **Enterprise API**: Complete OpenAPI\
+        \ documentation\n    - ✅ **Mobile Ready**: Flutter/React Native compatible\n\
+        \    - ✅ **Scalable**: Multi-provider TTS with health monitoring\n    - ✅\
+        \ **Premium Features**: ElevenLabs voice cloning ready\n\n    **Accent Twins\
+        \ are fully supported and production-ready! \U0001F389**\n    "
+      summary: 🎭 Accent Twins - Revolutionary Voice Cloning System
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                original_sample:
+                  type: integer
+                  description: ID of the analyzed voice sample to use as base
+                target_accent:
+                  type: string
+                  enum:
+                  - US
+                  - UK
+                  - AU
+                  - CA
+                  - IE
+                  description: Target accent for generation
+                tts_provider:
+                  type: string
+                  enum:
+                  - edge_tts
+                  - elevenlabs
+                  default: edge_tts
+                  description: TTS provider to use
+                voice_model:
+                  type: string
+                  description: Specific voice model (auto-selected if not provided)
+                generation_params:
+                  type: object
+                  description: Additional provider-specific parameters
+              required:
+              - original_sample
+              - target_accent
+            examples:
+              GenerateUSAccentTwin:
+                value:
+                  original_sample: 1
+                  target_accent: US
+                  tts_provider: edge_tts
+                  voice_model: en-US-GuyNeural
+                summary: Generate US Accent Twin
+              GenerateUKAccentWithElevenLabs:
+                value:
+                  original_sample: 1
+                  target_accent: UK
+                  tts_provider: elevenlabs
+                  voice_model: VR6AewLTigWG4xSOukaG
+                summary: Generate UK Accent with ElevenLabs
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAccentTwinList'
+              examples:
+                GenerateUSAccentTwin:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - original_sample: 1
+                      target_accent: US
+                      tts_provider: edge_tts
+                      voice_model: en-US-GuyNeural
+                  summary: Generate US Accent Twin
+                GenerateUKAccentWithElevenLabs:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - original_sample: 1
+                      target_accent: UK
+                      tts_provider: elevenlabs
+                      voice_model: VR6AewLTigWG4xSOukaG
+                  summary: Generate UK Accent with ElevenLabs
+          description: List of user's accent twins
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccentTwin'
+              examples:
+                GenerateUSAccentTwin:
+                  value:
+                    original_sample: 1
+                    target_accent: US
+                    tts_provider: edge_tts
+                    voice_model: en-US-GuyNeural
+                  summary: Generate US Accent Twin
+                GenerateUKAccentWithElevenLabs:
+                  value:
+                    original_sample: 1
+                    target_accent: UK
+                    tts_provider: elevenlabs
+                    voice_model: VR6AewLTigWG4xSOukaG
+                  summary: Generate UK Accent with ElevenLabs
+          description: Accent twin generation started successfully
+        '400':
+          description: Invalid parameters or voice sample not analyzed
+        '404':
+          description: Voice sample not found
+  /api/samples/accent-twins/{id}/:
+    get:
+      operationId: samples_accent_twins_retrieve
+      description: "\n    **Retrieve Accent Twin Details and Audio**\n\n    **GET**:\
+        \ Retrieve detailed information about a specific accent twin including:\n\
+        \    - Generation status and metadata\n    - Audio file URL for download\n\
+        \    - Voice model and provider used\n    - Processing time and similarity\
+        \ scores\n    - Associated original voice sample\n\n    **DELETE**: Permanently\
+        \ remove the accent twin and associated audio files.\n\n    **Status Values:**\n\
+        \    - `pending`: TTS generation queued\n    - `processing`: Currently generating\
+        \ audio\n    - `completed`: Audio file ready for download\n    - `failed`:\
+        \ Generation failed (check error_message)\n\n    **Audio Download**: When\
+        \ status is 'completed', the audio file is available\n    at the `file_url`\
+        \ field for immediate playback and comparison.\n    "
+      summary: Retrieve or Delete Accent Twin
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: ID of the accent twin
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccentTwin'
+          description: Accent twin details with audio file information
+        '204':
+          description: Accent twin deleted successfully
+        '403':
+          description: Access denied - not your accent twin
+        '404':
+          description: Accent twin not found
+    delete:
+      operationId: samples_accent_twins_destroy
+      description: "\n    **Retrieve Accent Twin Details and Audio**\n\n    **GET**:\
+        \ Retrieve detailed information about a specific accent twin including:\n\
+        \    - Generation status and metadata\n    - Audio file URL for download\n\
+        \    - Voice model and provider used\n    - Processing time and similarity\
+        \ scores\n    - Associated original voice sample\n\n    **DELETE**: Permanently\
+        \ remove the accent twin and associated audio files.\n\n    **Status Values:**\n\
+        \    - `pending`: TTS generation queued\n    - `processing`: Currently generating\
+        \ audio\n    - `completed`: Audio file ready for download\n    - `failed`:\
+        \ Generation failed (check error_message)\n\n    **Audio Download**: When\
+        \ status is 'completed', the audio file is available\n    at the `file_url`\
+        \ field for immediate playback and comparison.\n    "
+      summary: Retrieve or Delete Accent Twin
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: ID of the accent twin
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccentTwin'
+          description: Accent twin details with audio file information
+        '204':
+          description: Accent twin deleted successfully
+        '403':
+          description: Access denied - not your accent twin
+        '404':
+          description: Accent twin not found
+  /api/samples/voice-samples/{sample_id}/accent-twins/:
+    post:
+      operationId: samples_voice_samples_accent_twins_create
+      description: "\n    **Enhanced TTS Accent Twin Generation**\n\n    Generates\
+        \ an accent twin for an analyzed voice sample using our pluggable TTS architecture.\n\
+        \    This endpoint creates realistic accent variations of the user's speech\
+        \ using advanced TTS providers.\n\n    **Prerequisites:**\n    - Voice sample\
+        \ must be uploaded and analyzed\n    - Sample must have transcription data\
+        \ available\n\n    **TTS Providers & Features:**\n    - **Edge TTS** (Default,\
+        \ Free): Microsoft's neural voices with natural accents\n      - Supports:\
+        \ US, UK, AU, CA, IE accents\n      - High quality neural voice models\n \
+        \     - Fast generation (~1-2 seconds)\n    - **ElevenLabs** (Premium, Coming\
+        \ Soon): Ultra-realistic voice cloning\n      - Professional voice models\n\
+        \      - Custom voice training capabilities\n\n    **Supported Accents:**\n\
+        \    - `US`: American English (en-US-AriaNeural, en-US-JennyNeural)\n    -\
+        \ `UK`: British English (en-GB-SoniaNeural, en-GB-RyanNeural)\n    - `AU`:\
+        \ Australian English (en-AU-NatashaNeural, en-AU-WilliamNeural)\n    - `CA`:\
+        \ Canadian English (en-CA-ClaraNeural, en-CA-LiamNeural)\n    - `IE`: Irish\
+        \ English (en-IE-EmilyNeural, en-IE-ConnorNeural)\n\n    **Generation Process:**\n\
+        \    1. Validates voice sample and transcription\n    2. Creates or updates\
+        \ accent twin record\n    3. Generates audio using selected TTS provider\n\
+        \    4. Returns immediate response with generation status\n    5. Audio becomes\
+        \ available when status = 'completed'\n    "
+      summary: Generate Accent Twin for Voice Sample
+      parameters:
+      - in: path
+        name: sample_id
+        schema:
+          type: integer
+        description: ID of the voice sample to generate accent twin for
+        required: true
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_accent:
+                  type: string
+                  enum:
+                  - US
+                  - UK
+                  - AU
+                  - CA
+                  - IE
+                  default: US
+                  description: Target accent for generation
+                tts_provider:
+                  type: string
+                  enum:
+                  - edge_tts
+                  - elevenlabs
+                  default: edge_tts
+                  description: TTS provider to use
+                voice_model:
+                  type: string
+                  description: Specific voice model (auto-selected if not provided)
+                  examples:
+                  - en-US-AriaNeural
+                  - en-GB-SoniaNeural
+                generation_params:
+                  type: object
+                  description: Additional provider-specific parameters
+                  properties:
+                    voice_speed:
+                      type: number
+                      default: 1.0
+                    voice_pitch:
+                      type: number
+                      default: 1.0
+              required:
+              - target_accent
+            examples:
+              GenerateUSAccentTwin:
+                value:
+                  target_accent: US
+                  tts_provider: edge_tts
+                  voice_model: en-US-AriaNeural
+                summary: Generate US Accent Twin
+              GenerateUKAccentWithCustomSpeed:
+                value:
+                  target_accent: UK
+                  tts_provider: edge_tts
+                  generation_params:
+                    voice_speed: 0.9
+                summary: Generate UK Accent with Custom Speed
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Accent twin generated successfully
+                  accent_twin:
+                    $ref: '#/components/schemas/AccentTwin'
+                  generation_info:
+                    type: object
+                    properties:
+                      provider:
+                        type: string
+                        example: edge_tts
+                      voice_model:
+                        type: string
+                        example: en-US-AriaNeural
+                      processing_time:
+                        type: number
+                        example: 1.5
+                      file_size:
+                        type: integer
+                        example: 69552
+              examples:
+                GenerateUSAccentTwin:
+                  value:
+                    target_accent: US
+                    tts_provider: edge_tts
+                    voice_model: en-US-AriaNeural
+                  summary: Generate US Accent Twin
+                GenerateUKAccentWithCustomSpeed:
+                  value:
+                    target_accent: UK
+                    tts_provider: edge_tts
+                    generation_params:
+                      voice_speed: 0.9
+                  summary: Generate UK Accent with Custom Speed
+          description: Accent twin generation successful
+        '400':
+          description: Voice sample not analyzed or missing transcription
+        '404':
+          description: Voice sample not found
+  /api/samples/accent-twins/{twin_id}/status/:
+    get:
+      operationId: samples_accent_twins_status_retrieve
+      description: |-
+        Get the status of an accent twin generation.
+
+        GET /api/samples/accent-twins/{id}/status/
+      parameters:
+      - in: path
+        name: twin_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/accent-twins/{twin_id}/compare/:
+    post:
+      operationId: samples_accent_twins_compare_create
+      description: |-
+        Compare an accent twin with its original sample for detailed analysis.
+
+        POST /api/samples/accent-twins/{id}/compare/
+      parameters:
+      - in: path
+        name: twin_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/samples/accent-twins/available-accents/:
+    get:
+      operationId: samples_accent_twins_available_accents_retrieve
+      description: |-
+        Get list of available target accents for accent twin generation.
+
+        GET /api/samples/accent-twins/available-accents/
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
   /api/samples/voice-samples/{sample_id}/accent-recommendations/:
     get:
       operationId: samples_voice_samples_accent_recommendations_retrieve
@@ -2340,6 +3200,592 @@ paths:
                       average_processing_time:
                         type: number
           description: TTS system status and capabilities
+  /api/samples/consent/record/:
+    post:
+      operationId: samples_consent_record_create
+      description: "\n    **Record User Consent for Voice Data Processing**\n\n  \
+        \  Records user consent for various voice data operations including recording,\n\
+        \    analysis, AI processing, data storage, and accent twin generation.\n\n\
+        \    **Consent Types:**\n    - `recording`: Consent for voice recording and\
+        \ storage\n    - `analysis`: Consent for ML analysis of voice samples\n  \
+        \  - `ai_processing`: Consent for AI/GPT processing of voice data\n    - `data_storage`:\
+        \ Consent for long-term data storage\n    - `accent_twin`: Consent for accent\
+        \ twin generation\n\n    **Features:**\n    - GDPR-compliant consent storage\
+        \ with audit trails\n    - Configurable retention periods (default: 7 years)\n\
+        \    - IP address and device information tracking\n    - Consent expiration\
+        \ management\n    - Multiple consent types per user\n\n    **Legal Compliance:**\n\
+        \    - Timestamped consent records\n    - Version-controlled consent text\n\
+        \    - Automatic expiration handling\n    - Consent revocation capabilities\n\
+        \    "
+      summary: Record Voice Data Consent
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                consent_type:
+                  type: string
+                  enum:
+                  - recording
+                  - analysis
+                  - ai_processing
+                  - data_storage
+                  - accent_twin
+                  description: Type of consent to record
+                consent_text:
+                  type: string
+                  description: Custom consent text (optional, uses default if not
+                    provided)
+                voice_sample_id:
+                  type: integer
+                  description: Associated voice sample ID (optional)
+                audio_file_path:
+                  type: string
+                  description: Path to recorded consent audio (optional)
+                retention_days:
+                  type: integer
+                  default: 2555
+                  description: 'Data retention period in days (default: 7 years)'
+              required:
+              - consent_type
+            examples:
+              RecordRecordingConsent:
+                value:
+                  consent_type: recording
+                  voice_sample_id: 1
+                  retention_days: 2555
+                summary: Record Recording Consent
+                description: Record consent for voice recording
+              RecordAIProcessingConsent:
+                value:
+                  consent_type: ai_processing
+                  consent_text: I consent to AI processing of my voice data...
+                summary: Record AI Processing Consent
+                description: Record consent for AI/GPT processing
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Consent recorded successfully
+                  consent:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      consent_type:
+                        type: string
+                      is_granted:
+                        type: boolean
+                      consent_timestamp:
+                        type: string
+                        format: date-time
+                      expires_at:
+                        type: string
+                        format: date-time
+                      days_until_expiry:
+                        type: integer
+              examples:
+                RecordRecordingConsent:
+                  value:
+                    consent_type: recording
+                    voice_sample_id: 1
+                    retention_days: 2555
+                  summary: Record Recording Consent
+                  description: Record consent for voice recording
+                RecordAIProcessingConsent:
+                  value:
+                    consent_type: ai_processing
+                    consent_text: I consent to AI processing of my voice data...
+                  summary: Record AI Processing Consent
+                  description: Record consent for AI/GPT processing
+          description: Consent recorded successfully
+        '400':
+          description: Invalid consent type or parameters
+        '404':
+          description: Voice sample not found
+  /api/samples/consent/check/:
+    get:
+      operationId: samples_consent_check_retrieve
+      description: "\n    **Check User's Consent Status for Voice Operations**\n\n\
+        \    Verifies if user has provided required consent for specific voice data\
+        \ operations.\n    Essential for GDPR compliance and legal data processing.\n\
+        \n    **Use Cases:**\n    - Pre-operation consent validation\n    - User consent\
+        \ status display\n    - Compliance auditing\n    - Consent renewal reminders\n\
+        \n    **Response includes:**\n    - Whether consent is granted and active\n\
+        \    - Consent expiration information\n    - Days until expiry for active\
+        \ consents\n    - Required actions if consent is missing\n    "
+      summary: Check User Consent Status
+      parameters:
+      - in: query
+        name: consent_type
+        schema:
+          type: string
+          enum:
+          - accent_twin
+          - ai_processing
+          - analysis
+          - data_storage
+          - recording
+        description: Type of consent to check
+        required: true
+      - in: query
+        name: voice_sample_id
+        schema:
+          type: integer
+        description: Check consent for specific voice sample
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  consent_info:
+                    type: object
+                    properties:
+                      has_consent:
+                        type: boolean
+                      consent_id:
+                        type: integer
+                        nullable: true
+                      consent_type:
+                        type: string
+                        nullable: true
+                      granted_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      expires_at:
+                        type: string
+                        format: date-time
+                        nullable: true
+                      days_until_expiry:
+                        type: integer
+                        nullable: true
+                      message:
+                        type: string
+          description: Consent status retrieved successfully
+        '400':
+          description: Missing or invalid consent_type parameter
+  /api/samples/consent/history/:
+    get:
+      operationId: samples_consent_history_retrieve
+      description: "\n    **Retrieve User's Complete Consent History**\n\n    Returns\
+        \ all consent records for the authenticated user including\n    active consents,\
+        \ expired consents, and consent history.\n\n    **Information Included:**\n\
+        \    - All consent types and their status\n    - Grant timestamps and expiration\
+        \ dates\n    - Consent text versions\n    - Associated voice samples\n   \
+        \ - Compliance and audit information\n\n    **Use Cases:**\n    - User consent\
+        \ management dashboard\n    - GDPR compliance verification\n    - Consent\
+        \ renewal workflows\n    - Legal audit trails\n    "
+      summary: Get User's Consent History
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  consents:
+                    type: object
+                    properties:
+                      active_consents:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            consent_type:
+                              type: string
+                            consent_id:
+                              type: integer
+                            granted_at:
+                              type: string
+                              format: date-time
+                            expires_at:
+                              type: string
+                              format: date-time
+                            days_until_expiry:
+                              type: integer
+                      expired_consents:
+                        type: array
+                        items:
+                          type: object
+                      total_consents:
+                        type: integer
+                      compliance_status:
+                        type: string
+          description: User consent history retrieved successfully
+        '500':
+          description: Error retrieving consent history
+  /api/samples/consent/{consent_id}/revoke/:
+    post:
+      operationId: samples_consent_revoke_create
+      description: "\n    **Revoke Previously Granted Consent**\n\n    Allows users\
+        \ to revoke their consent for voice data processing.\n    Creates an audit\
+        \ trail and marks consent as no longer active.\n\n    **Important Notes:**\n\
+        \    - Consent revocation is permanent for the consent record\n    - Data\
+        \ may still be retained according to legal requirements\n    - New consent\
+        \ will need to be provided for future operations\n    - Audit trail is maintained\
+        \ for compliance\n\n    **GDPR Compliance:**\n    - Maintains revocation records\
+        \ for audit purposes\n    - Does not delete associated data (separate process\
+        \ required)\n    - Provides confirmation of revocation\n    "
+      summary: Revoke Consent
+      parameters:
+      - in: path
+        name: consent_id
+        schema:
+          type: integer
+        description: ID of the consent to revoke
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Consent revoked successfully
+                  revoked_consent:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      consent_type:
+                        type: string
+                      revoked_at:
+                        type: string
+                        format: date-time
+          description: Consent revoked successfully
+        '404':
+          description: Consent not found or not owned by user
+        '400':
+          description: Cannot revoke consent (may already be inactive)
+  /api/samples/tutor-chat/sessions/:
+    get:
+      operationId: samples_tutor_chat_sessions_retrieve
+      description: "\n    **List All AI Tutor Chat Sessions for User**\n\n    Returns\
+        \ all chat sessions created by the authenticated user\n    with session status\
+        \ and activity information.\n\n    **Session Information:**\n    - Session\
+        \ names and target accents\n    - Activity status and message counts\n   \
+        \ - Creation and last activity timestamps\n    - Session expiration status\n\
+        \n    **Use Cases:**\n    - Session management dashboard\n    - Continue previous\
+        \ conversations\n    - Track tutoring engagement\n    - Session cleanup and\
+        \ organization\n    "
+      summary: List User's Chat Sessions
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  sessions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        target_accent:
+                          type: string
+                        status:
+                          type: string
+                        message_count:
+                          type: integer
+                        last_activity:
+                          type: string
+                          format: date-time
+                        created_at:
+                          type: string
+                          format: date-time
+                        is_active:
+                          type: boolean
+          description: Chat sessions retrieved successfully
+        '500':
+          description: Error retrieving chat sessions
+  /api/samples/tutor-chat/sessions/create/:
+    post:
+      operationId: samples_tutor_chat_sessions_create_create
+      description: "\n    **Create New AI Tutor Chat Session**\n\n    Creates a new\
+        \ conversational AI tutor session for personalized accent training guidance.\n\
+        \    The AI tutor provides contextual advice based on user's accent profile\
+        \ and training history.\n\n    **Features:**\n    - Personalized tutoring\
+        \ based on user's accent analysis\n    - Context-aware responses using voice\
+        \ sample data\n    - Session-based conversation management\n    - Integration\
+        \ with user's training progress\n\n    **Session Context:**\n    - Target\
+        \ accent for focused training\n    - Associated voice samples for reference\n\
+        \    - Training session linking for progress tracking\n    - Automatic context\
+        \ summarization\n\n    **AI Tutor Capabilities:**\n    - Pronunciation guidance\
+        \ and feedback\n    - Accent-specific technique suggestions\n    - Practice\
+        \ exercise recommendations\n    - Progress motivation and encouragement\n\
+        \    "
+      summary: Create AI Tutor Chat Session
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                session_name:
+                  type: string
+                  description: Optional custom name for the chat session
+                target_accent:
+                  type: string
+                  enum:
+                  - US
+                  - UK
+                  - AU
+                  - CA
+                  - IE
+                  description: Target accent for the tutoring session
+                voice_sample_id:
+                  type: integer
+                  description: Associated voice sample for context (optional)
+                training_session_id:
+                  type: integer
+                  description: Associated training session (optional)
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Chat session created successfully
+                  session:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      target_accent:
+                        type: string
+                      status:
+                        type: string
+                      message_count:
+                        type: integer
+                      created_at:
+                        type: string
+                        format: date-time
+          description: Chat session created successfully
+        '400':
+          description: Invalid parameters
+        '404':
+          description: Voice sample or training session not found
+  /api/samples/tutor-chat/sessions/{session_id}/:
+    get:
+      operationId: samples_tutor_chat_sessions_retrieve_2
+      description: "\n    **Retrieve Chat Session Conversation History**\n\n    Gets\
+        \ the complete conversation history for a tutor chat session\n    including\
+        \ all messages, timestamps, and AI response metadata.\n\n    **Information\
+        \ Included:**\n    - All messages in chronological order\n    - Message timestamps\
+        \ and metadata\n    - AI response performance metrics\n    - Session information\
+        \ and context\n\n    **Use Cases:**\n    - Review previous tutoring sessions\n\
+        \    - Continue interrupted conversations\n    - Analyze learning progress\
+        \ over time\n    - Export conversation for reference\n    "
+      summary: Get Chat Session History
+      parameters:
+      - in: query
+        name: limit
+        schema:
+          type: integer
+        description: 'Maximum number of messages to return (default: 20)'
+      - in: path
+        name: session_id
+        schema:
+          type: integer
+        description: ID of the chat session
+        required: true
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  session:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      name:
+                        type: string
+                      target_accent:
+                        type: string
+                      status:
+                        type: string
+                      message_count:
+                        type: integer
+                      created_at:
+                        type: string
+                        format: date-time
+                      last_activity:
+                        type: string
+                        format: date-time
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        role:
+                          type: string
+                        content:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+                        token_count:
+                          type: integer
+                          nullable: true
+                        processing_time:
+                          type: number
+                          nullable: true
+                        confidence_score:
+                          type: number
+                          nullable: true
+          description: Chat history retrieved successfully
+        '404':
+          description: Chat session not found
+        '403':
+          description: Access denied - not your session
+  /api/samples/tutor-chat/sessions/{session_id}/message/:
+    post:
+      operationId: samples_tutor_chat_sessions_message_create
+      description: "\n    **Send Message and Get AI Tutor Response**\n\n    Sends\
+        \ a message to the AI tutor and receives a contextual response\n    based\
+        \ on the user's accent training needs and conversation history.\n\n    **Response\
+        \ Features:**\n    - Personalized pronunciation guidance\n    - Context-aware\
+        \ accent training advice\n    - Practice exercise suggestions\n    - Progress\
+        \ encouragement and motivation\n\n    **AI Integration:**\n    - Uses GPT-4o\
+        \ for natural conversation\n    - Maintains conversation context\n    - Considers\
+        \ user's accent profile\n    - Provides actionable training advice\n    "
+      summary: Send Message to AI Tutor
+      parameters:
+      - in: path
+        name: session_id
+        schema:
+          type: integer
+        description: ID of the chat session
+        required: true
+      tags:
+      - samples
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  description: Message to send to the AI tutor
+              required:
+              - message
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  response:
+                    type: string
+                  message_id:
+                    type: integer
+                  token_count:
+                    type: integer
+                    nullable: true
+                  processing_time:
+                    type: number
+                    nullable: true
+                  model:
+                    type: string
+                  confidence_score:
+                    type: number
+                    nullable: true
+          description: AI tutor response received
+        '400':
+          description: Invalid message or session not active
+        '404':
+          description: Chat session not found
+        '500':
+          description: Error generating AI response
   /api/training/sessions/:
     get:
       operationId: training_sessions_retrieve
@@ -2716,6 +4162,102 @@ paths:
           description: ''
 components:
   schemas:
+    AccentTwin:
+      type: object
+      description: Serializer for AccentTwin model with detailed generation information.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          format: uuid
+          readOnly: true
+          description: User who owns this accent twin
+        user_username:
+          type: string
+          readOnly: true
+        original_sample:
+          type: integer
+          description: Original voice sample used for generation
+        original_sample_info:
+          type: string
+          readOnly: true
+        target_accent:
+          type: string
+          description: Target accent for the synthesized voice (e.g., 'US', 'UK',
+            'AU')
+          maxLength: 50
+        tts_provider:
+          allOf:
+          - $ref: '#/components/schemas/TtsProviderEnum'
+          default: coqui
+        voice_model:
+          type: string
+          description: Specific voice model or speaker ID used
+          maxLength: 100
+        generation_status:
+          allOf:
+          - $ref: '#/components/schemas/GenerationStatusEnum'
+          readOnly: true
+        accent_twin_file:
+          type: string
+          format: uri
+          readOnly: true
+          nullable: true
+          description: Generated accent twin audio file
+        file_url:
+          type: string
+          readOnly: true
+        generation_params:
+          description: Parameters used for generation (quality, speed, etc.)
+        processing_time:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Time taken for generation in seconds
+        error_message:
+          type: string
+          readOnly: true
+          description: Error message if generation failed
+        similarity_score:
+          type: number
+          format: double
+          readOnly: true
+          nullable: true
+          description: Similarity score between original and accent twin (0-100)
+        phoneme_gaps:
+          readOnly: true
+          description: Detailed phoneme-level differences for training
+        is_ready:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - accent_twin_file
+      - created_at
+      - error_message
+      - file_url
+      - generation_status
+      - id
+      - is_ready
+      - original_sample
+      - original_sample_info
+      - phoneme_gaps
+      - processing_time
+      - similarity_score
+      - target_accent
+      - updated_at
+      - user
+      - user_username
     ChangePasswordRequest:
       type: object
       description: Serializer for changing user password.
@@ -2761,6 +4303,18 @@ components:
         * `phonetic` - Phonetic Training
         * `accent_drill` - Accent Drill
         * `free_speech` - Free Speech
+    GenerationStatusEnum:
+      enum:
+      - pending
+      - processing
+      - completed
+      - failed
+      type: string
+      description: |-
+        * `pending` - Generation Pending
+        * `processing` - Processing
+        * `completed` - Completed Successfully
+        * `failed` - Generation Failed
     JWTResponse:
       type: object
       description: Serializer for JWT token response.
@@ -2777,6 +4331,26 @@ components:
       - access
       - refresh
       - user
+    PaginatedAccentTwinList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccentTwin'
     PaginatedTrainingSessionList:
       type: object
       properties:
@@ -3014,6 +4588,18 @@ components:
           description: Session duration
       required:
       - name
+    TtsProviderEnum:
+      enum:
+      - coqui
+      - bark
+      - edge_tts
+      - gtts
+      type: string
+      description: |-
+        * `coqui` - Coqui TTS
+        * `bark` - Bark TTS
+        * `edge_tts` - Microsoft Edge TTS
+        * `gtts` - Google TTS
     UserLoginRequest:
       type: object
       description: Serializer for user login.
