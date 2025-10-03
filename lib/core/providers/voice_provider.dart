@@ -12,6 +12,7 @@ import 'package:dio/dio.dart';
 import '../models/voice_models.dart';
 import '../services/voice_api_service.dart';
 import '../di/injection_container.dart';
+import '../utils/permission_helper.dart';
 
 // Providers
 final voiceApiServiceProvider = Provider<VoiceApiService>((ref) {
@@ -124,49 +125,56 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
   Future<bool> _requestPermissions() async {
     print('🎤 Requesting permissions...');
     
-    try {
-      // Try to initialize FlutterSound first - it will trigger the native permission dialog
-      print('🎤 Attempting to initialize FlutterSound to trigger native permission...');
-      
-      if (_recorder == null) {
-        _recorder = FlutterSoundRecorder();
-        await _recorder!.openRecorder();
-        print('🎤 FlutterSound recorder opened successfully - permission likely granted');
-        return true;
-      }
-      
-      return true;
-    } catch (e) {
-      print('🎤 FlutterSound initialization failed: $e');
-      
-      // Fallback to permission_handler
-      print('🎤 Falling back to permission_handler...');
-      
-      final microphoneStatus = await Permission.microphone.status;
-      print('🎤 Current microphone permission: $microphoneStatus');
-      
-      final microphoneResult = await Permission.microphone.request();
+    // Check permission using cross-platform helper first
+    final microphoneStatus = await PermissionHelper.checkMicrophonePermission();
+    print('🎤 Current microphone permission: $microphoneStatus');
+    
+    if (!microphoneStatus.isGranted) {
+      final microphoneResult = await PermissionHelper.requestMicrophonePermission();
       print('🎤 Microphone permission result: $microphoneResult');
       
-      if (microphoneResult.isGranted) {
-        print('🎤 Microphone permission granted via permission_handler!');
-        return true;
-      } else if (microphoneResult.isPermanentlyDenied) {
-        print('🎤 Microphone permission permanently denied');
-        state = state.copyWith(
-          status: RecordingStatus.error,
-          errorMessage: 'Microphone permission was permanently denied. Please enable it in Settings → iloqi → Microphone, then try again.',
-        );
+      if (!microphoneResult.isGranted) {
+        if (microphoneResult.isPermanentlyDenied) {
+          print('🎤 Microphone permission permanently denied');
+          state = state.copyWith(
+            status: RecordingStatus.error,
+            errorMessage: 'Microphone permission was permanently denied. Please enable it in Settings → iloqi → Microphone, then try again.',
+          );
+        } else {
+          print('🎤 Microphone permission denied');
+          state = state.copyWith(
+            status: RecordingStatus.error,
+            errorMessage: 'Microphone permission is required to record audio.',
+          );
+        }
         return false;
-      } else {
-        print('🎤 Microphone permission denied: $microphoneResult');
+      }
+    }
+    
+    print('🎤 Microphone permission granted!');
+    
+    // Now try to initialize FlutterSound recorder if not already done
+    if (_recorder == null) {
+      try {
+        print('🎤 Initializing FlutterSound recorder...');
+        _recorder = FlutterSoundRecorder();
+        await _recorder!.openRecorder();
+        print('🎤 FlutterSound recorder opened successfully');
+        return true;
+      } catch (e) {
+        print('🎤 FlutterSound initialization failed: $e');
+        
+        // On macOS, FlutterSound might not work properly, but permission is granted
+        // This is a known issue with FlutterSound on macOS
         state = state.copyWith(
           status: RecordingStatus.error,
-          errorMessage: 'Microphone permission was denied. Please try again.',
+          errorMessage: 'Audio recording system initialization failed. This is a known issue on macOS. Please try on iOS or Android.',
         );
         return false;
       }
     }
+    
+    return true;
   }
 
   Future<void> startRecording() async {
@@ -217,9 +225,20 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
 
     } catch (e) {
       print('🎤 Error starting recording: $e');
+      
+      // Provide user-friendly error message based on the error type
+      String userMessage;
+      if (e.toString().contains('Recorder is not open')) {
+        userMessage = 'Audio recording system initialization failed. This is a known issue on macOS. Please try on iOS or Android.';
+      } else if (e.toString().contains('MissingPluginException')) {
+        userMessage = 'Audio recording is not supported on this platform. Please try on iOS or Android.';
+      } else {
+        userMessage = 'Failed to start recording. Please check your microphone permissions and try again.';
+      }
+      
       state = state.copyWith(
         status: RecordingStatus.error,
-        errorMessage: 'Failed to start recording: $e',
+        errorMessage: userMessage,
       );
     }
   }

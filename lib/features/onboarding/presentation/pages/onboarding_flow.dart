@@ -11,6 +11,7 @@ import '../../../../core/models/voice_models.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/services/voice_api_service.dart';
+import '../../../../core/utils/permission_helper.dart';
 
 // Provider to track onboarding state
 final onboardingInProgressProvider = StateProvider<bool>((ref) => false);
@@ -75,7 +76,7 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
           ref.read(onboardingStepProvider.notifier).state = OnboardingStep.status;
         } else if (hasProfileData && !hasConsent) {
           // User has profile but no consent - check microphone permission
-          final micStatus = await Permission.microphone.status;
+          final micStatus = await PermissionHelper.checkMicrophonePermission();
           print('🔄 User has profile but no consent, mic permission: $micStatus');
           
           if (micStatus.isGranted) {
@@ -246,11 +247,20 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
         );
 
       case OnboardingStep.enrollment:
+        // Check for voice provider errors and display them
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (recordingState.status == RecordingStatus.error && recordingState.errorMessage != null) {
+            if (_error != recordingState.errorMessage) {
+              setState(() => _error = recordingState.errorMessage);
+            }
+          }
+        });
+        
         return _EnrollmentStep(
           recordingState: recordingState,
-          onStart: () {
+          onStart: () async {
             setState(() => _error = null);
-            ref.read(voiceRecordingProvider.notifier).startRecording();
+            await ref.read(voiceRecordingProvider.notifier).startRecording();
           },
           onStop: () async {
             await ref.read(voiceRecordingProvider.notifier).stopRecording();
@@ -378,14 +388,20 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
         print('📝 Step set to: ${ref.read(onboardingStepProvider)}');
         // Keep the flag true until onboarding is complete
       } else {
-        setState(() => _error = 'Failed to save your profile. Please try again.');
+        if (mounted) {
+          setState(() => _error = 'Failed to save your profile. Please try again.');
+        }
         ref.read(onboardingInProgressProvider.notifier).state = false;
       }
     } catch (e) {
-      setState(() => _error = 'Error saving profile: $e');
+      if (mounted) {
+        setState(() => _error = 'Error saving profile: $e');
+      }
       ref.read(onboardingInProgressProvider.notifier).state = false;
     } finally {
-      setState(() => _isSubmittingProfile = false);
+      if (mounted) {
+        setState(() => _isSubmittingProfile = false);
+      }
     }
   }
 
@@ -394,25 +410,29 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
     print('🎤 Starting comprehensive microphone permission check...');
     
     try {
-      // Step 1: Check current status
-      var status = await Permission.microphone.status;
+      // Step 1: Check current status using cross-platform helper
+      var status = await PermissionHelper.checkMicrophonePermission();
       print('🎤 Current permission status: $status');
       
       if (status.isGranted) {
         print('🎤 Permission already granted, advancing to enrollment');
-        ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+        if (mounted) {
+          ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+        }
         return;
       }
       
       // Step 2: If not granted, check if we can request
       if (status.isDenied) {
         print('🎤 Permission denied, attempting to request...');
-        status = await Permission.microphone.request();
+        status = await PermissionHelper.requestMicrophonePermission();
         print('🎤 After request, status: $status');
         
         if (status.isGranted) {
           print('🎤 Permission granted after request, advancing to enrollment');
-          ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+          if (mounted) {
+            ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
+          }
           return;
         }
       }
@@ -445,8 +465,8 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
     setState(() => _error = null);
     
     try {
-      // Force refresh permission status
-      final status = await Permission.microphone.status;
+      // Force refresh permission status using cross-platform helper
+      final status = await PermissionHelper.checkMicrophonePermission();
       print('🎤 Rechecked permission status: $status');
       
       if (status.isGranted) {
@@ -478,15 +498,15 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
     print('🎤 Checking microphone permission...');
     
     try {
-      // Check current status
-      var status = await Permission.microphone.status;
+      // Check current status using cross-platform helper
+      var status = await PermissionHelper.checkMicrophonePermission();
       print('🎤 Initial permission status: $status');
       
       // On iOS, sometimes we need to refresh the status after returning from Settings
       if (status.isDenied || status.isPermanentlyDenied) {
         // Wait a bit and check again
         await Future.delayed(const Duration(milliseconds: 500));
-        status = await Permission.microphone.status;
+        status = await PermissionHelper.checkMicrophonePermission();
         print('🎤 Refreshed permission status: $status');
       }
       
@@ -767,7 +787,7 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
   }
 
   Future<void> _checkPermissionStatus() async {
-    final status = await Permission.microphone.status;
+    final status = await PermissionHelper.checkMicrophonePermission();
     if (mounted) {
       setState(() => _permissionStatus = status);
       
@@ -799,8 +819,8 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
     } catch (e) {
       print('🎤 Recording test failed: $e');
       
-      // Check the cached permission status as fallback
-      final status = await Permission.microphone.status;
+      // Check the cached permission status as fallback using cross-platform helper
+      final status = await PermissionHelper.checkMicrophonePermission();
       print('🎤 Fallback permission status: $status');
       
       setState(() {
@@ -809,7 +829,7 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
       
       // Try requesting permission if denied
       if (status.isDenied) {
-        final requestedStatus = await Permission.microphone.request();
+        final requestedStatus = await PermissionHelper.requestMicrophonePermission();
         print('🎤 Permission request result: $requestedStatus');
         
         setState(() {
