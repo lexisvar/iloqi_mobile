@@ -251,12 +251,16 @@ class CrossPlatformRecorder {
   Future<String?> _handleMacOSRecordingFailure() async {
     debugPrint('🎤 Handling macOS recording failure - searching for files');
 
+    // Prioritize temp directory first as that's where macOS typically saves recordings
     final searchDirectories = [
+      await getTemporaryDirectory(), // Most likely location first
       Directory.systemTemp,
       await getApplicationSupportDirectory(),
-      await getTemporaryDirectory(),
       await getApplicationDocumentsDirectory(),
     ];
+
+    // Search for files created in the last 30 seconds (more reasonable timeframe)
+    final cutoffTime = DateTime.now().subtract(const Duration(seconds: 30));
 
     for (final dir in searchDirectories) {
       try {
@@ -267,49 +271,51 @@ class CrossPlatformRecorder {
           continue;
         }
 
-        final files = await dir.list().where((entity) =>
-          entity is File &&
-          (entity.path.endsWith('.m4a') || entity.path.endsWith('.aac') || entity.path.endsWith('.wav') || entity.path.endsWith('.caf'))
-        ).toList();
+        // Use a more efficient search - look for recently modified files first
+        final entities = await dir.list().toList();
+        final recentFiles = <File>[];
 
-        debugPrint('🎤 Found ${files.length} potential recording files');
-
-        if (files.isNotEmpty) {
-          // Find the most recent file
-          File? recentFile;
-          DateTime? recentTime;
-
-          for (final entity in files) {
-            final file = entity as File;
-            try {
-              final stat = await file.stat();
-              if (recentTime == null || stat.modified.isAfter(recentTime)) {
-                recentTime = stat.modified;
-                recentFile = file;
+        for (final entity in entities) {
+          if (entity is File) {
+            final fileName = path.basename(entity.path).toLowerCase();
+            // Check for audio file extensions
+            if (fileName.endsWith('.m4a') || fileName.endsWith('.aac') ||
+                fileName.endsWith('.wav') || fileName.endsWith('.caf')) {
+              try {
+                final stat = await entity.stat();
+                // Only consider files modified recently
+                if (stat.modified.isAfter(cutoffTime)) {
+                  recentFiles.add(entity);
+                }
+              } catch (e) {
+                debugPrint('🎤 Could not stat file ${entity.path}: $e');
               }
-            } catch (e) {
-              debugPrint('🎤 Could not stat file ${file.path}: $e');
             }
           }
+        }
 
-          if (recentFile != null && recentTime != null) {
-            final timeDiff = DateTime.now().difference(recentTime);
-            debugPrint('🎤 Most recent file: ${recentFile.path} (${timeDiff.inSeconds}s ago)');
+        debugPrint('🎤 Found ${recentFiles.length} recent potential recording files');
 
-            // For macOS with null path, be more lenient with timing (up to 5 minutes)
-            if (timeDiff.inMinutes < 5) {
-              final size = await recentFile.length();
-              debugPrint('🎤 Found valid recording file: ${recentFile.path} (${size} bytes)');
-
-              if (size > 0) {
-                _currentRecordingPath = recentFile.path;
-                return recentFile.path;
-              } else {
-                debugPrint('🎤 File exists but is empty');
-              }
-            } else {
-              debugPrint('🎤 File is too old to be our recording');
+        if (recentFiles.isNotEmpty) {
+          // Sort by modification time (most recent first)
+          recentFiles.sort((a, b) {
+            try {
+              return b.statSync().modified.compareTo(a.statSync().modified);
+            } catch (e) {
+              return 0;
             }
+          });
+
+          // Check the most recent file
+          final recentFile = recentFiles.first;
+          final size = await recentFile.length();
+          debugPrint('🎤 Checking most recent file: ${recentFile.path} (${size} bytes)');
+
+          if (size > 0) {
+            _currentRecordingPath = recentFile.path;
+            return recentFile.path;
+          } else {
+            debugPrint('🎤 Most recent file exists but is empty');
           }
         }
       } catch (e) {

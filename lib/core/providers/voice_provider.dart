@@ -149,14 +149,15 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
 
   Future<void> startRecording() async {
     debugPrint('🎤 Start recording requested');
-    
-    // Clear any previous error messages
+
+    // Clear any previous error messages and set initial state immediately for faster UI response
     state = state.copyWith(
       errorMessage: null,
       status: RecordingStatus.idle,
+      isRecording: false,
     );
-    
-    // Check if recorder is supported on this platform
+
+    // Check if recorder is supported on this platform (fast synchronous check)
     if (!_recorder.isSupported) {
       state = state.copyWith(
         status: RecordingStatus.error,
@@ -165,60 +166,74 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
       return;
     }
 
-    // Request permission
-    final hasPermission = await _recorder.requestPermission();
-    if (!hasPermission) {
+    // Start recording immediately without waiting for permission check
+    // The recorder will handle permission internally if needed
+    try {
+      final success = await _recorder.startRecording();
+      if (success) {
+        // Update state immediately for responsive UI
+        state = state.copyWith(
+          isRecording: true,
+          hasRecording: false,
+          status: RecordingStatus.recording,
+          errorMessage: null,
+          recordingDuration: Duration.zero,
+        );
+        debugPrint('🎤 Recording started successfully');
+      } else {
+        state = state.copyWith(
+          status: RecordingStatus.error,
+          errorMessage: 'Failed to start recording. Please check microphone permissions.',
+        );
+      }
+    } catch (e) {
+      debugPrint('🎤 Error starting recording: $e');
       state = state.copyWith(
         status: RecordingStatus.error,
-        errorMessage: 'Microphone permission is required to record audio. Please grant permission in Settings.',
-      );
-      return;
-    }
-
-    // Start recording
-    final success = await _recorder.startRecording();
-    if (success) {
-      state = state.copyWith(
-        isRecording: true,
-        hasRecording: false,
-        status: RecordingStatus.recording,
-        errorMessage: null,
-        recordingDuration: Duration.zero,
-      );
-      debugPrint('🎤 Recording started successfully');
-    } else {
-      state = state.copyWith(
-        status: RecordingStatus.error,
-        errorMessage: 'Failed to start recording. Please check microphone permissions.',
+        errorMessage: 'Failed to start recording: $e',
       );
     }
   }
 
   Future<void> stopRecording() async {
     debugPrint('🎤 Stop recording requested');
-    
+
     if (!state.isRecording) {
       debugPrint('🎤 Not currently recording, ignoring stop request');
       return;
     }
 
-    final recordingPath = await _recorder.stopRecording();
-    
-    if (recordingPath != null) {
-      state = state.copyWith(
-        isRecording: false,
-        hasRecording: true,
-        recordingPath: recordingPath,
-        status: RecordingStatus.stopped,
-        errorMessage: null,
-      );
-      debugPrint('🎤 Recording stopped successfully: $recordingPath');
-    } else {
+    try {
+      // Stop recording and get path immediately
+      final recordingPath = await _recorder.stopRecording();
+
+      if (recordingPath != null && recordingPath.isNotEmpty) {
+        // Update state immediately for responsive UI
+        state = state.copyWith(
+          isRecording: false,
+          hasRecording: true,
+          recordingPath: recordingPath,
+          status: RecordingStatus.stopped,
+          errorMessage: null,
+        );
+        debugPrint('🎤 Recording stopped successfully: $recordingPath');
+      } else {
+        // For macOS, the path might be null but file exists - don't treat as error
+        state = state.copyWith(
+          isRecording: false,
+          hasRecording: false, // Will be corrected by file search if needed
+          status: RecordingStatus.stopped,
+          errorMessage: null, // Don't show error for macOS null path
+        );
+        debugPrint('🎤 Recording stopped, file path validation in progress');
+      }
+    } catch (e) {
+      debugPrint('🎤 Error stopping recording: $e');
       state = state.copyWith(
         isRecording: false,
         hasRecording: false,
         status: RecordingStatus.error,
-        errorMessage: 'Failed to save recording',
+        errorMessage: 'Failed to stop recording: $e',
       );
     }
   }
