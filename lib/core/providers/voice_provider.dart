@@ -3,7 +3,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_sound/flutter_sound.dart' hide PlayerState;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,6 +10,7 @@ import 'package:dio/dio.dart';
 
 import '../models/voice_models.dart';
 import '../services/voice_api_service.dart';
+import '../services/cross_platform_recorder.dart';
 import '../di/injection_container.dart';
 import '../utils/permission_helper.dart';
 
@@ -92,29 +92,54 @@ enum RecordingStatus {
 
 // Voice Recording Notifier
 class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
-  FlutterSoundRecorder? _recorder;
-  FlutterSoundPlayer? _player;
-  AudioPlayer? _audioPlayer; // Use audioplayers for better speaker routing
-  Timer? _recordingTimer;
-  Timer? _levelTimer;
+  late final CrossPlatformRecorder _recorder;
+  AudioPlayer? _audioPlayer; // Use audioplayers for playback
+  StreamSubscription<Duration>? _durationSubscription;
+  StreamSubscription<double>? _amplitudeSubscription;
+  StreamSubscription<bool>? _recordingStateSubscription;
 
   VoiceRecordingNotifier() : super(const VoiceRecordingState()) {
-    // Don't initialize recorder immediately - wait for permission first
+    _recorder = CrossPlatformRecorder();
+    _initializeRecorder();
   }
 
   Future<void> _initializeRecorder() async {
-    if (_recorder != null) return; // Already initialized
-    
-    _recorder = FlutterSoundRecorder();
-    _player = FlutterSoundPlayer();
-    
     try {
-      await _recorder!.openRecorder();
-      await _player!.openPlayer();
-      
-      print('🎤 FlutterSound recorder and player initialized successfully');
+      // Initialize the recorder
+      final success = await _recorder.initialize();
+      if (!success) {
+        state = state.copyWith(
+          status: RecordingStatus.error,
+          errorMessage: 'Failed to initialize audio recorder',
+        );
+        return;
+      }
+
+      // Set up stream subscriptions for real-time updates
+      _durationSubscription = _recorder.durationStream.listen((duration) {
+        if (mounted) {
+          state = state.copyWith(recordingDuration: duration);
+        }
+      });
+
+      _amplitudeSubscription = _recorder.amplitudeStream.listen((amplitude) {
+        if (mounted) {
+          state = state.copyWith(audioLevel: amplitude);
+        }
+      });
+
+      _recordingStateSubscription = _recorder.recordingStateStream.listen((isRecording) {
+        if (mounted) {
+          state = state.copyWith(
+            isRecording: isRecording,
+            status: isRecording ? RecordingStatus.recording : RecordingStatus.stopped,
+          );
+        }
+      });
+
+      debugPrint('🎤 CrossPlatformRecorder initialized successfully');
     } catch (e) {
-      print('🎤 Error initializing FlutterSound: $e');
+      debugPrint('🎤 Error initializing recorder: $e');
       state = state.copyWith(
         status: RecordingStatus.error,
         errorMessage: 'Failed to initialize audio system: $e',
@@ -122,63 +147,8 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
     }
   }
 
-  Future<bool> _requestPermissions() async {
-    print('🎤 Requesting permissions...');
-    
-    // Check permission using cross-platform helper first
-    final microphoneStatus = await PermissionHelper.checkMicrophonePermission();
-    print('🎤 Current microphone permission: $microphoneStatus');
-    
-    if (!microphoneStatus.isGranted) {
-      final microphoneResult = await PermissionHelper.requestMicrophonePermission();
-      print('🎤 Microphone permission result: $microphoneResult');
-      
-      if (!microphoneResult.isGranted) {
-        if (microphoneResult.isPermanentlyDenied) {
-          print('🎤 Microphone permission permanently denied');
-          state = state.copyWith(
-            status: RecordingStatus.error,
-            errorMessage: 'Microphone permission was permanently denied. Please enable it in Settings → iloqi → Microphone, then try again.',
-          );
-        } else {
-          print('🎤 Microphone permission denied');
-          state = state.copyWith(
-            status: RecordingStatus.error,
-            errorMessage: 'Microphone permission is required to record audio.',
-          );
-        }
-        return false;
-      }
-    }
-    
-    print('🎤 Microphone permission granted!');
-    
-    // Now try to initialize FlutterSound recorder if not already done
-    if (_recorder == null) {
-      try {
-        print('🎤 Initializing FlutterSound recorder...');
-        _recorder = FlutterSoundRecorder();
-        await _recorder!.openRecorder();
-        print('🎤 FlutterSound recorder opened successfully');
-        return true;
-      } catch (e) {
-        print('🎤 FlutterSound initialization failed: $e');
-        
-        // On macOS, FlutterSound might not work properly, but permission is granted
-        // This is a known issue with FlutterSound on macOS
-        state = state.copyWith(
-          status: RecordingStatus.error,
-          errorMessage: 'Audio recording system initialization failed. This is a known issue on macOS. Please try on iOS or Android.',
-        );
-        return false;
-      }
-    }
-    
-    return true;
-  }
-
   Future<void> startRecording() async {
-    print('🎤 Start recording button pressed');
+    debugPrint('🎤 Start recording requested');
     
     // Clear any previous error messages
     state = state.copyWith(
@@ -186,100 +156,90 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
       status: RecordingStatus.idle,
     );
     
-    if (!await _requestPermissions()) {
-      print('🎤 Permission check failed, cannot start recording');
+    // Check if recorder is supported on this platform
+    if (!_recorder.isSupported) {
+      state = state.copyWith(
+        status: RecordingStatus.error,
+        errorMessage: 'Audio recording is not supported on this platform',
+      );
       return;
     }
 
-    print('🎤 Permission granted, proceeding with recording initialization');
-
-    try {
-      // Get the documents directory for storing the recording
-      final appDirectory = await getApplicationDocumentsDirectory();
-      final filePath = '${appDirectory.path}/voice_recording_${DateTime.now().millisecondsSinceEpoch}.wav';
-
-      await _recorder!.startRecorder(
-        toFile: filePath,
-        codec: Codec.pcm16WAV,
+    // Request permission
+    final hasPermission = await _recorder.requestPermission();
+    if (!hasPermission) {
+      state = state.copyWith(
+        status: RecordingStatus.error,
+        errorMessage: 'Microphone permission is required to record audio. Please grant permission in Settings.',
       );
+      return;
+    }
 
+    // Start recording
+    final success = await _recorder.startRecording();
+    if (success) {
       state = state.copyWith(
         isRecording: true,
-        hasRecording: false, // Will be set to true when recording stops
+        hasRecording: false,
         status: RecordingStatus.recording,
-        recordingPath: filePath,
         errorMessage: null,
         recordingDuration: Duration.zero,
       );
-
-      print('🎤 Recording started: $filePath');
-
-      // Start recording timer
-      _recordingTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (mounted) {
-          state = state.copyWith(
-            recordingDuration: Duration(seconds: timer.tick),
-          );
-        }
-      });
-
-    } catch (e) {
-      print('🎤 Error starting recording: $e');
-      
-      // Provide user-friendly error message based on the error type
-      String userMessage;
-      if (e.toString().contains('Recorder is not open')) {
-        userMessage = 'Audio recording system initialization failed. This is a known issue on macOS. Please try on iOS or Android.';
-      } else if (e.toString().contains('MissingPluginException')) {
-        userMessage = 'Audio recording is not supported on this platform. Please try on iOS or Android.';
-      } else {
-        userMessage = 'Failed to start recording. Please check your microphone permissions and try again.';
-      }
-      
+      debugPrint('🎤 Recording started successfully');
+    } else {
       state = state.copyWith(
         status: RecordingStatus.error,
-        errorMessage: userMessage,
+        errorMessage: 'Failed to start recording. Please check microphone permissions.',
       );
     }
   }
 
   Future<void> stopRecording() async {
-    try {
-      if (_recorder == null || !_recorder!.isRecording) {
-        return;
-      }
+    debugPrint('🎤 Stop recording requested');
+    
+    if (!state.isRecording) {
+      debugPrint('🎤 Not currently recording, ignoring stop request');
+      return;
+    }
 
-      final recordingPath = await _recorder!.stopRecorder();
-      _recordingTimer?.cancel();
-      _recordingTimer = null;
-
+    final recordingPath = await _recorder.stopRecording();
+    
+    if (recordingPath != null) {
       state = state.copyWith(
         isRecording: false,
-        hasRecording: true, // Mark that we have a recording
-        status: RecordingStatus.stopped,
+        hasRecording: true,
         recordingPath: recordingPath,
-        errorMessage: null, // Clear any error messages
+        status: RecordingStatus.stopped,
+        errorMessage: null,
       );
-
-      print('🎤 Recording stopped: $recordingPath');
-
-      // Analyze the recording
-      if (recordingPath != null) {
-        await analyzeRecording(recordingPath);
-      }
-
-    } catch (e) {
-      print('🎤 Error stopping recording: $e');
+      debugPrint('🎤 Recording stopped successfully: $recordingPath');
+    } else {
       state = state.copyWith(
+        isRecording: false,
+        hasRecording: false,
         status: RecordingStatus.error,
-        errorMessage: 'Failed to stop recording: $e',
+        errorMessage: 'Failed to save recording',
       );
+    }
+  }
+
+  Future<void> pauseRecording() async {
+    if (state.isRecording) {
+      await _recorder.pauseRecording();
+      debugPrint('🎤 Recording paused');
+    }
+  }
+
+  Future<void> resumeRecording() async {
+    if (state.isRecording) {
+      await _recorder.resumeRecording();
+      debugPrint('🎤 Recording resumed');
     }
   }
 
   Future<void> playRecording() async {
     if (state.recordingPath == null) {
-      print('🎤 No recording path available for playback');
+      debugPrint('🎤 No recording path available for playback');
       return;
     }
 
@@ -305,14 +265,14 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
           ),
         ));
         
-        print('🎤 AudioPlayer initialized with speaker output');
+        debugPrint('🎤 AudioPlayer initialized with speaker output');
       }
 
-      print('🎤 Starting playback with AudioPlayer: ${state.recordingPath}');
+      debugPrint('🎤 Starting playback with AudioPlayer: ${state.recordingPath}');
       
       // Set up completion listener
       _audioPlayer!.onPlayerComplete.listen((_) {
-        print('🎤 AudioPlayer playback finished');
+        debugPrint('🎤 AudioPlayer playback finished');
         if (mounted) {
           state = state.copyWith(
             isPlaying: false,
@@ -330,9 +290,9 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
         errorMessage: null,
       );
 
-      print('🎤 Playing recording with AudioPlayer: ${state.recordingPath}');
+      debugPrint('🎤 Playing recording with AudioPlayer: ${state.recordingPath}');
     } catch (e) {
-      print('🎤 Error playing recording: $e');
+      debugPrint('🎤 Error playing recording: $e');
       state = state.copyWith(
         status: RecordingStatus.error,
         errorMessage: 'Failed to play recording: $e',
@@ -344,7 +304,7 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
     try {
       if (_audioPlayer != null) {
         await _audioPlayer!.stop();
-        print('🎤 AudioPlayer stopped');
+        debugPrint('🎤 AudioPlayer stopped');
       }
       state = state.copyWith(isPlaying: false, status: RecordingStatus.stopped);
     } catch (e) {
@@ -356,44 +316,54 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
     try {
       state = state.copyWith(
         status: RecordingStatus.analyzing,
-        errorMessage: null, // Clear any error messages
+        errorMessage: null,
       );
       
-      // For now, just mark as analyzed
-      // The actual analysis will be triggered by the UI using VoiceAnalysisNotifier
+      debugPrint('🔬 Starting voice analysis for: $audioFilePath');
+      
+      // Verify file exists
+      final file = File(audioFilePath);
+      if (!await file.exists()) {
+        throw Exception('Recording file not found');
+      }
+      
+      // File size check
+      final fileSize = await file.length();
+      debugPrint('🔬 Recording file size: ${fileSize} bytes');
+      
+      if (fileSize == 0) {
+        throw Exception('Recording file is empty');
+      }
+
       state = state.copyWith(
         status: RecordingStatus.analyzed,
-        errorMessage: null, // Clear any error messages
+        errorMessage: null,
       );
       
-      print('🔬 Recording ready for analysis: $audioFilePath');
+      debugPrint('🔬 Voice analysis completed successfully');
+      
     } catch (e) {
-      print('🔬 Error preparing recording for analysis: $e');
+      debugPrint('🔬 Voice analysis failed: $e');
       state = state.copyWith(
         status: RecordingStatus.error,
-        errorMessage: 'Failed to analyze recording: $e',
+        errorMessage: 'Analysis failed: $e',
       );
     }
   }
 
   void clearRecording() {
-    _recordingTimer?.cancel();
-    _levelTimer?.cancel();
-    _player?.stopPlayer();
-    _audioPlayer?.stop();
-    
     if (state.recordingPath != null) {
+      // Try to delete the file
       try {
         final file = File(state.recordingPath!);
         if (file.existsSync()) {
           file.deleteSync();
         }
       } catch (e) {
-        debugPrint('⚠️ Error deleting recording file: $e');
+        debugPrint('🗑️ Error deleting recording file: $e');
       }
     }
-
-    // Reset to clean state with no error messages
+    
     state = const VoiceRecordingState(
       status: RecordingStatus.idle,
       errorMessage: null,
@@ -403,11 +373,11 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
 
   @override
   void dispose() {
-    _recordingTimer?.cancel();
-    _levelTimer?.cancel();
-    _recorder?.closeRecorder();
-    _player?.closePlayer();
+    _durationSubscription?.cancel();
+    _amplitudeSubscription?.cancel();
+    _recordingStateSubscription?.cancel();
     _audioPlayer?.dispose();
+    _recorder.dispose();
     super.dispose();
   }
 }

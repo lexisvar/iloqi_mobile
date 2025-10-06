@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/models/voice_models.dart';
+import '../../../../core/services/cross_platform_recorder.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/services/voice_api_service.dart';
@@ -803,16 +803,23 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
     
     try {
       // Test if we can actually initialize recording (this triggers native permission)
-      final recorder = FlutterSoundRecorder();
-      await recorder.openRecorder();
-      await recorder.closeRecorder();
-      
-      print('🎤 Microphone access confirmed through recording test');
-      
-      // Update state to granted and proceed
-      setState(() {
-        _permissionStatus = PermissionStatus.granted;
-      });
+      final recorder = CrossPlatformRecorder();
+      final hasPermission = await recorder.requestPermission();
+      if (hasPermission) {
+        final canInitialize = await recorder.initialize();
+        if (canInitialize) {
+          print('🎤 Microphone access confirmed through recording test');
+          
+          // Update state to granted and proceed
+          setState(() {
+            _permissionStatus = PermissionStatus.granted;
+          });
+        } else {
+          throw Exception('Failed to initialize recorder');
+        }
+      } else {
+        throw Exception('Permission denied');
+      }
       
       widget.onMicrophoneConfirmed();
       
@@ -848,12 +855,18 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
     
     try {
       // Test if we can actually initialize recording
-      final recorder = FlutterSoundRecorder();
-      await recorder.openRecorder();
-      await recorder.closeRecorder();
+      final recorder = CrossPlatformRecorder();
+      final hasPermission = await recorder.hasPermission();
+      if (hasPermission) {
+        final canInitialize = await recorder.initialize();
+        if (canInitialize) {
+          print('🎤 Microphone access confirmed - recording is possible');
+          return true;
+        }
+      }
       
-      print('🎤 Microphone access confirmed - recording is possible');
-      return true;
+      print('🎤 Microphone access test failed');
+      return false;
       
     } catch (e) {
       print('🎤 Microphone access test failed: $e');

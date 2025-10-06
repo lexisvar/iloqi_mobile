@@ -33,7 +33,7 @@ dependencies:
   hive_flutter: ^1.1.0
   
   # Audio Recording & Playback
-  flutter_sound: ^9.2.13  # More stable audio recording package
+  record: ^4.4.4  # Use a more stable version that's compatible with macOS
   just_audio: ^0.9.36
   audioplayers: ^5.2.1
   
