@@ -78,9 +78,12 @@ class CrossPlatformRecorder {
       String? path;
 
       if (Platform.isMacOS) {
-        // For macOS, don't specify a path - let the system handle it to avoid URL issues
+        // For macOS, use a simple, reliable path in the temp directory
         debugPrint('🎤 Using macOS-optimized recording configuration');
-        path = null;
+        final tempDir = await getTemporaryDirectory();
+        final timestamp = DateTime.now().millisecondsSinceEpoch;
+        path = '${tempDir.path}/iloqi_recording_$timestamp.m4a';
+        debugPrint('🎤 Recording to: $path');
       } else if (Platform.isIOS || Platform.isAndroid) {
         // For mobile platforms, use a specific path
         final directory = await getApplicationDocumentsDirectory();
@@ -175,19 +178,18 @@ class CrossPlatformRecorder {
 
       print('Stop recording');
 
-      // Stop the recording and get the file path
-      final path = await _recorder.stop();
+      // Stop the recording
+      await _recorder.stop();
 
       _isRecording = false;
       _recordingStateController.add(false);
       _stopTimers();
 
-      debugPrint('🎤 Recording stopped: $path');
       debugPrint('🎤 Platform: ${Platform.operatingSystem}');
 
-      // Enhanced validation for all platforms
-      if (path != null && path.isNotEmpty) {
-        final file = File(path);
+      // For macOS, use the path we set during start recording
+      if (Platform.isMacOS && _currentRecordingPath != null) {
+        final file = File(_currentRecordingPath!);
 
         // Check if file exists and has content
         if (await file.exists()) {
@@ -196,43 +198,30 @@ class CrossPlatformRecorder {
 
           if (size > 0) {
             debugPrint('🎤 Recording file has content');
-            _currentRecordingPath = path;
-            return path;
+            return _currentRecordingPath;
           } else {
-            debugPrint('🎤 Recording file exists but is empty (0 bytes)');
-            // For macOS, this might indicate an AVFoundation issue
-            if (Platform.isMacOS) {
-              debugPrint('🎤 Empty file on macOS - searching for actual recording');
-              return await _handleMacOSRecordingFailure();
-            }
+            debugPrint('🎤 Recording file exists but is empty');
             return null;
           }
         } else {
-          debugPrint('🎤 Recording file does not exist at: $path');
-          // For macOS, try to find the file in alternative locations
-          if (Platform.isMacOS) {
-            return await _handleMacOSRecordingFailure();
-          }
-          return null;
+          debugPrint('🎤 Recording file does not exist at expected path: $_currentRecordingPath');
+          // Try to find it with a quick search
+          return await _findRecordingFile();
         }
       } else {
-        debugPrint('🎤 No recording path returned - this is normal for macOS');
-        // For macOS, this is expected - search for the file
-        if (Platform.isMacOS) {
-          return await _handleMacOSRecordingFailure();
+        // For other platforms, get the path from the recorder
+        final path = await _recorder.stop();
+        if (path != null && await File(path).exists()) {
+          _currentRecordingPath = path;
+          return path;
         }
-        return null;
       }
+
+      return null;
     } catch (e) {
       debugPrint('🎤 Failed to stop recording: $e');
       debugPrint('🎤 Error type: ${e.runtimeType}');
       debugPrint('🎤 Platform: ${Platform.operatingSystem}');
-
-      // Check if this is the specific AVFoundation error
-      if (e.toString().contains('AVFoundationErrorDomain') && e.toString().contains('-11805')) {
-        debugPrint('🎤 Detected AVFoundation "Cannot Record" error');
-        return await _handleMacOSRecordingFailure();
-      }
 
       _isRecording = false;
       _recordingStateController.add(false);
@@ -241,55 +230,83 @@ class CrossPlatformRecorder {
     }
   }
 
-  /// Handle macOS recording failures by searching for files in alternative locations
-  Future<String?> _handleMacOSRecordingFailure() async {
-    debugPrint('🎤 Handling macOS recording failure - searching for files');
+  /// Quick file search for when the expected path doesn't work
+  Future<String?> _findRecordingFile() async {
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final tempPath = tempDir.path;
 
-    // Prioritize temp directory first as that's where macOS typically saves recordings
+      // Look for our specific recording file pattern in temp directory
+      final prefix = path.basenameWithoutExtension(_currentRecordingPath ?? '');
+      final files = await tempDir.list().where((entity) {
+        return entity is File && entity.path.contains(prefix);
+      }).toList();
+
+      if (files.isNotEmpty) {
+        final file = files.first as File;
+        final size = await file.length();
+        if (size > 0) {
+          debugPrint('🎤 Found recording file: ${file.path}');
+          return file.path;
+        }
+      }
+    } catch (e) {
+      debugPrint('🎤 Error finding recording file: $e');
+    }
+
+    return null;
+  }
+
+  /// Handle macOS recording by searching for files in multiple locations
+  Future<String?> _handleMacOSRecording() async {
+    debugPrint('🎤 Searching for macOS recording files');
+
+    // Expanded search directories including common macOS locations
     final searchDirectories = [
-      await getTemporaryDirectory(), // Most likely location first
+      await getTemporaryDirectory(),
       Directory.systemTemp,
       await getApplicationSupportDirectory(),
       await getApplicationDocumentsDirectory(),
+      Directory('/tmp'), // macOS temp directory
+      Directory('${Platform.environment['HOME'] ?? ''}/Library/Caches'),
+      Directory('${Platform.environment['HOME'] ?? ''}/Documents'),
     ];
 
-    // Search for files created in the last 60 seconds (more reasonable timeframe for macOS)
-    final cutoffTime = DateTime.now().subtract(const Duration(seconds: 60));
+    // Search for files created in the last 90 seconds for macOS
+    final cutoffTime = DateTime.now().subtract(const Duration(seconds: 90));
 
     for (final dir in searchDirectories) {
       try {
-        debugPrint('🎤 Searching for recording files in: ${dir.path}');
+        if (!await dir.exists()) continue;
 
-        if (!await dir.exists()) {
-          debugPrint('🎤 Directory does not exist: ${dir.path}');
-          continue;
-        }
+        debugPrint('🎤 Searching in: ${dir.path}');
 
-        // Use a more efficient search - look for recently modified files first
+        // Get all files and directories first
         final entities = await dir.list().toList();
         final recentFiles = <File>[];
 
         for (final entity in entities) {
           if (entity is File) {
             final fileName = path.basename(entity.path).toLowerCase();
-            // Check for audio file extensions and common macOS recording patterns
+
+            // Look for any file that might be a recording (broader search)
             if (fileName.endsWith('.m4a') || fileName.endsWith('.aac') ||
                 fileName.endsWith('.wav') || fileName.endsWith('.caf') ||
-                fileName.contains('recording') || fileName.contains('audio')) {
+                fileName.contains('recording') || fileName.contains('audio') ||
+                fileName.contains('temp') || fileName.matches(r'^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}')) {
               try {
                 final stat = await entity.stat();
-                // Only consider files modified recently
                 if (stat.modified.isAfter(cutoffTime)) {
                   recentFiles.add(entity);
                 }
               } catch (e) {
-                debugPrint('🎤 Could not stat file ${entity.path}: $e');
+                // File might be deleted or inaccessible, continue
               }
             }
           }
         }
 
-        debugPrint('🎤 Found ${recentFiles.length} recent potential recording files');
+        debugPrint('🎤 Found ${recentFiles.length} recent files in ${dir.path}');
 
         if (recentFiles.isNotEmpty) {
           // Sort by modification time (most recent first) and size (largest first)
@@ -309,26 +326,83 @@ class CrossPlatformRecorder {
             }
           });
 
-          // Check the most recent file first
-          for (final recentFile in recentFiles) {
-            final size = await recentFile.length();
-            debugPrint('🎤 Checking file: ${recentFile.path} (${size} bytes, ${recentFile.statSync().modified})');
+          // Check the most recent files (up to 3) for valid recordings
+          for (final recentFile in recentFiles.take(3)) {
+            try {
+              final size = await recentFile.length();
+              final modified = recentFile.statSync().modified;
+              debugPrint('🎤 Checking: ${recentFile.path} (${size} bytes, modified: $modified)');
 
-            if (size > 1024) { // At least 1KB to be a valid recording
-              debugPrint('🎤 Found valid recording file: ${recentFile.path}');
-              _currentRecordingPath = recentFile.path;
-              return recentFile.path;
-            } else {
-              debugPrint('🎤 File too small to be a valid recording: ${size} bytes');
+              // More lenient size check for macOS recordings
+              if (size > 512) { // At least 512 bytes
+                debugPrint('🎤 Found valid recording file: ${recentFile.path}');
+                _currentRecordingPath = recentFile.path;
+                return recentFile.path;
+              } else {
+                debugPrint('🎤 File too small: ${size} bytes');
+              }
+            } catch (e) {
+              debugPrint('🎤 Error checking file ${recentFile.path}: $e');
             }
           }
         }
       } catch (e) {
-        debugPrint('🎤 Error searching for recording files in ${dir.path}: $e');
+        debugPrint('🎤 Error searching ${dir.path}: $e');
       }
     }
 
-    debugPrint('🎤 No valid recording files found in any location');
+    debugPrint('🎤 No valid recording files found');
+
+    // As a last resort, try to find any recently created files in common locations
+    try {
+      debugPrint('🎤 Attempting broader search for any recent files...');
+      final homeDir = Platform.environment['HOME'];
+      if (homeDir != null) {
+        final commonDirs = [
+          Directory('$homeDir/Desktop'),
+          Directory('$homeDir/Downloads'),
+          Directory('$homeDir/Documents'),
+        ];
+
+        for (final dir in commonDirs) {
+          if (await dir.exists()) {
+            final recentFiles = await dir
+                .list()
+                .where((entity) => entity is File)
+                .cast<File>()
+                .where((file) async {
+                  try {
+                    final stat = await file.stat();
+                    return stat.modified.isAfter(cutoffTime) && await file.length() > 1024;
+                  } catch (e) {
+                    return false;
+                  }
+                })
+                .toList();
+
+            if (recentFiles.isNotEmpty) {
+              debugPrint('🎤 Found ${recentFiles.length} recent files in ${dir.path}');
+              // Return the most recently modified file as a fallback
+              final fallbackFile = recentFiles.reduce((a, b) {
+                try {
+                  return a.statSync().modified.isAfter(b.statSync().modified) ? a : b;
+                } catch (e) {
+                  return a;
+                }
+              });
+
+              debugPrint('🎤 Using fallback file: ${fallbackFile.path}');
+              _currentRecordingPath = fallbackFile.path;
+              return fallbackFile.path;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('🎤 Fallback search failed: $e');
+    }
+
+    debugPrint('🎤 No valid recording files found');
     return null;
   }
 
