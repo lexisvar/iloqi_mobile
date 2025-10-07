@@ -2493,6 +2493,12 @@ paths:
                   - CA
                   - IE
                   description: Target accent for generation
+                tts_provider:
+                  type: string
+                  enum:
+                  - edge_tts
+                  - elevenlabs
+                  description: TTS provider to use (auto-selected from environment if not provided)
                 voice_model:
                   type: string
                   description: Specific voice model (auto-selected if not provided)
@@ -2559,22 +2565,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/AccentTwin'
               examples:
-                GenerateUSAccentTwin:
+                AccentTwinCreated:
                   value:
-                    original_sample: 1
-                    target_accent: US
-                  summary: Generate US accent with environment-configured provider
-                  description: TTS provider is automatically selected from environment
-                    variable TTS_DEFAULT_PROVIDER
-                GenerateUKAccentWithCustomVoice:
-                  value:
-                    original_sample: 1
-                    target_accent: UK
-                    voice_model: en-GB-RyanNeural
-                  summary: Generate UK accent with specific voice model
-                  description: Environment TTS provider will be used with custom voice
-                    model
-          description: Accent twin generation started successfully
+                    id: 52
+                    user: "0b6fe3e8-3452-4a06-880e-61c716d5115c"
+                    user_username: "user@example.com"
+                    original_sample: 64
+                    original_sample_info:
+                      id: 64
+                      filename: "my_audio.wav"
+                      duration: null
+                      created_at: "2025-10-07T09:41:21.762567Z"
+                    target_accent: "UK"
+                    tts_provider: "edge_tts"
+                    voice_model: "en-GB-SoniaNeural"
+                    generation_status: "pending"
+                    accent_twin_file: null
+                    file_url: null
+                    generation_params:
+                      voice_speed: 1.0
+                      voice_pitch: 1.0
+                    processing_time: null
+                    error_message: ""
+                    similarity_score: null
+                    phoneme_gaps: {}
+                    is_ready: false
+                    created_at: "2025-10-07T20:41:52.075336+11:00"
+                    updated_at: "2025-10-07T20:41:52.075349+11:00"
+                  summary: Accent twin creation response with ID
+                  description: Successful creation returns the accent twin object with unique ID
+          description: Accent twin creation started successfully
         '400':
           description: Invalid parameters or voice sample not analyzed
         '404':
@@ -2818,7 +2838,41 @@ paths:
       - cookieAuth: []
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: ['success', 'error']
+                    description: Overall status of the request
+                  accent_twin:
+                    $ref: '#/components/schemas/AccentTwin'
+                    description: Detailed accent twin information
+                required:
+                  - status
+                  - accent_twin
+              examples:
+                ProcessingStatus:
+                  value:
+                    status: "success"
+                    accent_twin:
+                      id: 52
+                      generation_status: "processing"
+                      is_ready: false
+                  summary: Accent twin currently processing
+                CompletedStatus:
+                  value:
+                    status: "success"
+                    accent_twin:
+                      id: 52
+                      generation_status: "completed"
+                      is_ready: true
+                      accent_twin_file: "http://example.com/media/accent_twins/accent_twin_52_UK.wav"
+                      file_url: "http://example.com/media/accent_twins/accent_twin_52_UK.wav"
+                  summary: Accent twin generation completed
+          description: Accent twin status information
   /api/samples/accent-twins/{twin_id}/compare/:
     post:
       operationId: samples_accent_twins_compare_create
@@ -4196,8 +4250,25 @@ components:
           type: integer
           description: Original voice sample used for generation
         original_sample_info:
-          type: string
+          type: object
           readOnly: true
+          description: Detailed information about the original voice sample
+          properties:
+            id:
+              type: integer
+              description: ID of the original sample
+            filename:
+              type: string
+              description: Original filename of the voice sample
+            duration:
+              type: number
+              format: float
+              nullable: true
+              description: Duration of the sample in seconds
+            created_at:
+              type: string
+              format: date-time
+              description: When the original sample was created
         target_accent:
           type: string
           description: Target accent for the synthesized voice (e.g., 'US', 'UK',
@@ -4247,8 +4318,9 @@ components:
           readOnly: true
           description: Detailed phoneme-level differences for training
         is_ready:
-          type: string
+          type: boolean
           readOnly: true
+          description: Whether the accent twin is ready for use (true/false)
         created_at:
           type: string
           format: date-time
