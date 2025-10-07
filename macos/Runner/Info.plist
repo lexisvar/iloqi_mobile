@@ -32,5 +32,9 @@
 	<!-- Microphone permission for voice recording -->
 	<key>NSMicrophoneUsageDescription</key>
 	<string>This app needs access to the microphone to record your voice for accent analysis and training.</string>
+	
+	<!-- Use Continuity Camera device type to avoid deprecation warning -->
+	<key>NSCameraUseContinuityCameraDeviceType</key>
+	<true/>
 </dict>
 </plist>

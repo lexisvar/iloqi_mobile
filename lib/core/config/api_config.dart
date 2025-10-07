@@ -4,12 +4,12 @@
 /// Change the base URL here to switch between environments.
 class ApiConfig {
   // 🔧 CHANGE THIS URL TO SWITCH ENVIRONMENTS
-  static const String baseUrl = 'http://172.20.10.13:8000/api/';
+  // static const String baseUrl = 'http://172.20.10.13:8000/api/';
   
   // Alternative URLs for easy switching:
   // static const String baseUrl = 'https://iloqi-production.up.railway.app/api/'; // Production
-  // static const String baseUrl = 'http://localhost:8000/api/'; // Local localhost
-  // static const String baseUrl = 'http://172.20.10.13:8000/api/'; // Local network IP
+  // static const String baseUrl = 'http://localhost:8000/api/'; // Local localhost (simulator only)
+  static const String baseUrl = 'http://172.20.10.13:8000/api/'; // Local network IP (for real device)
   
   /// Timeout configurations
   static const Duration connectTimeout = Duration(seconds: 30);

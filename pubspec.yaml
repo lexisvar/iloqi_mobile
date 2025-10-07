@@ -33,9 +33,10 @@ dependencies:
   hive_flutter: ^1.1.0
   
   # Audio Recording & Playback
-  record: ^4.4.4  # Use a more stable version that's compatible with macOS
+  record: ^6.1.2  # Latest version with improved macOS support
   just_audio: ^0.9.36
   audioplayers: ^5.2.1
+  audio_session: ^0.1.21  # For proper audio session configuration
   
   # Permissions
   permission_handler: ^11.1.0

@@ -10,7 +10,7 @@ import 'package:dio/dio.dart';
 
 import '../models/voice_models.dart';
 import '../services/voice_api_service.dart';
-import '../services/cross_platform_recorder.dart';
+import '../services/cross_platform_recorder_simple.dart';
 import '../di/injection_container.dart';
 import '../utils/permission_helper.dart';
 
@@ -92,14 +92,14 @@ enum RecordingStatus {
 
 // Voice Recording Notifier
 class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
-  late final CrossPlatformRecorder _recorder;
+  late final CrossPlatformRecorderSimple _recorder;
   AudioPlayer? _audioPlayer; // Use audioplayers for playback
   StreamSubscription<Duration>? _durationSubscription;
   StreamSubscription<double>? _amplitudeSubscription;
   StreamSubscription<bool>? _recordingStateSubscription;
 
   VoiceRecordingNotifier() : super(const VoiceRecordingState()) {
-    _recorder = CrossPlatformRecorder();
+    _recorder = CrossPlatformRecorderSimple();
     _initializeRecorder();
   }
 
@@ -130,14 +130,17 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
 
       _recordingStateSubscription = _recorder.recordingStateStream.listen((isRecording) {
         if (mounted) {
+          // Preserve duration when recording stops
+          final currentDuration = state.recordingDuration;
           state = state.copyWith(
             isRecording: isRecording,
             status: isRecording ? RecordingStatus.recording : RecordingStatus.stopped,
+            recordingDuration: isRecording ? currentDuration : currentDuration, // Always preserve duration
           );
         }
       });
 
-      debugPrint('🎤 CrossPlatformRecorder initialized successfully');
+      debugPrint('🎤 CrossPlatformRecorderSimple initialized successfully');
     } catch (e) {
       debugPrint('🎤 Error initializing recorder: $e');
       state = state.copyWith(
@@ -204,17 +207,27 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
     }
 
     try {
+      // Capture final duration before stopping
+      final finalDuration = state.recordingDuration;
+      debugPrint('🎤 Final recording duration: ${finalDuration.inSeconds} seconds');
+      
       // Stop recording and get path immediately
       final recordingPath = await _recorder.stopRecording();
 
+      // Cancel subscriptions to prevent them from overwriting our preserved state
+      _durationSubscription?.cancel();
+      _amplitudeSubscription?.cancel();
+      _recordingStateSubscription?.cancel();
+
       if (recordingPath != null && recordingPath.isNotEmpty) {
-        // Update state immediately for responsive UI
+        // Update state immediately for responsive UI, preserving duration
         state = state.copyWith(
           isRecording: false,
           hasRecording: true,
           recordingPath: recordingPath,
           status: RecordingStatus.stopped,
           errorMessage: null,
+          recordingDuration: finalDuration, // Preserve the final duration
         );
         debugPrint('🎤 Recording stopped successfully: $recordingPath');
       } else {
@@ -224,6 +237,7 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
           hasRecording: false, // Will be corrected by file search if needed
           status: RecordingStatus.stopped,
           errorMessage: null, // Don't show error for macOS null path
+          recordingDuration: finalDuration, // Preserve the final duration
         );
         debugPrint('🎤 Recording stopped, file path validation in progress');
       }

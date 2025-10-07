@@ -15,8 +15,9 @@ class CrossPlatformRecorder {
   factory CrossPlatformRecorder() => _instance;
   CrossPlatformRecorder._internal();
 
-  final Record _recorder = Record();
+  final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
+  bool _isStoppingRecording = false; // Prevent multiple simultaneous stop attempts
   String? _currentRecordingPath;
   Timer? _durationTimer;
   Timer? _amplitudeTimer;
@@ -32,14 +33,18 @@ class CrossPlatformRecorder {
   Stream<bool> get recordingStateStream => _recordingStateController.stream;
 
   // State getters
-  bool get isRecording => _isRecording;
+  bool get isRecording {
+    // In the new version, we'll rely on our internal flag
+    // since _recorder.isRecording is now async
+    return _isRecording;
+  }
   String? get currentRecordingPath => _currentRecordingPath;
 
   /// Initialize the recorder (check permissions, etc.)
   Future<bool> initialize() async {
     try {
       // Check if recording is available on this platform
-      if (!await _recorder.hasPermission()) {
+      if (!await hasPermission()) {
         debugPrint('🎤 Record package: No microphone permission');
         return false;
       }
@@ -64,173 +69,571 @@ class CrossPlatformRecorder {
     return status == PermissionStatus.granted;
   }
 
-  /// Start recording with cross-platform configuration
+  /// Test the recording interface (for debugging/validation)
+  Future<bool> testRecordingInterface() async {
+    try {
+      debugPrint('🎤 Testing recording interface...');
+      
+      // Check permission
+      if (!await hasPermission()) {
+        debugPrint('🎤 Test failed: No microphone permission');
+        return false;
+      }
+      
+      // Test platform support
+      if (!isSupported) {
+        debugPrint('🎤 Test failed: Platform not supported');
+        return false;
+      }
+      
+      // Test recorder availability
+      if (!await hasPermission()) {
+        debugPrint('🎤 Test failed: Recorder permission check failed');
+        return false;
+      }
+      
+      debugPrint('🎤 Recording interface test passed ✅');
+      return true;
+    } catch (e) {
+      debugPrint('🎤 Recording interface test failed: $e');
+      return false;
+    }
+  }
+
+  /// Start recording following AI overview best practices
   Future<bool> startRecording() async {
     try {
       debugPrint('🎤 Start recording requested');
 
-      // Check permission first
-      if (!await hasPermission()) {
-        debugPrint('🎤 Recording permission not granted');
+      // Step 1: Check permissions exactly as recommended
+      if (await _recorder.hasPermission()) {
+        // Step 2: Define file path exactly as in AI overview
+        final directory = await getApplicationDocumentsDirectory();
+        final filePath = '${directory.path}/my_audio.m4a'; // Exact pattern from AI overview
+        
+        debugPrint('🎤 Recording to file path: $filePath');
+
+        // Step 3: Start recording with exact configuration from AI overview
+        await _recorder.start(
+          const RecordConfig(encoder: AudioEncoder.aacLc), // Choose an appropriate encoder (from AI overview)
+          path: filePath,
+        );
+
+        // Update internal state
+        _isRecording = true;
+        _currentRecordingPath = filePath;
+        _recordingStateController.add(true);
+        _startTimers();
+
+        debugPrint('🎤 Recording started successfully');
+        return true;
+      } else {
+        // Handle permission denial exactly as in AI overview
+        debugPrint('🎤 Permission denied - cannot start recording');
         return false;
       }
-
-      String? path;
-
-      if (Platform.isMacOS) {
-        // For macOS, use a simple, reliable path in the temp directory
-        debugPrint('🎤 Using macOS-optimized recording configuration');
-        final tempDir = await getTemporaryDirectory();
-        final timestamp = DateTime.now().millisecondsSinceEpoch;
-        path = '${tempDir.path}/iloqi_recording_$timestamp.m4a';
-        debugPrint('🎤 Recording to: $path');
-      } else if (Platform.isIOS || Platform.isAndroid) {
-        // For mobile platforms, use a specific path
-        final directory = await getApplicationDocumentsDirectory();
-        final fileName = 'recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
-        path = '${directory.path}/$fileName';
-        debugPrint('🎤 Recording to: $path');
-      }
-
-      print('Start recording');
-
-      // Enhanced configuration for better macOS compatibility
-      if (Platform.isMacOS) {
-        // macOS-specific configuration to avoid AVFoundation issues
-        await _recorder.start(
-          path: path,
-          encoder: AudioEncoder.aacLc,
-        );
-      } else {
-        // Standard configuration for other platforms
-        await _recorder.start(
-          path: path,
-          encoder: AudioEncoder.aacLc,
-        );
-      }
-
-      _isRecording = true;
-      _currentRecordingPath = path;
-      _recordingStateController.add(true);
-      _startTimers();
-
-      debugPrint('🎤 Recording started: $path');
-      debugPrint('🎤 Recording started successfully');
-
-      return true;
     } catch (e) {
       debugPrint('🎤 Failed to start recording: $e');
-      debugPrint('🎤 Error type: ${e.runtimeType}');
-      debugPrint('🎤 Platform: ${Platform.operatingSystem}');
-
-      // Try alternative configuration for macOS if the first attempt fails
-      if (Platform.isMacOS && e.toString().contains('AVFoundation')) {
-        debugPrint('🎤 Attempting alternative macOS recording configuration');
-        return await _startRecordingWithAlternativeConfig();
-      }
-
       _recordingStateController.add(false);
       return false;
     }
   }
 
-  /// Alternative recording configuration for macOS when the primary method fails
-  Future<bool> _startRecordingWithAlternativeConfig() async {
-    try {
-      debugPrint('🎤 Trying alternative recording configuration');
-
-      // Use temporary directory and minimal configuration
-      final tempDir = await getTemporaryDirectory();
-      final fileName = 'recording_alt_${DateTime.now().millisecondsSinceEpoch}.m4a';
-      final path = '${tempDir.path}/$fileName';
-
-      debugPrint('🎤 Alternative recording path: $path');
-
-      // Minimal configuration for macOS fallback
-      await _recorder.start(
-        path: path,
-        encoder: AudioEncoder.aacLc,
-      );
-
-      _isRecording = true;
-      _currentRecordingPath = path;
-      _recordingStateController.add(true);
-      _startTimers();
-
-      debugPrint('🎤 Alternative recording started successfully: $path');
-      return true;
-    } catch (e) {
-      debugPrint('🎤 Alternative recording configuration also failed: $e');
-      _recordingStateController.add(false);
-      return false;
-    }
-  }
-
-  /// Stop recording
+  /// Stop recording following AI overview best practices
   Future<String?> stopRecording() async {
     try {
       debugPrint('🎤 Stop recording requested');
-
+      
       if (!_isRecording) {
         debugPrint('🎤 Not currently recording');
         return null;
       }
 
-      print('Stop recording');
-
-      // Stop the recording
-      await _recorder.stop();
-
+      // Simple stop following AI overview pattern
+      final path = await _recorder.stop();
+      
+      // Update state
       _isRecording = false;
-      _recordingStateController.add(false);
       _stopTimers();
-
-      debugPrint('🎤 Platform: ${Platform.operatingSystem}');
-
-      // For macOS, use the path we set during start recording
-      if (Platform.isMacOS && _currentRecordingPath != null) {
-        final file = File(_currentRecordingPath!);
-
-        // Check if file exists and has content
-        if (await file.exists()) {
-          final size = await file.length();
-          debugPrint('🎤 Recording file exists with size: $size bytes');
-
-          if (size > 0) {
-            debugPrint('🎤 Recording file has content');
-            return _currentRecordingPath;
-          } else {
-            debugPrint('🎤 Recording file exists but is empty');
-            return null;
-          }
-        } else {
-          debugPrint('🎤 Recording file does not exist at expected path: $_currentRecordingPath');
-          // Try to find it with a quick search
-          return await _findRecordingFile();
-        }
-      } else {
-        // For other platforms, get the path from the recorder
-        final path = await _recorder.stop();
-        if (path != null && await File(path).exists()) {
-          _currentRecordingPath = path;
-          return path;
-        }
-      }
-
-      return null;
+      _recordingStateController.add(false);
+      
+      debugPrint('🎤 Recording stopped successfully: $path');
+      
+      // Return the path where the audio file is saved (as in AI overview)
+      _currentRecordingPath = null;
+      return path;
+      
     } catch (e) {
       debugPrint('🎤 Failed to stop recording: $e');
-      debugPrint('🎤 Error type: ${e.runtimeType}');
-      debugPrint('🎤 Platform: ${Platform.operatingSystem}');
-
       _isRecording = false;
-      _recordingStateController.add(false);
       _stopTimers();
+      _recordingStateController.add(false);
       return null;
     }
   }
 
-  /// Quick file search for when the expected path doesn't work
+  /// Check if platform supports recording
+  bool get isSupported {
+    // The record package supports iOS, Android, and macOS
+    return Platform.isIOS || Platform.isAndroid || Platform.isMacOS;
+  }
+
+  /// Handle recorder timeout with aggressive recovery
+  Future<String?> _handleRecorderTimeout() async {
+    debugPrint('🎤 Handling recorder timeout - trying recovery methods');
+    
+    // Force update state immediately
+    await _updateStateAfterStop();
+    
+    // Try cancel with its own timeout - but don't wait if it hangs
+    debugPrint('🎤 Trying cancel() with timeout...');
+    try {
+      await Future.any([
+        _recorder.cancel(),
+        Future.delayed(const Duration(seconds: 1), () {
+          throw TimeoutException('cancel() timed out', const Duration(seconds: 1));
+        }),
+      ]);
+      debugPrint('🎤 Cancel completed successfully');
+    } on TimeoutException {
+      debugPrint('🎤 Cancel also timed out - proceeding with file recovery');
+    } catch (e) {
+      debugPrint('🎤 Cancel failed: $e - proceeding with file recovery');
+    }
+    
+    // Try dispose with very short timeout
+    debugPrint('🎤 Trying dispose() with timeout...');
+    try {
+      await Future.any([
+        Future(() => _recorder.dispose()),
+        Future.delayed(const Duration(milliseconds: 500), () {
+          throw TimeoutException('dispose() timed out', const Duration(milliseconds: 500));
+        }),
+      ]);
+      debugPrint('🎤 Dispose completed successfully');
+    } on TimeoutException {
+      debugPrint('🎤 Dispose also timed out - abandoning recorder');
+    } catch (e) {
+      debugPrint('🎤 Dispose failed: $e - abandoning recorder');
+    }
+    
+    // Always try to recover any existing recording file
+    debugPrint('🎤 Attempting file recovery regardless of recorder state');
+    return await _tryReturnStoredRecording();
+  }
+
+  /// Handle AVFoundation-specific errors with aggressive recovery
+  Future<String?> _handleAVFoundationError() async {
+    debugPrint('🎤 Handling AVFoundation error with aggressive recovery...');
+    
+    // Don't wait for the recorder - just immediately try to find the file
+    await _updateStateAfterStop();
+    
+    // Try multiple recovery strategies in parallel
+    final recoveryFutures = [
+      _tryReturnStoredRecording(),
+      _findAlternativeRecordingFile(),
+      Future.delayed(const Duration(milliseconds: 500), () => _searchSystemTempDirectories()),
+    ];
+    
+    try {
+      // Return the first successful result
+      final results = await Future.wait(recoveryFutures, eagerError: false);
+      
+      for (final result in results) {
+        if (result != null && result.isNotEmpty) {
+          debugPrint('🎤 Recovery successful: $result');
+          return result;
+        }
+      }
+      
+      debugPrint('🎤 All recovery attempts failed');
+      return null;
+    } catch (e) {
+      debugPrint('🎤 Recovery attempts failed: $e');
+      return null;
+    }
+  }
+
+  /// Try alternative stop methods for AVFoundation errors
+  Future<String?> _tryAlternativeStop() async {
+    try {
+      debugPrint('🎤 Trying cancel() with timeout for AVFoundation error...');
+      await Future.any([
+        _recorder.cancel(),
+        Future.delayed(const Duration(seconds: 2), () {
+          throw TimeoutException('cancel() timed out', const Duration(seconds: 2));
+        }),
+      ]);
+      debugPrint('🎤 Recording cancelled successfully');
+      await _updateStateAfterStop();
+      
+      // Return the stored path if the file exists
+      return await _tryReturnStoredRecording();
+    } on TimeoutException {
+      debugPrint('🎤 Cancel timed out');
+    } catch (cancelError) {
+      debugPrint('🎤 Cancel also failed: $cancelError');
+    }
+    
+    // Final fallback
+    await _updateStateAfterStop();
+    return await _tryReturnStoredRecording();
+  }
+
+  /// Standard stop recording for non-macOS platforms
+  Future<String?> _stopRecordingStandard() async {
+    debugPrint('🎤 About to check recorder.isRecording()...');
+    
+    // Check the actual recorder state (now async in v6.x)
+    bool recorderIsRecording;
+    try {
+      recorderIsRecording = await _recorder.isRecording();
+      debugPrint('🎤 Recorder.isRecording = $recorderIsRecording');
+    } catch (e) {
+      debugPrint('🎤 Error checking recorder.isRecording(): $e');
+      // Assume it's recording if we can't check
+      recorderIsRecording = true;
+    }
+
+    if (!recorderIsRecording) {
+      debugPrint('🎤 Recorder reports it is not recording');
+      await _updateStateAfterStop();
+      return null;
+    }
+
+    debugPrint('🎤 About to call recorder.stop()...');
+    print('Stop recording');
+
+    final recordingPath = await _recorder.stop();
+    debugPrint('🎤 Recording stopped. Returned path: $recordingPath');
+
+    await _updateStateAfterStop();
+    return await _verifyAndReturnRecording(recordingPath);
+  }
+
+  /// Update internal state after stopping recording
+  Future<void> _updateStateAfterStop() async {
+    _isRecording = false;
+    _recordingStateController.add(false);
+    _stopTimers();
+  }
+
+  /// Verify recording file and return path
+  Future<String?> _verifyAndReturnRecording(String? recordingPath) async {
+    if (recordingPath != null) {
+      final file = File(recordingPath);
+      
+      debugPrint('🎤 Checking if file exists: ${file.path}');
+      
+      // Give the system a moment to finalize the file
+      await Future.delayed(const Duration(milliseconds: 500));
+      
+      if (await file.exists()) {
+        final size = await file.length();
+        debugPrint('🎤 Recording file exists with size: $size bytes');
+        
+        if (size > 0) {
+          debugPrint('🎤 Recording completed successfully');
+          _currentRecordingPath = null;
+          return recordingPath;
+        } else {
+          debugPrint('🎤 Recording file is empty, waiting a bit more...');
+          await Future.delayed(const Duration(milliseconds: 1000));
+          final newSize = await file.length();
+          if (newSize > 0) {
+            debugPrint('🎤 Recording file now has content: $newSize bytes');
+            _currentRecordingPath = null;
+            return recordingPath;
+          } else {
+            debugPrint('🎤 Recording file is still empty after waiting');
+          }
+        }
+      } else {
+        debugPrint('🎤 Recording file does not exist at: $recordingPath');
+      }
+    } else {
+      debugPrint('🎤 No recording path returned from stop()');
+    }
+
+    // Try to return stored recording as fallback
+    return await _tryReturnStoredRecording();
+  }
+
+  /// Try to return the stored recording path
+  Future<String?> _tryReturnStoredRecording() async {
+    if (_currentRecordingPath != null) {
+      debugPrint('🎤 Trying to find file at stored path: $_currentRecordingPath');
+      final file = File(_currentRecordingPath!);
+      
+      // Give the system more time to finalize the file on macOS
+      if (Platform.isMacOS) {
+        debugPrint('🎤 macOS: Waiting longer for file to be finalized...');
+        await Future.delayed(const Duration(seconds: 2));
+      } else {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+      
+      if (await file.exists()) {
+        final size = await file.length();
+        debugPrint('🎤 Found recording file at stored path with size: $size bytes');
+        
+        if (size > 0) {
+          final result = _currentRecordingPath;
+          _currentRecordingPath = null;
+          debugPrint('🎤 Successfully returning recording: $result');
+          return result;
+        } else {
+          debugPrint('🎤 File exists but is empty, waiting a bit more...');
+          await Future.delayed(const Duration(seconds: 1));
+          final newSize = await file.length();
+          if (newSize > 0) {
+            final result = _currentRecordingPath;
+            _currentRecordingPath = null;
+            debugPrint('🎤 File now has content, returning: $result');
+            return result;
+          }
+        }
+      } else {
+        debugPrint('🎤 No file found at stored path: $_currentRecordingPath');
+        
+        // On macOS, try alternative search in case the path changed
+        if (Platform.isMacOS) {
+          debugPrint('🎤 macOS: Searching for alternative recording files...');
+          return await _findAlternativeRecordingFile();
+        }
+      }
+    }
+
+    debugPrint('🎤 No valid recording found');
+    _currentRecordingPath = null;
+    return null;
+  }
+
+  /// Search for alternative recording files on macOS
+  Future<String?> _findAlternativeRecordingFile() async {
+    try {
+      final documentsDir = await getApplicationDocumentsDirectory();
+      final directory = Directory(documentsDir.path);
+      
+      if (!await directory.exists()) {
+        debugPrint('🎤 Documents directory does not exist');
+        return null;
+      }
+
+      debugPrint('🎤 Searching for recent audio files in: ${documentsDir.path}');
+      
+      // Search for all audio files (prioritize WAV on macOS)
+      final audioExtensions = Platform.isMacOS 
+        ? ['.wav', '.m4a', '.aac', '.mp3', '.caf'] 
+        : ['.m4a', '.aac', '.wav', '.mp3', '.caf'];
+      final files = <File>[];
+      
+      await for (final entity in directory.list()) {
+        if (entity is File) {
+          final path = entity.path.toLowerCase();
+          if (audioExtensions.any((ext) => path.endsWith(ext))) {
+            files.add(entity);
+          }
+        }
+      }
+
+      // Also search in Application Support directory on macOS
+      if (Platform.isMacOS) {
+        try {
+          final appSupportDir = Directory('${Platform.environment['HOME']}/Library/Application Support/com.iloqi.mobile');
+          if (await appSupportDir.exists()) {
+            debugPrint('🎤 macOS: Also searching Application Support directory');
+            await for (final entity in appSupportDir.list()) {
+              if (entity is File) {
+                final path = entity.path.toLowerCase();
+                if (audioExtensions.any((ext) => path.endsWith(ext))) {
+                  files.add(entity);
+                }
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('🎤 macOS: Error accessing Application Support directory: $e');
+        }
+      }
+
+      if (files.isEmpty) {
+        debugPrint('🎤 No audio files found in documents directory');
+        
+        // Also check system temporary directories
+        return await _searchSystemTempDirectories();
+      }
+
+      // Sort by modification time, most recent first
+      files.sort((a, b) {
+        final aStats = a.statSync();
+        final bStats = b.statSync();
+        return bStats.modified.compareTo(aStats.modified);
+      });
+
+      // Check files in order of recency
+      for (final file in files.take(3)) { // Check top 3 most recent files
+        final size = await file.length();
+        final modTime = file.statSync().modified;
+        final age = DateTime.now().difference(modTime);
+        
+        debugPrint('🎤 Found audio file: ${file.path} (${size} bytes, ${age.inSeconds}s old)');
+        
+        // Only consider files created in the last 30 seconds
+        if (size > 0 && age.inSeconds < 30) {
+          debugPrint('🎤 Using recent audio file as recording result');
+          return file.path;
+        }
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('🎤 Error searching for alternative recording file: $e');
+      return null;
+    }
+  }
+
+  /// Search system temporary directories for recording files
+  Future<String?> _searchSystemTempDirectories() async {
+    if (!Platform.isMacOS) return null;
+    
+    try {
+      // Common macOS temp directories where AVFoundation might save files
+      final tempPaths = [
+        '/tmp', // Our fallback directory
+        Directory.systemTemp.path,
+        '${Platform.environment['HOME']}/Library/Caches',
+        '${Platform.environment['HOME']}/Library/Application Support',
+        '/var/folders', // macOS system temp folders
+      ];
+      
+      for (final tempPath in tempPaths) {
+        try {
+          final tempDir = Directory(tempPath);
+          if (!await tempDir.exists()) continue;
+          
+          debugPrint('🎤 Searching temp directory: $tempPath');
+          
+          await for (final entity in tempDir.list()) {
+            if (entity is File) {
+              final path = entity.path.toLowerCase();
+              if (path.contains('recording') && (path.endsWith('.wav') || path.endsWith('.m4a') || path.endsWith('.aac') || path.endsWith('.caf'))) {
+                final stats = entity.statSync();
+                final age = DateTime.now().difference(stats.modified);
+                
+                // Only consider very recent files (last 30 seconds)
+                if (age.inSeconds < 30) {
+                  final size = await entity.length();
+                  if (size > 0) {
+                    debugPrint('🎤 Found recent temp recording: ${entity.path} (${size} bytes)');
+                    return entity.path;
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          // Silently continue if we can't access a directory
+          debugPrint('🎤 Cannot access temp directory $tempPath: $e');
+          continue;
+        }
+      }
+    } catch (e) {
+      debugPrint('🎤 Error searching system temp directories: $e');
+    }
+    
+    return null;
+  }
+
+  /// Handle timeout recovery
+  Future<String?> _handleTimeoutRecovery() async {
+    debugPrint('🎤 Handling timeout recovery');
+    await _updateStateAfterStop();
+    
+    // Try to salvage any existing recording
+    return await _tryReturnStoredRecording();
+  }
+
+  /// Handle stop recording errors
+  Future<String?> _handleStopRecordingError() async {
+    debugPrint('🎤 Handling stop recording error');
+    await _updateStateAfterStop();
+    
+    // Try to salvage any existing recording
+    return await _tryReturnStoredRecording();
+  }
+
+  /// Alternative file search method for when normal path checking fails
+  Future<String?> _findRecordingFileAlternative() async {
+    try {
+      // Search in Documents directory for recent .m4a files
+      final documentsDir = await getApplicationDocumentsDirectory();
+      
+      debugPrint('🎤 Searching for recent recordings in: ${documentsDir.path}');
+      
+      final directory = Directory(documentsDir.path);
+      if (!await directory.exists()) {
+        debugPrint('🎤 Documents directory does not exist');
+        return null;
+      }
+
+      // Get all files in the directory
+      final entities = await directory.list().toList();
+      final recentFiles = <File>[];
+      final cutoffTime = DateTime.now().subtract(const Duration(minutes: 5));
+
+      for (final entity in entities) {
+        if (entity is File) {
+          final fileName = entity.path.toLowerCase();
+          
+          // Look for .m4a files
+          if (fileName.endsWith('.m4a')) {
+            try {
+              final stat = await entity.stat();
+              // Check if file was modified recently
+              if (stat.modified.isAfter(cutoffTime)) {
+                final size = await entity.length();
+                if (size > 0) {
+                  recentFiles.add(entity);
+                  debugPrint('🎤 Found recent recording candidate: ${entity.path} (${size} bytes)');
+                }
+              }
+            } catch (e) {
+              debugPrint('🎤 Error checking file ${entity.path}: $e');
+            }
+          }
+        }
+      }
+
+      if (recentFiles.isNotEmpty) {
+        // Sort by modification time, newest first
+        recentFiles.sort((a, b) {
+          try {
+            final statA = a.statSync();
+            final statB = b.statSync();
+            return statB.modified.compareTo(statA.modified);
+          } catch (e) {
+            debugPrint('🎤 Error sorting files: $e');
+            return 0;
+          }
+        });
+        
+        final mostRecent = recentFiles.first;
+        final size = await mostRecent.length();
+        debugPrint('🎤 Selected most recent recording: ${mostRecent.path} (${size} bytes)');
+        return mostRecent.path;
+      }
+
+      debugPrint('🎤 No recent recording files found in Documents directory');
+      return null;
+    } catch (e) {
+      debugPrint('🎤 Error in alternative file search: $e');
+      return null;
+    }
+  }
+
+  /// Quick file search for when the expected path doesn't work (legacy method)
   Future<String?> _findRecordingFile() async {
     try {
       final tempDir = await getTemporaryDirectory();
@@ -290,10 +693,11 @@ class CrossPlatformRecorder {
             final fileName = path.basename(entity.path).toLowerCase();
 
             // Look for any file that might be a recording (broader search)
+            final uuidPattern = RegExp(r'^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}');
             if (fileName.endsWith('.m4a') || fileName.endsWith('.aac') ||
                 fileName.endsWith('.wav') || fileName.endsWith('.caf') ||
                 fileName.contains('recording') || fileName.contains('audio') ||
-                fileName.contains('temp') || fileName.matches(r'^\w{8}-\w{4}-\w{4}-\w{4}-\w{12}')) {
+                fileName.contains('temp') || uuidPattern.hasMatch(fileName)) {
               try {
                 final stat = await entity.stat();
                 if (stat.modified.isAfter(cutoffTime)) {
@@ -366,34 +770,47 @@ class CrossPlatformRecorder {
 
         for (final dir in commonDirs) {
           if (await dir.exists()) {
-            final recentFiles = await dir
+            final allFiles = await dir
                 .list()
                 .where((entity) => entity is File)
                 .cast<File>()
-                .where((file) async {
-                  try {
-                    final stat = await file.stat();
-                    return stat.modified.isAfter(cutoffTime) && await file.length() > 1024;
-                  } catch (e) {
-                    return false;
-                  }
-                })
                 .toList();
+
+            final recentFiles = <File>[];
+            for (final file in allFiles) {
+              try {
+                final stat = await file.stat();
+                if (stat.modified.isAfter(cutoffTime) && await file.length() > 1024) {
+                  recentFiles.add(file);
+                }
+              } catch (e) {
+                // File might be deleted or inaccessible, continue
+              }
+            }
 
             if (recentFiles.isNotEmpty) {
               debugPrint('🎤 Found ${recentFiles.length} recent files in ${dir.path}');
               // Return the most recently modified file as a fallback
-              final fallbackFile = recentFiles.reduce((a, b) {
+              File? fallbackFile;
+              DateTime? mostRecentTime;
+              
+              for (final file in recentFiles) {
                 try {
-                  return a.statSync().modified.isAfter(b.statSync().modified) ? a : b;
+                  final stat = await file.stat();
+                  if (mostRecentTime == null || stat.modified.isAfter(mostRecentTime)) {
+                    mostRecentTime = stat.modified;
+                    fallbackFile = file;
+                  }
                 } catch (e) {
-                  return a;
+                  // Continue with other files
                 }
-              });
+              }
 
-              debugPrint('🎤 Using fallback file: ${fallbackFile.path}');
-              _currentRecordingPath = fallbackFile.path;
-              return fallbackFile.path;
+              if (fallbackFile != null) {
+                debugPrint('🎤 Using fallback file: ${fallbackFile.path}');
+                _currentRecordingPath = fallbackFile.path;
+                return fallbackFile.path;
+              }
             }
           }
         }
@@ -503,6 +920,34 @@ class CrossPlatformRecorder {
       return '.aac'; // Pure AAC works well on Android
     } else {
       return '.wav'; // Fallback for other platforms
+    }
+  }
+
+  /// Quick validation of a recording file
+  Future<bool> validateRecording(String? filePath) async {
+    if (filePath == null || filePath.isEmpty) {
+      debugPrint('🎤 Validation failed: No file path provided');
+      return false;
+    }
+
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        debugPrint('🎤 Validation failed: File does not exist at $filePath');
+        return false;
+      }
+
+      final fileSize = await file.length();
+      if (fileSize < 1024) { // Less than 1KB is probably not a valid recording
+        debugPrint('🎤 Validation failed: File too small ($fileSize bytes)');
+        return false;
+      }
+
+      debugPrint('🎤 Recording validation passed: ${fileSize ~/ 1024}KB');
+      return true;
+    } catch (e) {
+      debugPrint('🎤 Validation error: $e');
+      return false;
     }
   }
 

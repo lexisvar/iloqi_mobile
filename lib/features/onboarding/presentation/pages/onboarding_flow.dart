@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/models/voice_models.dart';
-import '../../../../core/services/cross_platform_recorder.dart';
+import '../../../../core/services/cross_platform_recorder_simple.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/services/voice_api_service.dart';
@@ -76,10 +76,11 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
           ref.read(onboardingStepProvider.notifier).state = OnboardingStep.status;
         } else if (hasProfileData && !hasConsent) {
           // User has profile but no consent - check microphone permission
-          final micStatus = await PermissionHelper.checkMicrophonePermission();
-          print('🔄 User has profile but no consent, mic permission: $micStatus');
+          final recorder = CrossPlatformRecorderSimple();
+          final micPermissionGranted = await recorder.hasPermission();
+          print('🔄 User has profile but no consent, mic permission granted: $micPermissionGranted');
           
-          if (micStatus.isGranted) {
+          if (micPermissionGranted) {
             // Mic permission already granted, go to enrollment
             print('🔄 Mic permission granted, setting step to enrollment');
             ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
@@ -243,7 +244,6 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
           onOpenSettings: openAppSettings,
           onCheckPermission: _recheckMicrophonePermission,
           onMicrophoneConfirmed: _microphoneConfirmed,
-          onDebugSkip: _debugSkipMicPermission,
         );
 
       case OnboardingStep.enrollment:
@@ -273,11 +273,16 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
             final updatedState = ref.read(voiceRecordingProvider);
             final dur = updatedState.recordingDuration.inSeconds;
 
+            debugPrint('🎤 Validation - Duration: ${dur}s, HasRecording: ${updatedState.hasRecording}, Path: ${updatedState.recordingPath}');
+
             // Validate duration 10-60s
             if (dur < 10 || dur > 60) {
+              debugPrint('🎤 Duration validation failed: ${dur}s (need 10-60s)');
               setState(() => _error = 'Please record between 10 and 60 seconds.');
               return;
             }
+
+            debugPrint('🎤 Duration validation passed: ${dur}s');
 
             // For now, don't require recording path - let analysis handle file issues
             // This makes the UI more responsive
@@ -480,12 +485,6 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
       print('🎤 Error rechecking permission: $e');
       setState(() => _error = 'Error checking permission: $e');
     }
-  }
-
-  // Debug method to skip permission (for development only)
-  void _debugSkipMicPermission() {
-    print('🎤 DEBUG: Skipping microphone permission');
-    ref.read(onboardingStepProvider.notifier).state = OnboardingStep.enrollment;
   }
 
   // Method to advance when microphone is confirmed working (bypasses cached permission check)
@@ -762,14 +761,12 @@ class _MicPermissionStep extends StatefulWidget {
   final Future<bool> Function() onOpenSettings;
   final VoidCallback onCheckPermission;
   final VoidCallback onMicrophoneConfirmed; // New callback for when mic is confirmed working
-  final VoidCallback? onDebugSkip;
 
   const _MicPermissionStep({
     required this.onAllow, 
     required this.onOpenSettings,
     required this.onCheckPermission,
     required this.onMicrophoneConfirmed,
-    this.onDebugSkip,
   });
 
   @override
@@ -815,54 +812,32 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
   }
 
   Future<void> _handleMicrophoneTap() async {
-    print('🎤 Microphone icon tapped, testing actual recording capability...');
+    print('🎤 Microphone icon tapped - requesting native permission...');
     
     try {
-      // Test if we can actually initialize recording (this triggers native permission)
-      final recorder = CrossPlatformRecorder();
+      // Use the recording package's built-in permission request
+      // This will trigger the native iOS permission dialog
+      final recorder = CrossPlatformRecorderSimple();
       final hasPermission = await recorder.requestPermission();
-      if (hasPermission) {
-        final canInitialize = await recorder.initialize();
-        if (canInitialize) {
-          print('🎤 Microphone access confirmed through recording test');
-          
-          // Update state to granted and proceed
-          setState(() {
-            _permissionStatus = PermissionStatus.granted;
-          });
-        } else {
-          throw Exception('Failed to initialize recorder');
-        }
-      } else {
-        throw Exception('Permission denied');
-      }
       
-      widget.onMicrophoneConfirmed();
+      if (hasPermission) {
+        print('🎤 Native permission granted, advancing to enrollment');
+        setState(() {
+          _permissionStatus = PermissionStatus.granted;
+        });
+        widget.onMicrophoneConfirmed();
+      } else {
+        print('🎤 Native permission denied');
+        setState(() {
+          _permissionStatus = PermissionStatus.denied;
+        });
+      }
       
     } catch (e) {
-      print('🎤 Recording test failed: $e');
-      
-      // Check the cached permission status as fallback using cross-platform helper
-      final status = await PermissionHelper.checkMicrophonePermission();
-      print('🎤 Fallback permission status: $status');
-      
+      print('🎤 Native permission request failed: $e');
       setState(() {
-        _permissionStatus = status;
+        _permissionStatus = PermissionStatus.denied;
       });
-      
-      // Try requesting permission if denied
-      if (status.isDenied) {
-        final requestedStatus = await PermissionHelper.requestMicrophonePermission();
-        print('🎤 Permission request result: $requestedStatus');
-        
-        setState(() {
-          _permissionStatus = requestedStatus;
-        });
-        
-        if (requestedStatus.isGranted) {
-          widget.onCheckPermission();
-        }
-      }
     }
   }
 
@@ -871,7 +846,7 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
     
     try {
       // Test if we can actually initialize recording
-      final recorder = CrossPlatformRecorder();
+      final recorder = CrossPlatformRecorderSimple();
       final hasPermission = await recorder.hasPermission();
       if (hasPermission) {
         final canInitialize = await recorder.initialize();
@@ -954,7 +929,7 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
                       ? 'Please enable microphone access in Settings to continue.'
                       : isDenied
                           ? 'Tap the microphone above to allow access.'
-                          : 'To analyze your pronunciation.',
+                          : 'Tap the microphone to grant access and start voice analysis.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: isGranted ? Colors.green.shade700 : null,
@@ -1121,33 +1096,6 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
             ),
           ),
           
-          // Debug section for development
-          if (widget.onDebugSkip != null) ...[
-            const SizedBox(height: 40),
-            const Divider(),
-            const SizedBox(height: 20),
-            Text(
-              'Debug Options (Development Only)',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey.shade600,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              height: 40,
-              child: OutlinedButton(
-                onPressed: widget.onDebugSkip,
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.red,
-                  side: const BorderSide(color: Colors.red),
-                ),
-                child: const Text('DEBUG: Skip Permission'),
-              ),
-            ),
-          ],
           const SizedBox(height: 40),
         ],
       ),
