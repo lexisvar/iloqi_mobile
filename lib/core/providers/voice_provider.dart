@@ -642,6 +642,27 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
     try {
       debugPrint('🎭 Generating accent twin: $targetAccent for sample: $sampleId (attempt ${retryCount + 1})');
       
+      // First, check if an accent twin already exists for this sample and target accent
+      debugPrint('🔍 Checking for existing accent twin...');
+      final existingTwin = await _checkExistingAccentTwin(sampleId, targetAccent);
+      
+      if (existingTwin != null) {
+        debugPrint('✅ Found existing accent twin: ${existingTwin.id}, status: ${existingTwin.generationStatus}');
+        state = AsyncValue.data(existingTwin);
+        
+        // If the existing twin is not ready, start polling for its status
+        final needsPolling = (existingTwin.isReady != true) &&
+            (existingTwin.generationStatus == null || 
+             existingTwin.generationStatus == 'pending' || 
+             existingTwin.generationStatus == 'processing');
+             
+        if (needsPolling && existingTwin.id != null) {
+          _startPolling(existingTwin.id!);
+        }
+        return;
+      }
+      
+      debugPrint('🆕 No existing accent twin found, creating new one...');
       final request = AccentTwinCreateRequest(
         originalSample: sampleId,
         targetAccent: targetAccent,
@@ -702,6 +723,31 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
       }
       
       state = AsyncValue.error(errorMessage, stackTrace);
+    }
+  }
+
+  // Helper method to check if an accent twin already exists
+  Future<AccentTwin?> _checkExistingAccentTwin(int sampleId, String targetAccent) async {
+    try {
+      // Get the list of accent twins and look for one that matches our criteria
+      final accentTwinsList = await _voiceApiService.getAccentTwinsList(ordering: '-created_at');
+      
+      // Find an existing accent twin that matches our criteria
+      final existingTwin = accentTwinsList.results.where(
+        (twin) => twin.originalSample == sampleId && 
+                 twin.targetAccent == targetAccent &&
+                 twin.ttsProvider == 'edge_tts',
+      ).toList();
+      
+      if (existingTwin.isNotEmpty) {
+        // Return the most recent one
+        return existingTwin.first;
+      }
+      
+      return null;
+    } catch (e) {
+      debugPrint('⚠️ Error checking for existing accent twin: $e');
+      return null; // If we can't check, proceed with creation
     }
   }
 

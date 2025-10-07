@@ -324,41 +324,52 @@ class AccentTwin {
 }
 
 @JsonSerializable()
+@JsonSerializable()
 class TrainingSession {
-  final String id;
-  @JsonKey(name: 'training_type')
-  final String trainingType;
+  final int id;
+  final String user;
+  @JsonKey(name: 'user_username')
+  final String userUsername;
+  final String name;
+  @JsonKey(name: 'exercise_type')
+  final String exerciseType;
   @JsonKey(name: 'target_accent')
   final String targetAccent;
-  @JsonKey(name: 'content_text')
-  final String contentText;
-  @JsonKey(name: 'reference_audio')
-  final String? referenceAudio;
-  @JsonKey(name: 'user_recording')
-  final String? userRecording;
-  @JsonKey(name: 'feedback_score')
-  final double? feedbackScore;
-  @JsonKey(name: 'feedback_text')
-  final String? feedbackText;
-  @JsonKey(name: 'session_duration')
-  final int? sessionDuration;
-  @JsonKey(name: 'completed_at')
-  final String? completedAt;
+  @JsonKey(name: 'prompt_text')
+  final String promptText;
+  @JsonKey(name: 'is_completed')
+  final bool isCompleted;
+  @JsonKey(name: 'session_score')
+  final double? sessionScore;
+  @JsonKey(name: 'duration_minutes')
+  final int? durationMinutes;
+  @JsonKey(name: 'sample_count')
+  final int sampleCount;
+  @JsonKey(name: 'analyzed_sample_count')
+  final int analyzedSampleCount;
+  @JsonKey(name: 'completion_percentage')
+  final int completionPercentage;
   @JsonKey(name: 'created_at')
   final String createdAt;
+  @JsonKey(name: 'completed_at')
+  final String? completedAt;
 
   const TrainingSession({
     required this.id,
-    required this.trainingType,
+    required this.user,
+    required this.userUsername,
+    required this.name,
+    required this.exerciseType,
     required this.targetAccent,
-    required this.contentText,
-    this.referenceAudio,
-    this.userRecording,
-    this.feedbackScore,
-    this.feedbackText,
-    this.sessionDuration,
-    this.completedAt,
+    required this.promptText,
+    required this.isCompleted,
+    this.sessionScore,
+    this.durationMinutes,
+    required this.sampleCount,
+    required this.analyzedSampleCount,
+    required this.completionPercentage,
     required this.createdAt,
+    this.completedAt,
   });
 
   factory TrainingSession.fromJson(Map<String, dynamic> json) => _$TrainingSessionFromJson(json);

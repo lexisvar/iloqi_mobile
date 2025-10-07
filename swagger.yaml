@@ -381,50 +381,6 @@ paths:
                 $ref: '#/components/schemas/UserProfile'
           description: ''
   /api/auth/profile/update/:
-    patch:
-      operationId: auth_profile_update_partial_update
-      description: Update user profile information including language preferences
-        and learning goals
-      summary: Update user profile
-      tags:
-      - User Profile
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
-            examples:
-              ProfileUpdateExample:
-                value:
-                  l1_language: Spanish
-                  target_accent: UK
-                  proficiency_level: intermediate
-                  learning_goals: Improve pronunciation for business presentations
-                summary: Profile Update Example
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
-      security:
-      - jwtAuth: []
-      - cookieAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserProfile'
-              examples:
-                ProfileUpdateExample:
-                  value:
-                    l1_language: Spanish
-                    target_accent: UK
-                    proficiency_level: intermediate
-                    learning_goals: Improve pronunciation for business presentations
-                  summary: Profile Update Example
-          description: ''
     put:
       operationId: auth_profile_update_update
       description: Update user profile information including language preferences
@@ -451,6 +407,50 @@ paths:
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/UserProfileUpdateRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                ProfileUpdateExample:
+                  value:
+                    l1_language: Spanish
+                    target_accent: UK
+                    proficiency_level: intermediate
+                    learning_goals: Improve pronunciation for business presentations
+                  summary: Profile Update Example
+          description: ''
+    patch:
+      operationId: auth_profile_update_partial_update
+      description: Update user profile information including language preferences
+        and learning goals
+      summary: Update user profile
+      tags:
+      - User Profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+            examples:
+              ProfileUpdateExample:
+                value:
+                  l1_language: Spanish
+                  target_accent: UK
+                  proficiency_level: intermediate
+                  learning_goals: Improve pronunciation for business presentations
+                summary: Profile Update Example
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileUpdateRequest'
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -2360,10 +2360,10 @@ paths:
                     results:
                     - original_sample: 1
                       target_accent: US
-                      tts_provider: edge_tts
-                      voice_model: en-US-GuyNeural
-                  summary: Generate US Accent Twin
-                GenerateUKAccentWithElevenLabs:
+                  summary: Generate US accent with environment-configured provider
+                  description: TTS provider is automatically selected from environment
+                    variable TTS_DEFAULT_PROVIDER
+                GenerateUKAccentWithCustomVoice:
                   value:
                     count: 123
                     next: http://api.example.org/accounts/?page=4
@@ -2371,9 +2371,10 @@ paths:
                     results:
                     - original_sample: 1
                       target_accent: UK
-                      tts_provider: elevenlabs
-                      voice_model: VR6AewLTigWG4xSOukaG
-                  summary: Generate UK Accent with ElevenLabs
+                      voice_model: en-GB-RyanNeural
+                  summary: Generate UK accent with specific voice model
+                  description: Environment TTS provider will be used with custom voice
+                    model
           description: List of user's accent twins
         '201':
           content:
@@ -2389,10 +2390,10 @@ paths:
                     results:
                     - original_sample: 1
                       target_accent: US
-                      tts_provider: edge_tts
-                      voice_model: en-US-GuyNeural
-                  summary: Generate US Accent Twin
-                GenerateUKAccentWithElevenLabs:
+                  summary: Generate US accent with environment-configured provider
+                  description: TTS provider is automatically selected from environment
+                    variable TTS_DEFAULT_PROVIDER
+                GenerateUKAccentWithCustomVoice:
                   value:
                     count: 123
                     next: http://api.example.org/accounts/?page=4
@@ -2400,9 +2401,10 @@ paths:
                     results:
                     - original_sample: 1
                       target_accent: UK
-                      tts_provider: elevenlabs
-                      voice_model: VR6AewLTigWG4xSOukaG
-                  summary: Generate UK Accent with ElevenLabs
+                      voice_model: en-GB-RyanNeural
+                  summary: Generate UK accent with specific voice model
+                  description: Environment TTS provider will be used with custom voice
+                    model
           description: Accent twin generation started successfully
         '400':
           description: Invalid parameters or voice sample not analyzed
@@ -2491,13 +2493,6 @@ paths:
                   - CA
                   - IE
                   description: Target accent for generation
-                tts_provider:
-                  type: string
-                  enum:
-                  - edge_tts
-                  - elevenlabs
-                  default: edge_tts
-                  description: TTS provider to use
                 voice_model:
                   type: string
                   description: Specific voice model (auto-selected if not provided)
@@ -2507,21 +2502,23 @@ paths:
               required:
               - original_sample
               - target_accent
+              additionalProperties: false
             examples:
               GenerateUSAccentTwin:
                 value:
                   original_sample: 1
                   target_accent: US
-                  tts_provider: edge_tts
-                  voice_model: en-US-GuyNeural
-                summary: Generate US Accent Twin
-              GenerateUKAccentWithElevenLabs:
+                summary: Generate US accent with environment-configured provider
+                description: TTS provider is automatically selected from environment
+                  variable TTS_DEFAULT_PROVIDER
+              GenerateUKAccentWithCustomVoice:
                 value:
                   original_sample: 1
                   target_accent: UK
-                  tts_provider: elevenlabs
-                  voice_model: VR6AewLTigWG4xSOukaG
-                summary: Generate UK Accent with ElevenLabs
+                  voice_model: en-GB-RyanNeural
+                summary: Generate UK accent with specific voice model
+                description: Environment TTS provider will be used with custom voice
+                  model
       security:
       - jwtAuth: []
       - cookieAuth: []
@@ -2540,10 +2537,10 @@ paths:
                     results:
                     - original_sample: 1
                       target_accent: US
-                      tts_provider: edge_tts
-                      voice_model: en-US-GuyNeural
-                  summary: Generate US Accent Twin
-                GenerateUKAccentWithElevenLabs:
+                  summary: Generate US accent with environment-configured provider
+                  description: TTS provider is automatically selected from environment
+                    variable TTS_DEFAULT_PROVIDER
+                GenerateUKAccentWithCustomVoice:
                   value:
                     count: 123
                     next: http://api.example.org/accounts/?page=4
@@ -2551,9 +2548,10 @@ paths:
                     results:
                     - original_sample: 1
                       target_accent: UK
-                      tts_provider: elevenlabs
-                      voice_model: VR6AewLTigWG4xSOukaG
-                  summary: Generate UK Accent with ElevenLabs
+                      voice_model: en-GB-RyanNeural
+                  summary: Generate UK accent with specific voice model
+                  description: Environment TTS provider will be used with custom voice
+                    model
           description: List of user's accent twins
         '201':
           content:
@@ -2565,16 +2563,17 @@ paths:
                   value:
                     original_sample: 1
                     target_accent: US
-                    tts_provider: edge_tts
-                    voice_model: en-US-GuyNeural
-                  summary: Generate US Accent Twin
-                GenerateUKAccentWithElevenLabs:
+                  summary: Generate US accent with environment-configured provider
+                  description: TTS provider is automatically selected from environment
+                    variable TTS_DEFAULT_PROVIDER
+                GenerateUKAccentWithCustomVoice:
                   value:
                     original_sample: 1
                     target_accent: UK
-                    tts_provider: elevenlabs
-                    voice_model: VR6AewLTigWG4xSOukaG
-                  summary: Generate UK Accent with ElevenLabs
+                    voice_model: en-GB-RyanNeural
+                  summary: Generate UK accent with specific voice model
+                  description: Environment TTS provider will be used with custom voice
+                    model
           description: Accent twin generation started successfully
         '400':
           description: Invalid parameters or voice sample not analyzed
@@ -3786,6 +3785,22 @@ paths:
           description: Chat session not found
         '500':
           description: Error generating AI response
+  /api/samples/tts/configuration/:
+    get:
+      operationId: samples_tts_configuration_retrieve
+      description: Get current Text-to-Speech provider configuration and available
+        providers.
+      summary: Get TTS Configuration
+      tags:
+      - samples
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: TTS configuration details
+        '401':
+          description: Authentication required
   /api/training/sessions/:
     get:
       operationId: training_sessions_retrieve
@@ -4191,6 +4206,7 @@ components:
         tts_provider:
           allOf:
           - $ref: '#/components/schemas/TtsProviderEnum'
+          readOnly: true
           default: coqui
         voice_model:
           type: string
@@ -4255,6 +4271,7 @@ components:
       - processing_time
       - similarity_score
       - target_accent
+      - tts_provider
       - updated_at
       - user
       - user_username

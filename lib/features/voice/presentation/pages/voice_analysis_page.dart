@@ -26,6 +26,7 @@ class VoiceAnalysisPage extends ConsumerStatefulWidget {
 
 class _VoiceAnalysisPageState extends ConsumerState<VoiceAnalysisPage> {
   VoiceAnalysisStep _currentStep = VoiceAnalysisStep.welcome;
+  bool _hasInitialized = false;
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +35,32 @@ class _VoiceAnalysisPageState extends ConsumerState<VoiceAnalysisPage> {
     final accentTwinState = ref.watch(accentTwinProvider);
     final audioPlaybackState = ref.watch(audioPlaybackProvider);
 
-    // Auto-advance steps based on state
+    // Initialize step based on existing state (only once)
+    if (!_hasInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeStep(recordingState, analysisState);
+      });
+      _hasInitialized = true;
+    }
+
+    // Auto-advance steps based on state changes
     if (_currentStep == VoiceAnalysisStep.record && recordingState.hasRecording && !recordingState.isRecording) {
-      _currentStep = VoiceAnalysisStep.analyze;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _currentStep = VoiceAnalysisStep.analyze;
+        });
+        // Trigger voice analysis when moving to analyze step
+        if (recordingState.recordingPath != null) {
+          ref.read(voiceAnalysisProvider.notifier).analyzeVoice(recordingState.recordingPath!);
+        }
+      });
     }
     if (_currentStep == VoiceAnalysisStep.analyze && analysisState.hasValue && analysisState.value != null) {
-      _currentStep = VoiceAnalysisStep.results;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() {
+          _currentStep = VoiceAnalysisStep.results;
+        });
+      });
     }
 
     return Scaffold(
@@ -141,6 +162,15 @@ class _VoiceAnalysisPageState extends ConsumerState<VoiceAnalysisPage> {
         return ResultsStep(
           analysisState: analysisState,
           onCreateAccentTwin: () => setState(() => _currentStep = VoiceAnalysisStep.accentTwin),
+          onRetakeAnalysis: () {
+            // Clear existing recording and analysis, go back to record step
+            ref.read(voiceRecordingProvider.notifier).clearRecording();
+            ref.read(voiceAnalysisProvider.notifier).clearAnalysis();
+            ref.read(accentTwinProvider.notifier).clearAccentTwin();
+            setState(() {
+              _currentStep = VoiceAnalysisStep.record;
+            });
+          },
           isOnboardingContext: widget.isOnboardingContext,
         );
 
@@ -151,6 +181,31 @@ class _VoiceAnalysisPageState extends ConsumerState<VoiceAnalysisPage> {
           audioPlaybackState: audioPlaybackState,
           currentSample: ref.read(voiceAnalysisProvider.notifier).currentSample,
         );
+    }
+  }
+
+  void _initializeStep(VoiceRecordingState recordingState, AsyncValue<VoiceAnalysis?> analysisState) {
+    // If user has both recording and analysis, show results step with option to retake
+    if (recordingState.hasRecording && analysisState.hasValue && analysisState.value != null) {
+      setState(() {
+        _currentStep = VoiceAnalysisStep.results;
+      });
+    }
+    // If user has recording but no analysis, go to analyze step
+    else if (recordingState.hasRecording && !recordingState.isRecording) {
+      setState(() {
+        _currentStep = VoiceAnalysisStep.analyze;
+      });
+      // Trigger analysis
+      if (recordingState.recordingPath != null) {
+        ref.read(voiceAnalysisProvider.notifier).analyzeVoice(recordingState.recordingPath!);
+      }
+    }
+    // If user has no recording, show welcome step
+    else {
+      setState(() {
+        _currentStep = VoiceAnalysisStep.welcome;
+      });
     }
   }
 }

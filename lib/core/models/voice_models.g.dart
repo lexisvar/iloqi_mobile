@@ -254,32 +254,40 @@ Map<String, dynamic> _$AccentTwinToJson(AccentTwin instance) =>
 
 TrainingSession _$TrainingSessionFromJson(Map<String, dynamic> json) =>
     TrainingSession(
-      id: json['id'] as String,
-      trainingType: json['training_type'] as String,
+      id: (json['id'] as num).toInt(),
+      user: json['user'] as String,
+      userUsername: json['user_username'] as String,
+      name: json['name'] as String,
+      exerciseType: json['exercise_type'] as String,
       targetAccent: json['target_accent'] as String,
-      contentText: json['content_text'] as String,
-      referenceAudio: json['reference_audio'] as String?,
-      userRecording: json['user_recording'] as String?,
-      feedbackScore: (json['feedback_score'] as num?)?.toDouble(),
-      feedbackText: json['feedback_text'] as String?,
-      sessionDuration: (json['session_duration'] as num?)?.toInt(),
-      completedAt: json['completed_at'] as String?,
+      promptText: json['prompt_text'] as String,
+      isCompleted: json['is_completed'] as bool,
+      sessionScore: (json['session_score'] as num?)?.toDouble(),
+      durationMinutes: (json['duration_minutes'] as num?)?.toInt(),
+      sampleCount: (json['sample_count'] as num).toInt(),
+      analyzedSampleCount: (json['analyzed_sample_count'] as num).toInt(),
+      completionPercentage: (json['completion_percentage'] as num).toInt(),
       createdAt: json['created_at'] as String,
+      completedAt: json['completed_at'] as String?,
     );
 
 Map<String, dynamic> _$TrainingSessionToJson(TrainingSession instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'training_type': instance.trainingType,
+      'user': instance.user,
+      'user_username': instance.userUsername,
+      'name': instance.name,
+      'exercise_type': instance.exerciseType,
       'target_accent': instance.targetAccent,
-      'content_text': instance.contentText,
-      'reference_audio': instance.referenceAudio,
-      'user_recording': instance.userRecording,
-      'feedback_score': instance.feedbackScore,
-      'feedback_text': instance.feedbackText,
-      'session_duration': instance.sessionDuration,
-      'completed_at': instance.completedAt,
+      'prompt_text': instance.promptText,
+      'is_completed': instance.isCompleted,
+      'session_score': instance.sessionScore,
+      'duration_minutes': instance.durationMinutes,
+      'sample_count': instance.sampleCount,
+      'analyzed_sample_count': instance.analyzedSampleCount,
+      'completion_percentage': instance.completionPercentage,
       'created_at': instance.createdAt,
+      'completed_at': instance.completedAt,
     };
 
 UserProgress _$UserProgressFromJson(Map<String, dynamic> json) => UserProgress(

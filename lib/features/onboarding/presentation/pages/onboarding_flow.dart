@@ -12,6 +12,8 @@ import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/services/voice_api_service.dart';
 import '../../../../core/utils/permission_helper.dart';
+import '../widgets/animated_recording_button.dart';
+import '../widgets/voice_analysis_player.dart';
 
 // Provider to track onboarding state
 final onboardingInProgressProvider = StateProvider<bool>((ref) => false);
@@ -1141,26 +1143,27 @@ class _EnrollmentStep extends StatelessWidget {
         const SizedBox(height: 16),
         _Meters(recordingState: recordingState),
         const SizedBox(height: 24),
-        Center(
-          child: GestureDetector(
-            onTap: isRecording ? onStop : onStart,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: isRecording ? 180 : 160,
-              height: isRecording ? 180 : 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: isRecording
-                      ? [Colors.red.withOpacity(0.2), Colors.red.withOpacity(0.3)]
-                      : [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.3)],
-                ),
-                border: Border.all(color: isRecording ? Colors.red : Colors.blue, width: 4),
-              ),
-              child: Icon(isRecording ? Icons.stop_rounded : Icons.mic_rounded,
-                  size: 80, color: isRecording ? Colors.red : Colors.blue),
-            ),
+        
+        // Audio level visualizer
+        if (isRecording)
+          AudioLevelVisualizer(
+            audioLevel: recordingState.audioLevel,
+            isActive: isRecording,
+            size: 80,
+            color: Colors.green,
           ),
+        
+        const SizedBox(height: 16),
+        
+        // Animated recording button
+        AnimatedRecordingButton(
+          isRecording: isRecording,
+          onStart: onStart,
+          onStop: onStop,
+          audioLevel: recordingState.audioLevel,
+          size: 160,
+          primaryColor: Colors.blue,
+          recordingColor: Colors.red,
         ),
         const SizedBox(height: 16),
         if (hasRecording)
@@ -1276,20 +1279,10 @@ class _ConsentStep extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Center(
-          child: GestureDetector(
-            onTap: isRecording ? onStop : onStart,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              width: isRecording ? 120 : 100,
-              height: isRecording ? 120 : 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isRecording ? Colors.red.shade100 : Colors.blue.shade100,
-                border: Border.all(color: isRecording ? Colors.red : Colors.blue, width: 3),
-              ),
-              child: Icon(isRecording ? Icons.stop_rounded : Icons.mic_rounded,
-                  size: 48, color: isRecording ? Colors.red : Colors.blue),
-            ),
+          child: AnimatedRecordingButton(
+            isRecording: isRecording,
+            onStart: onStart,
+            onStop: onStop,
           ),
         ),
         const SizedBox(height: 24),
@@ -1375,130 +1368,10 @@ class _AnalysisStep extends StatelessWidget {
         ),
         const SizedBox(height: 24),
 
-        // Analysis summary card
-        Card(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.analytics,
-                      color: Theme.of(context).primaryColor,
-                      size: 32,
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Analysis Results',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                // Detected Accent
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).primaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.flag,
-                        size: 28,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Detected Accent',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Text(
-                              analysis.detectedAccent.toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Quality metrics
-                Row(
-                  children: [
-                    Expanded(
-                      child: _MetricItem(
-                        icon: Icons.trending_up,
-                        label: 'Confidence',
-                        value: '${(analysis.confidence * 100).toStringAsFixed(1)}%',
-                        color: Colors.blue,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _MetricItem(
-                        icon: Icons.high_quality,
-                        label: 'Audio Quality',
-                        value: '${(analysis.audioQuality * 100).toStringAsFixed(1)}%',
-                        color: Colors.green,
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 12),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: _MetricItem(
-                        icon: Icons.timer,
-                        label: 'Duration',
-                        value: '${analysis.duration.toStringAsFixed(1)}s',
-                        color: Colors.orange,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _MetricItem(
-                        icon: Icons.waves,
-                        label: 'Pronunciation',
-                        value: analysis.pronunciationScore != null
-                            ? '${(analysis.pronunciationScore! * 100).toStringAsFixed(1)}%'
-                            : 'N/A',
-                        color: Colors.purple,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+        // Voice Analysis Player
+        VoiceAnalysisPlayer(
+          audioPath: recordingState.recordingPath ?? '',
+          analysis: analysis,
         ),
 
         const SizedBox(height: 24),
@@ -1591,56 +1464,6 @@ class _AnalysisStep extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _MetricItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  const _MetricItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              color: color.withOpacity(0.8),
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
     );
   }
 }

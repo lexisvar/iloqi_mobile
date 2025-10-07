@@ -8,12 +8,14 @@ import '../../../../core/models/voice_models.dart';
 class ResultsStep extends ConsumerWidget {
   final AsyncValue<VoiceAnalysis?> analysisState;
   final VoidCallback onCreateAccentTwin;
+  final VoidCallback? onRetakeAnalysis;
   final bool isOnboardingContext;
 
   const ResultsStep({
     super.key,
     required this.analysisState,
     required this.onCreateAccentTwin,
+    this.onRetakeAnalysis,
     this.isOnboardingContext = false,
   });
 
@@ -337,27 +339,74 @@ class ResultsStep extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  height: 56,
-                  child: ElevatedButton(
-                    onPressed: isOnboardingContext
-                        ? () => Navigator.of(context).pop() // Return to onboarding flow
-                        : onCreateAccentTwin,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).primaryColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                
+                // Action buttons
+                if (onRetakeAnalysis != null && !isOnboardingContext) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        flex: 1,
+                        child: OutlinedButton(
+                          onPressed: onRetakeAnalysis,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Theme.of(context).primaryColor,
+                            side: BorderSide(color: Theme.of(context).primaryColor),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text(
+                            'Retake Analysis',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
-                      elevation: 4,
-                    ),
-                    child: Text(
-                      isOnboardingContext ? 'Continue Setup' : 'Create Accent Twin',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: onCreateAccentTwin,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 4,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
+                          child: const Text(
+                            'Create Accent Twin',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ] else ...[
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: isOnboardingContext
+                          ? () => Navigator.of(context).pop() // Return to onboarding flow
+                          : onCreateAccentTwin,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 4,
+                      ),
+                      child: Text(
+                        isOnboardingContext ? 'Continue Setup' : 'Create Accent Twin',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

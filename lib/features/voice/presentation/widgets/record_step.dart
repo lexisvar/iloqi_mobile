@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/providers/voice_provider.dart';
 
-class RecordStep extends ConsumerWidget {
+class RecordStep extends ConsumerStatefulWidget {
   final VoiceRecordingState recordingState;
   final VoidCallback onRecordingComplete;
 
@@ -14,7 +14,12 @@ class RecordStep extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RecordStep> createState() => _RecordStepState();
+}
+
+class _RecordStepState extends ConsumerState<RecordStep> {
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -39,23 +44,23 @@ class RecordStep extends ConsumerWidget {
         // Recording Button with enhanced animation
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
-          width: recordingState.isRecording ? 240 : 220,
-          height: recordingState.isRecording ? 240 : 220,
+          width: widget.recordingState.isRecording ? 240 : 220,
+          height: widget.recordingState.isRecording ? 240 : 220,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: recordingState.isRecording
+              colors: widget.recordingState.isRecording
                   ? [Colors.red.withOpacity(0.2), Colors.red.withOpacity(0.3)]
                   : [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.3)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: recordingState.isRecording ? Colors.red : Colors.blue,
+              color: widget.recordingState.isRecording ? Colors.red : Colors.blue,
               width: 4,
             ),
             boxShadow: [
-              if (recordingState.isRecording)
+              if (widget.recordingState.isRecording)
                 BoxShadow(
                   color: Colors.red.withOpacity(0.4),
                   blurRadius: 30,
@@ -68,9 +73,9 @@ class RecordStep extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(200),
               onTap: () {
-                if (recordingState.isRecording) {
+                if (widget.recordingState.isRecording) {
                   ref.read(voiceRecordingProvider.notifier).stopRecording();
-                  onRecordingComplete();
+                  // Don't call onRecordingComplete here - it will be called in didUpdateWidget
                 } else {
                   ref.read(voiceRecordingProvider.notifier).startRecording();
                 }
@@ -81,17 +86,17 @@ class RecordStep extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      recordingState.isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                      widget.recordingState.isRecording ? Icons.stop_rounded : Icons.mic_rounded,
                       size: 80,
-                      color: recordingState.isRecording ? Colors.red : Colors.blue,
+                      color: widget.recordingState.isRecording ? Colors.red : Colors.blue,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      recordingState.isRecording ? 'STOP' : 'RECORD',
+                      widget.recordingState.isRecording ? 'STOP' : 'RECORD',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: recordingState.isRecording ? Colors.red : Colors.blue,
+                        color: widget.recordingState.isRecording ? Colors.red : Colors.blue,
                       ),
                     ),
                   ],
@@ -124,10 +129,10 @@ class RecordStep extends ConsumerWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              if (recordingState.isRecording) ...[
+              if (widget.recordingState.isRecording) ...[
                 const SizedBox(height: 12),
                 Text(
-                  _formatDuration(recordingState.recordingDuration),
+                  _formatDuration(widget.recordingState.recordingDuration),
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -141,7 +146,7 @@ class RecordStep extends ConsumerWidget {
         ),
 
         // Audio level indicator
-        if (recordingState.isRecording && recordingState.audioLevel != null) ...[
+        if (widget.recordingState.isRecording && widget.recordingState.audioLevel != null) ...[
           const SizedBox(height: 24),
           Text(
             'Audio Level',
@@ -160,7 +165,7 @@ class RecordStep extends ConsumerWidget {
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
-              widthFactor: (recordingState.audioLevel! + 40) / 40,
+              widthFactor: (widget.recordingState.audioLevel! + 40) / 40,
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
@@ -172,7 +177,7 @@ class RecordStep extends ConsumerWidget {
         ],
 
         // Playback controls
-        if (recordingState.hasRecording && !recordingState.isRecording) ...[
+        if (widget.recordingState.hasRecording && !widget.recordingState.isRecording) ...[
           const SizedBox(height: 32),
           Container(
             padding: const EdgeInsets.all(16),
@@ -198,21 +203,61 @@ class RecordStep extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           ElevatedButton.icon(
-            onPressed: recordingState.isPlaying
+            onPressed: widget.recordingState.isPlaying
                 ? () => ref.read(voiceRecordingProvider.notifier).stopPlayback()
                 : () => ref.read(voiceRecordingProvider.notifier).playRecording(),
-            icon: Icon(recordingState.isPlaying ? Icons.stop : Icons.play_arrow),
-            label: Text(recordingState.isPlaying ? 'Stop Playback' : 'Play Recording'),
+            icon: Icon(widget.recordingState.isPlaying ? Icons.stop : Icons.play_arrow),
+            label: Text(widget.recordingState.isPlaying ? 'Stop Playback' : 'Play Recording'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
+          
+          // Action buttons for user choice
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              // Record Again button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    // Clear current recording and start fresh
+                    ref.read(voiceRecordingProvider.notifier).clearRecording();
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Record Again'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.grey.shade600,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              // Proceed to Analysis button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    debugPrint('🎤 User chose to proceed with analysis');
+                    widget.onRecordingComplete();
+                  },
+                  icon: const Icon(Icons.analytics),
+                  label: const Text('Analyze Voice'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
 
         // Error message
-        if (recordingState.errorMessage != null) ...[
+        if (widget.recordingState.errorMessage != null) ...[
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
@@ -227,7 +272,7 @@ class RecordStep extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    recordingState.errorMessage!,
+                    widget.recordingState.errorMessage!,
                     style: TextStyle(
                       color: Colors.red.shade800,
                       fontWeight: FontWeight.w500,
@@ -243,18 +288,18 @@ class RecordStep extends ConsumerWidget {
   }
 
   String _getStatusText() {
-    if (recordingState.errorMessage != null) {
+    if (widget.recordingState.errorMessage != null) {
       return 'Error occurred';
     }
 
-    switch (recordingState.status) {
+    switch (widget.recordingState.status) {
       case RecordingStatus.idle:
         return 'Tap the microphone to start recording your voice';
       case RecordingStatus.recording:
         return 'Recording... Speak naturally for 10-30 seconds';
       case RecordingStatus.stopped:
-        return recordingState.hasRecording
-            ? 'Recording complete! Ready for analysis'
+        return widget.recordingState.hasRecording
+            ? 'Recording complete! Listen to your recording and choose an option below'
             : 'Tap the microphone to start recording';
       case RecordingStatus.playing:
         return 'Playing your recording...';
@@ -268,17 +313,17 @@ class RecordStep extends ConsumerWidget {
   }
 
   Color _getStatusColor() {
-    if (recordingState.errorMessage != null) {
+    if (widget.recordingState.errorMessage != null) {
       return Colors.red;
     }
 
-    switch (recordingState.status) {
+    switch (widget.recordingState.status) {
       case RecordingStatus.idle:
         return Colors.grey.shade600;
       case RecordingStatus.recording:
         return Colors.red;
       case RecordingStatus.stopped:
-        return recordingState.hasRecording ? Colors.green : Colors.grey.shade600;
+        return widget.recordingState.hasRecording ? Colors.green : Colors.grey.shade600;
       case RecordingStatus.playing:
         return Colors.blue;
       case RecordingStatus.analyzing:

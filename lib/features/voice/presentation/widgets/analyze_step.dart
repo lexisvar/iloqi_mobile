@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/models/voice_models.dart';
 
-class AnalyzeStep extends ConsumerWidget {
+class AnalyzeStep extends ConsumerStatefulWidget {
   final VoiceRecordingState recordingState;
   final AsyncValue<VoiceAnalysis?> analysisState;
   final VoidCallback onAnalysisComplete;
@@ -17,7 +17,38 @@ class AnalyzeStep extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AnalyzeStep> createState() => _AnalyzeStepState();
+}
+
+class _AnalyzeStepState extends ConsumerState<AnalyzeStep> {
+  bool _hasTriggeredAnalysis = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Trigger analysis automatically when this step loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerAnalysisIfNeeded();
+    });
+  }
+
+  void _triggerAnalysisIfNeeded() {
+    // Only trigger analysis if:
+    // 1. We haven't triggered it already
+    // 2. We have a recording path
+    // 3. Analysis is not already loading or completed
+    if (!_hasTriggeredAnalysis && 
+        widget.recordingState.recordingPath != null && 
+        !widget.analysisState.isLoading && 
+        !widget.analysisState.hasValue) {
+      debugPrint('🔬 Auto-triggering voice analysis for: ${widget.recordingState.recordingPath}');
+      ref.read(voiceAnalysisProvider.notifier).analyzeVoice(widget.recordingState.recordingPath!);
+      _hasTriggeredAnalysis = true;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -46,18 +77,18 @@ class AnalyzeStep extends ConsumerWidget {
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             gradient: LinearGradient(
-              colors: analysisState.isLoading
+              colors: widget.analysisState.isLoading
                   ? [Colors.blue.withOpacity(0.2), Colors.blue.withOpacity(0.4)]
                   : [Colors.green.withOpacity(0.2), Colors.green.withOpacity(0.4)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             border: Border.all(
-              color: analysisState.isLoading ? Colors.blue : Colors.green,
+              color: widget.analysisState.isLoading ? Colors.blue : Colors.green,
               width: 4,
             ),
           ),
-          child: analysisState.isLoading
+          child: widget.analysisState.isLoading
               ? const CircularProgressIndicator(
                   strokeWidth: 6,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
@@ -75,26 +106,26 @@ class AnalyzeStep extends ConsumerWidget {
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: analysisState.isLoading ? Colors.blue.shade50 : Colors.green.shade50,
+            color: widget.analysisState.isLoading ? Colors.blue.shade50 : Colors.green.shade50,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: analysisState.isLoading ? Colors.blue.shade200 : Colors.green.shade200,
+              color: widget.analysisState.isLoading ? Colors.blue.shade200 : Colors.green.shade200,
             ),
           ),
           child: Column(
             children: [
               Text(
-                analysisState.isLoading
+                widget.analysisState.isLoading
                     ? 'Analyzing your voice patterns...'
                     : 'Analysis Complete!',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: analysisState.isLoading ? Colors.blue.shade800 : Colors.green.shade800,
+                  color: widget.analysisState.isLoading ? Colors.blue.shade800 : Colors.green.shade800,
                 ),
                 textAlign: TextAlign.center,
               ),
-              if (analysisState.isLoading) ...[
+              if (widget.analysisState.isLoading) ...[
                 const SizedBox(height: 16),
                 const LinearProgressIndicator(
                   backgroundColor: Colors.blue,
@@ -106,16 +137,16 @@ class AnalyzeStep extends ConsumerWidget {
         ),
 
         // Analyze button
-        if (!analysisState.isLoading && analysisState.hasError) ...[
+        if (!widget.analysisState.isLoading && widget.analysisState.hasError) ...[
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
               onPressed: () {
-                if (recordingState.recordingPath != null) {
+                if (widget.recordingState.recordingPath != null) {
                   ref.read(voiceAnalysisProvider.notifier)
-                      .analyzeVoice(recordingState.recordingPath!);
+                      .analyzeVoice(widget.recordingState.recordingPath!);
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -134,13 +165,13 @@ class AnalyzeStep extends ConsumerWidget {
         ],
 
         // Continue button
-        if (!analysisState.isLoading && analysisState.hasValue && analysisState.value != null) ...[
+        if (!widget.analysisState.isLoading && widget.analysisState.hasValue && widget.analysisState.value != null) ...[
           const SizedBox(height: 32),
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
-              onPressed: onAnalysisComplete,
+              onPressed: widget.onAnalysisComplete,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
@@ -157,7 +188,7 @@ class AnalyzeStep extends ConsumerWidget {
         ],
 
         // Error display
-        if (analysisState.hasError) ...[
+        if (widget.analysisState.hasError) ...[
           const SizedBox(height: 24),
           Container(
             padding: const EdgeInsets.all(16),
@@ -186,7 +217,7 @@ class AnalyzeStep extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  analysisState.error.toString(),
+                  widget.analysisState.error.toString(),
                   style: TextStyle(
                     color: Colors.red.shade700,
                     fontSize: 14,
