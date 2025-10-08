@@ -2,14 +2,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 
-import 'package:iloqi_mobile/core/services/cross_platform_recorder.dart';
+import '../lib/core/services/cross_platform_recorder_simple.dart';
 
 void main() {
-  group('CrossPlatformRecorder Tests', () {
-    late CrossPlatformRecorder recorder;
+  group('CrossPlatformRecorderSimple Tests', () {
+    late CrossPlatformRecorderSimple recorder;
 
     setUp(() {
-      recorder = CrossPlatformRecorder();
+      recorder = CrossPlatformRecorderSimple();
     });
 
     test('should initialize successfully', () {

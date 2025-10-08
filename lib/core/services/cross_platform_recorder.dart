@@ -847,12 +847,6 @@ class CrossPlatformRecorder {
     }
   }
 
-  /// Check if the current platform supports recording
-  bool get isSupported {
-    // The record package supports iOS, Android, macOS, Windows, and Linux
-    return Platform.isIOS || Platform.isAndroid || Platform.isMacOS || Platform.isWindows || Platform.isLinux;
-  }
-
   /// Get platform-specific recording directory
   Future<Directory> _getRecordingDirectory() async {
     if (Platform.isMacOS) {

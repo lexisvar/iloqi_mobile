@@ -10,7 +10,7 @@ import 'package:dio/dio.dart';
 
 import '../models/voice_models.dart';
 import '../services/voice_api_service.dart';
-import '../services/cross_platform_recorder_simple.dart';
+import '../services/cross_platform_recorder.dart';
 import '../di/injection_container.dart';
 import '../utils/permission_helper.dart';
 
@@ -92,14 +92,14 @@ enum RecordingStatus {
 
 // Voice Recording Notifier
 class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
-  late final CrossPlatformRecorderSimple _recorder;
+  late final CrossPlatformRecorder _recorder;
   AudioPlayer? _audioPlayer; // Use audioplayers for playback
   StreamSubscription<Duration>? _durationSubscription;
   StreamSubscription<double>? _amplitudeSubscription;
   StreamSubscription<bool>? _recordingStateSubscription;
 
   VoiceRecordingNotifier() : super(const VoiceRecordingState()) {
-    _recorder = CrossPlatformRecorderSimple();
+    _recorder = CrossPlatformRecorder();
     _initializeRecorder();
   }
 
@@ -140,7 +140,7 @@ class VoiceRecordingNotifier extends StateNotifier<VoiceRecordingState> {
         }
       });
 
-      debugPrint('🎤 CrossPlatformRecorderSimple initialized successfully');
+      debugPrint('🎤 CrossPlatformRecorder initialized successfully');
     } catch (e) {
       debugPrint('🎤 Error initializing recorder: $e');
       state = state.copyWith(
@@ -666,7 +666,7 @@ class AccentTwinNotifier extends StateNotifier<AsyncValue<AccentTwin?>> {
       final request = AccentTwinCreateRequest(
         originalSample: sampleId,
         targetAccent: targetAccent,
-        ttsProvider: 'edge_tts', // Use Edge TTS as default
+        // ttsProvider is now handled server-side, no need to specify
         voiceModel: _getVoiceModelForAccent(targetAccent),
         generationParams: {
           'voice_speed': 1.0,

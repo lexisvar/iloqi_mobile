@@ -7,7 +7,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection_container.dart';
 import '../../../../core/models/voice_models.dart';
-import '../../../../core/services/cross_platform_recorder_simple.dart';
+import '../../../../core/services/cross_platform_recorder.dart';
 import '../../../../core/providers/auth_provider.dart';
 import '../../../../core/providers/voice_provider.dart';
 import '../../../../core/services/voice_api_service.dart';
@@ -78,7 +78,7 @@ class _OnboardingFlowPageState extends ConsumerState<OnboardingFlowPage> with Wi
           ref.read(onboardingStepProvider.notifier).state = OnboardingStep.status;
         } else if (hasProfileData && !hasConsent) {
           // User has profile but no consent - check microphone permission
-          final recorder = CrossPlatformRecorderSimple();
+          final recorder = CrossPlatformRecorder();
           final micPermissionGranted = await recorder.hasPermission();
           print('🔄 User has profile but no consent, mic permission granted: $micPermissionGranted');
           
@@ -819,7 +819,7 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
     try {
       // Use the recording package's built-in permission request
       // This will trigger the native iOS permission dialog
-      final recorder = CrossPlatformRecorderSimple();
+      final recorder = CrossPlatformRecorder();
       final hasPermission = await recorder.requestPermission();
       
       if (hasPermission) {
@@ -848,7 +848,7 @@ class _MicPermissionStepState extends State<_MicPermissionStep> with WidgetsBind
     
     try {
       // Test if we can actually initialize recording
-      final recorder = CrossPlatformRecorderSimple();
+      final recorder = CrossPlatformRecorder();
       final hasPermission = await recorder.hasPermission();
       if (hasPermission) {
         final canInitialize = await recorder.initialize();
